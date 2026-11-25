@@ -1,0 +1,8 @@
+[
+  { "id": "nw", "name": "North West", "lat": 12.0, "lng": 7.6, "image": "/pin.svg", "summary": "", "updated": null, "sources": [] },
+  { "id": "ne", "name": "North East", "lat": 10.5, "lng": 12.5, "image": "/pin.svg", "summary": "", "updated": null, "sources": [] },
+  { "id": "nc", "name": "North Central", "lat": 8.5, "lng": 7.5, "image": "/pin.svg", "summary": "", "updated": null, "sources": [] },
+  { "id": "sw", "name": "South West", "lat": 7.4, "lng": 3.9, "image": "/pin.svg", "summary": "", "updated": null, "sources": [] },
+  { "id": "se", "name": "South East", "lat": 6.0, "lng": 7.6, "image": "/pin.svg", "summary": "", "updated": null, "sources": [] },
+  { "id": "ss", "name": "South South", "lat": 5.0, "lng": 6.3, "image": "/pin.svg", "summary": "", "updated": null, "sources": [] }
+]

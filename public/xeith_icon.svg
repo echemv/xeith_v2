@@ -1,0 +1,45 @@
+<svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e60ff"/>
+      <stop offset="100%" stop-color="#0033cc"/>
+    </linearGradient>
+    <filter id="dropShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="5" stdDeviation="6" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+  <rect width="600" height="600" fill="#faf8f5"/>
+
+  <!-- Bacteria: white with blue outline, UNDERNEATH (TR-BL diagonal) -->
+  <g>
+    <!-- top-right arm -->
+    <rect x="-70" y="-35" width="140" height="70" rx="35"
+          transform="translate(360,240) rotate(-45)"
+          fill="#ffffff" stroke="#0033cc" stroke-width="3"/>
+    <!-- bottom-left arm (with pili) -->
+    <rect x="-70" y="-35" width="140" height="70" rx="35"
+          transform="translate(240,360) rotate(-45)"
+          fill="#ffffff" stroke="#0033cc" stroke-width="3"/>
+  </g>
+
+  <!-- Pili: wavy lines on the bottom-left bacteria arm -->
+  <g fill="none" stroke="#0033cc" stroke-width="2.5" stroke-linecap="round">
+    <path d="M 195 405 Q 165 395 140 410 Q 115 425 95 415"/>
+    <path d="M 205 420 Q 175 410 150 425 Q 125 440 105 430"/>
+    <path d="M 185 430 Q 155 420 130 435 Q 105 450 85 440"/>
+    <path d="M 215 440 Q 185 430 160 445 Q 135 460 115 450"/>
+    <path d="M 175 445 Q 145 435 120 450 Q 95 465 75 455"/>
+  </g>
+
+  <!-- Antibiotic: solid blue, ON TOP (TL-BR diagonal) -->
+  <g>
+    <!-- top-left arm -->
+    <rect x="-70" y="-35" width="140" height="70" rx="35"
+          transform="translate(245,245) rotate(45)"
+          fill="url(#gradBlue)" filter="url(#dropShadow)"/>
+    <!-- bottom-right arm -->
+    <rect x="-70" y="-35" width="140" height="70" rx="35"
+          transform="translate(355,355) rotate(45)"
+          fill="url(#gradBlue)" filter="url(#dropShadow)"/>
+  </g>
+</svg>

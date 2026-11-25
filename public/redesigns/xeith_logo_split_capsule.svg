@@ -1,0 +1,24 @@
+<svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e60ff"/>
+      <stop offset="100%" stop-color="#0033cc"/>
+    </linearGradient>
+    <filter id="dropShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="7" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+  <rect width="600" height="600" fill="#faf8f5"/>
+
+  <!-- Bacteria: white with blue outline, UNDERNEATH (TR-BL diagonal) -->
+  <g transform="translate(300.0,300.0) rotate(-45)">
+    <path d="M -209.66 -42.61 L 125.11 -42.61 A 42.61 42.61 0 0 1 125.11 42.61 L -209.66 42.61 A 42.61 42.61 0 0 1 -209.66 -42.61 Z" fill="#ffffff" stroke="#0033cc" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+  
+
+  <!-- Antibiotic: solid blue, ON TOP (TL-BR diagonal) -->
+  <g transform="translate(300.0,300.0) rotate(45)" filter="url(#dropShadow)">
+    <path d="M -92.05 -56.59 L -66.14 -56.59 A 56.59 56.59 0 0 1 -66.14 56.59 L -92.05 56.59 A 56.59 56.59 0 0 1 -92.05 -56.59 Z" fill="url(#gradBlue)"/>
+    <path d="M 66.14 -56.59 L 92.05 -56.59 A 56.59 56.59 0 0 1 92.05 56.59 L 66.14 56.59 A 56.59 56.59 0 0 1 66.14 -56.59 Z" fill="url(#gradBlue)"/>
+  </g>
+</svg>

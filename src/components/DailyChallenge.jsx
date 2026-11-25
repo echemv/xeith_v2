@@ -1,0 +1,510 @@
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useApp, award, ymd } from '../store'
+
+// Challenge types
+const CHALLENGE_TYPES = {
+  QUIZ: 'quiz',
+  WORD_LADDER: 'word_ladder',
+  PHOTO_CHALLENGE: 'photo_challenge',
+  FACT_MATCH: 'fact_match'
+}
+
+// Mock AI service — replace with real API call when online
+const mockAI = {
+  generateDailyChallenge: async (date) => {
+    const day = date || new Date()
+    const dayOfYear = Math.floor((day - new Date(day.getFullYear(), 0, 0)) / 864e5)
+
+    // Rotate challenge types deterministically by day
+    const types = Object.values(CHALLENGE_TYPES)
+    const type = types[dayOfYear % types.length]
+
+    // Word ladders for AMR terms
+    const wordLadders = [
+      { start: 'GERM', end: 'DRUG', steps: ['GERM', 'TERM', 'TERMS', 'TERSE', 'TERES', 'TERAS', 'TERRA', 'TERRA', 'TARRA', 'DARRA', 'DARRY', 'DRUG'], hint: tx('Each step changes one letter. Transform the microbe into the medicine!') },
+      { start: 'VIRUS', end: 'CURES', steps: ['VIRUS', 'VISUS', 'VISAS', 'VIOLS', 'VOILS', 'COILS', 'COALS', 'COALS', 'COALS', 'CORES', 'CORES', 'CORES', 'CURES'], hint: tx('From the problem to the solution.') },
+      { start: 'MOLD', end: 'HEAL', steps: ['MOLD', 'GOLD', 'GOAD', 'GRAD', 'GRADE', 'GRADE', 'GRADE', 'GRADE', 'GRADE', 'GRADE', 'HEAL'], hint: tx('Fungus to recovery.') },
+      { start: 'BUGS', end: 'SAFE', steps: ['BUGS', 'BUGS', 'BAGS', 'BATS', 'BATS', 'BATS', 'BATS', 'BAYS', 'BAYS', 'SAFE'], hint: tx('Stop the bugs, stay safe.') },
+      { start: 'DOSE', end: 'WELL', steps: ['DOSE', 'DOES', 'DOES', 'DOES', 'DOES', 'DOES', 'DOES', 'WELL'], hint: tx('Right dose, get well.') }
+    ]
+
+    // Photo challenge prompts
+    const photoChallenges = [
+      { prompt: tx('Take a photo of something that prevents infections (soap, clean water, vaccine card, hand sanitizer, mask)'), category: 'prevention', examples: [tx('Handwashing station'), tx('Clean water source'), tx('Vaccination record'), tx('Hand sanitizer'), tx('Face mask')] },
+      { prompt: tx('Photograph a place where antibiotics should NOT be used for viral illnesses (pharmacy, clinic, hospital sign)'), category: 'stewardship', examples: [tx('Pharmacy counter'), tx('Clinic waiting room'), tx('Antibiotic awareness poster')] },
+      { prompt: tx('Snap a picture of a food that supports gut microbiome health (yogurt, fermented food, fiber-rich meal)'), category: 'microbiome', examples: [tx('Yogurt'), tx('Kimchi'), tx('Kombucha'), tx('High-fiber meal'), tx('Sauerkraut')] },
+      { prompt: tx('Find and photograph a surface you should disinfect regularly (doorknob, phone, keyboard, light switch)'), category: 'hygiene', examples: [tx('Doorknob'), tx('Phone screen'), tx('Keyboard'), tx('Light switch'), tx('Remote control')] }
+    ]
+
+    // Quiz questions by pathogen type
+    const quizPools = {
+      bacteria: [
+        { question: tx('What is the main cause of antimicrobial resistance in bacteria?'), options: [tx('Misuse and overuse of antibiotics'), tx('Too much handwashing'), tx('Not drinking enough water')], answer: 0, explanation: tx('Antimicrobial resistance arises when bacteria evolve to survive exposure to antimicrobial agents. The primary driver is inappropriate use of antimicrobial agents.') },
+        { question: tx('How do bacteria share resistance genes?'), options: [tx('Horizontal gene transfer'), tx('Through the air'), tx('By dividing')], answer: 0, explanation: tx('Bacteria can transfer resistance genes to other bacteria through conjugation, transformation, and transduction.') },
+        { question: tx('What happens when you take antibiotics for a viral infection?'), options: [tx('It kills good bacteria and promotes resistance'), tx('It cures the virus faster'), tx('Nothing happens')], answer: 0, explanation: tx('Antibiotics dont work on viruses but they do kill beneficial bacteria, giving resistant bacteria space to multiply.') }
+      ],
+      virus: [
+        { question: tx('Why do antibiotics not work on viruses?'), options: [tx('Viruses have no cell wall'), tx('Viruses are too small'), tx('Antibiotics only kill bacteria')], answer: 2, explanation: tx('Antibiotics target bacterial structures like cell walls or protein synthesis. Viruses use host cells to replicate and have different structures.') },
+        { question: tx('Which illness is usually caused by a virus?'), options: [tx('The common cold'), tx('A bacterial skin infection'), tx('A urinary infection caused by bacteria')], answer: 0, explanation: tx('Colds are usually caused by viruses, so antibiotics wont help.') }
+      ],
+      fungus: [
+        { question: tx('What can happen if antifungal medicines are overused?'), options: [tx('Resistant fungal infections'), tx('Faster healing'), tx('No effect')], answer: 0, explanation: tx('Overuse of antifungals selects for resistant fungi like Candida auris, which can cause hard-to-treat infections.') },
+        { question: tx('What is Candida auris?'), options: [tx('A multidrug-resistant fungus spreading in hospitals'), tx('A new antibiotic'), tx('A virus')], answer: 0, explanation: tx('Candida auris is a multidrug-resistant fungus that spreads in healthcare settings and causes serious infections.') }
+      ],
+      parasite: [
+        { question: tx('How can parasites develop resistance?'), options: [tx('Through repeated exposure to antiparasitic drugs'), tx('By washing hands'), tx('By drinking clean water')], answer: 0, explanation: tx('Parasites like malaria develop resistance through mutations when exposed to antiparasitic drugs repeatedly or incompletely.') },
+        { question: tx('What is a key strategy to prevent antimalarial resistance?'), options: [tx('Complete the full course of treatment'), tx('Take half doses'), tx('Share medication')], answer: 0, explanation: tx('Completing the full prescribed course prevents parasites from surviving and developing resistance.') }
+      ]
+    }
+
+    const topics = ['bacteria', 'virus', 'fungus', 'parasite']
+    const topic = topics[dayOfYear % topics.length]
+
+    switch (type) {
+      case CHALLENGE_TYPES.WORD_LADDER: {
+        const ladder = wordLadders[dayOfYear % wordLadders.length]
+        return {
+          type: CHALLENGE_TYPES.WORD_LADDER,
+          topic,
+          title: tx('Word Ladder: {{start}} → {{end}}', { start: ladder.start, end: ladder.end }),
+          prompt: tx('Transform "{{start}}" into "{{end}}" by changing one letter at a time. Each step must be a valid word.', { start: ladder.start, end: ladder.end }),
+          startWord: ladder.start,
+          endWord: ladder.end,
+          hint: ladder.hint,
+          maxSteps: ladder.steps.length - 1
+        }
+      }
+      case CHALLENGE_TYPES.PHOTO_CHALLENGE: {
+        const photo = photoChallenges[dayOfYear % photoChallenges.length]
+        return {
+          type: CHALLENGE_TYPES.PHOTO_CHALLENGE,
+          topic,
+          title: tx('Photo Challenge'),
+          prompt: photo.prompt,
+          category: photo.category,
+          examples: photo.examples
+        }
+      }
+      case CHALLENGE_TYPES.FACT_MATCH: {
+        const facts = [
+          { statement: tx('Antibiotics kill viruses'), truth: false, explanation: tx('Antibiotics only work on bacteria, not viruses.') },
+          { statement: tx('Resistance develops in microbes, not people'), truth: true, explanation: tx('It is the bacteria that become resistant, not the person taking the medicine.') },
+          { statement: tx('You can stop antibiotics when you feel better'), truth: false, explanation: tx('Always complete the full course unless a clinician tells you to stop.') },
+          { statement: tx('Handwashing prevents infections and reduces antibiotic need'), truth: true, explanation: tx('Clean hands prevent infections, so fewer antibiotics are needed.') },
+          { statement: tx('Sharing antibiotics is safe if symptoms match'), truth: false, explanation: tx('Similar symptoms can have different causes; the drug or dose may be wrong.') }
+        ]
+        const selected = facts.sort(() => Math.random() - 0.5).slice(0, 3)
+        return {
+          type: CHALLENGE_TYPES.FACT_MATCH,
+          topic,
+          title: tx('Fact or Myth?'),
+          prompt: tx('Swipe or tap to sort: which statements are facts and which are myths?'),
+          items: selected
+        }
+      }
+      default: {
+        const pool = quizPools[topic] || quizPools.bacteria
+        const q = pool[dayOfYear % pool.length]
+        return {
+          type: CHALLENGE_TYPES.QUIZ,
+          topic,
+          question: q.question,
+          options: q.options,
+          answer: q.answer,
+          explanation: q.explanation
+        }
+      }
+    }
+  }
+}
+
+// Word Ladder Component
+function WordLadder({ challenge, onComplete, t }) {
+  const [currentWord, setCurrentWord] = useState(challenge.startWord)
+  const [steps, setSteps] = useState([challenge.startWord])
+  const [message, setMessage] = useState('')
+  const [solved, setSolved] = useState(false)
+
+  const handleSubmit = () => {
+    const word = currentWord.toUpperCase().trim()
+    if (word.length !== challenge.startWord.length) {
+      setMessage(t('Word must be {{n}} letters', { n: challenge.startWord.length }))
+      return
+    }
+    if (word === steps[steps.length - 1]) {
+      setMessage(t('That\'s the current word!'))
+      return
+    }
+    // Check one letter difference
+    const diff = word.split('').filter((c, i) => c !== steps[steps.length - 1][i]).length
+    if (diff !== 1) {
+      setMessage(t('Change only one letter from the previous word'))
+      return
+    }
+    // Check if it's the end word
+    if (word === challenge.endWord) {
+      setSteps([...steps, word])
+      setSolved(true)
+      onComplete(true)
+      return
+    }
+    // Accept as intermediate step
+    setSteps([...steps, word])
+    setCurrentWord('')
+    setMessage('')
+  }
+
+  const handleInput = (e) => {
+    setCurrentWord(e.target.value.toUpperCase())
+    setMessage('')
+  }
+
+  return (
+    <section className="card daily-challenge">
+      <p className="eyebrow">{t(challenge.title)}</p>
+      <p className="fact">{t(challenge.prompt)}</p>
+      <p className="muted" style={{ fontSize: '0.85rem' }}>{t(challenge.hint)}</p>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', margin: '16px 0' }}>
+        {steps.map((step, i) => (
+          <span key={i} style={{
+            background: i === steps.length - 1 ? challenge.topic === 'virus' ? 'var(--g-sky)' : 'var(--g-teal)' : 'var(--g-soft)',
+            color: i === steps.length - 1 ? '#fff' : 'var(--navy)',
+            padding: '8px 12px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontFamily: 'monospace',
+            letterSpacing: '0.1em',
+            boxShadow: i === steps.length - 1 ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
+            transition: 'all 0.3s',
+            minWidth: '60px',
+            textAlign: 'center'
+          }}>
+            {step}
+            {i < steps.length - 1 && <span style={{ marginLeft: '8px', opacity: 0.5 }}>→</span>}
+          </span>
+        ))}
+      </div>
+
+      {!solved && (
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+          <input
+            type="text"
+            value={currentWord}
+            onChange={handleInput}
+            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+            placeholder={t('Enter next word...')}
+            style={{
+              width: '140px',
+              textAlign: 'center',
+              fontSize: '1.1rem',
+              fontWeight: 600,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              padding: '10px',
+              borderRadius: '12px',
+              border: '2px solid var(--line)'
+            }}
+            maxLength={challenge.startWord.length}
+            autoFocus
+          />
+          <button className="btn" onClick={handleSubmit} style={{ alignSelf: 'flex-end' }}>{t('Submit')}</button>
+        </div>
+      )}
+
+      {message && <p className="muted" style={{ color: 'var(--coral)', textAlign: 'center', minHeight: '1.5em' }}>{message}</p>}
+
+      {solved && (
+        <div style={{ textAlign: 'center', marginTop: '16px', animation: 'pop 0.5s' }}>
+          <p className="result-correct" style={{ fontSize: '1.5rem' }}>🎉 {t('Solved!')}</p>
+          <p className="muted">{t('Steps taken: {{n}}', { n: steps.length - 1 })}</p>
+        </div>
+      )}
+    </section>
+  )
+}
+
+// Photo Challenge Component
+function PhotoChallenge({ challenge, onComplete, t }) {
+  const [photo, setPhoto] = useState(null)
+  const [preview, setPreview] = useState(null)
+  const [submitted, setSubmitted] = useState(false)
+  const fileInputRef = useRef(null)
+
+  const handlePhotoCapture = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        setPreview(event.target.result)
+        setPhoto(file)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleSubmit = () => {
+    if (photo) {
+      setSubmitted(true)
+      // In a real app, this would upload to a server for review
+      setTimeout(() => onComplete(true), 500)
+    }
+  }
+
+  const handleRetake = () => {
+    setPhoto(null)
+    setPreview(null)
+    setSubmitted(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  return (
+    <section className="card daily-challenge">
+      <p className="eyebrow">{t(challenge.title)}</p>
+      <p className="fact">{t(challenge.prompt)}</p>
+
+      <div style={{ margin: '16px 0' }}>
+        <p className="muted" style={{ fontSize: '0.85rem', marginBottom: '8px' }}>{t('Examples:')}</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          {challenge.examples.map((ex, i) => (
+            <span key={i} className="btn ghost" style={{ fontSize: '0.8rem', padding: '6px 12px' }}>{t(ex)}</span>
+          ))}
+        </div>
+      </div>
+
+      {!submitted ? (
+        <>
+          {!preview ? (
+            <div style={{ border: '2px dashed var(--line)', borderRadius: '16px', padding: '32px', textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.2s', onClick: () => fileInputRef.current?.click() }}>
+              <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoCapture} style={{ display: 'none' }} />
+              <p style={{ fontSize: '3rem', margin: '0 0 8px' }}>📷</p>
+              <p className="muted">{t('Tap to take a photo or upload')}</p>
+              <p className="muted" style={{ fontSize: '0.85rem' }}>{t('Camera access required')}</p>
+            </div>
+          ) : (
+            <div style={{ position: 'relative', display: 'inline-block', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,0.15)' }}>
+              <img src={preview} alt={t('Your photo')} style={{ maxWidth: '100%', height: 'auto', display: 'block', maxHeight: '300px' }} />
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.7))', padding: '20px 16px 16px', color: '#fff' }}>
+                <p style={{ margin: '0 0 8px', fontWeight: 600 }}>{t('Great shot!')}</p>
+                <p className="muted" style={{ margin: 0 }}>{t('Does this match the challenge?')}</p>
+              </div>
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '16px' }}>
+            {preview && !submitted && (
+              <button className="btn ghost" onClick={handleRetake}>{t('Retake')}</button>
+            )}
+            {preview && !submitted && (
+              <button className="btn" onClick={handleSubmit}>{t('Submit')}</button>
+            )}
+          </div>
+        </>
+      ) : (
+        <div style={{ textAlign: 'center', animation: 'pop 0.5s' }}>
+          <p style={{ fontSize: '4rem', margin: '16px 0' }}>📸</p>
+          <p className="result-correct" style={{ fontSize: '1.5rem' }}>✅ {t('Submitted for review!')}</p>
+          <p className="muted">{t('Your photo will be reviewed. Points awarded on approval.')}</p>
+        </div>
+      )}
+    </section>
+  )
+}
+
+// Fact Match Component
+function FactMatch({ challenge, onComplete, t }) {
+  const [answers, setAnswers] = useState({})
+  const [submitted, setSubmitted] = useState(false)
+  const [results, setResults] = useState(null)
+
+  const handleAnswer = (index, isFact) => {
+    setAnswers(prev => ({ ...prev, [index]: isFact }))
+  }
+
+  const handleSubmit = () => {
+    if (Object.keys(answers).length !== challenge.items.length) return
+    const correct = challenge.items.filter((item, i) => answers[i] === item.truth).length
+    const resultItems = challenge.items.map((item, i) => ({
+      ...item,
+      userAnswer: answers[i],
+      correct: answers[i] === item.truth
+    }))
+    setResults({ correct, items: resultItems })
+    setSubmitted(true)
+    onComplete(correct === challenge.items.length)
+  }
+
+  return (
+    <section className="card daily-challenge">
+      <p className="eyebrow">{t(challenge.title)}</p>
+      <p className="fact">{t(challenge.prompt)}</p>
+
+      {!submitted ? (
+        <>
+          {challenge.items.map((item, i) => (
+            <div key={i} className="card" style={{ margin: '12px 0', padding: '16px', background: answers[i] !== undefined ? (answers[i] ? 'rgba(39,174,96,0.1)' : 'rgba(242,120,107,0.1)') : undefined, borderColor: answers[i] !== undefined ? (answers[i] ? '#27AE60' : '#F2786B') : 'var(--line)' }}>
+              <p style={{ margin: '0 0 12px', fontSize: '1.05rem' }}>{t(item.statement)}</p>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  className={`btn ${answers[i] === true ? 'right' : 'ghost'}`}
+                  onClick={() => handleAnswer(i, true)}
+                  style={{ flex: 1 }}
+                >
+                  ✅ {t('Fact')}
+                </button>
+                <button
+                  className={`btn ${answers[i] === false ? 'wrong' : 'ghost'}`}
+                  onClick={() => handleAnswer(i, false)}
+                  style={{ flex: 1 }}
+                >
+                  ❌ {t('Myth')}
+                </button>
+              </div>
+            </div>
+          ))}
+          <button className="btn" onClick={handleSubmit} disabled={Object.keys(answers).length !== challenge.items.length} style={{ width: '100%', marginTop: '8px' }}>
+            {t('Submit Answers')}
+          </button>
+        </>
+      ) : (
+        <>
+          {results.items.map((item, i) => (
+            <div key={i} className="card" style={{ margin: '12px 0', padding: '16px' }}>
+              <p style={{ margin: '0 0 8px', fontSize: '1.05rem' }}>{t(item.statement)}</p>
+              <p style={{ margin: 0, color: item.correct ? '#27AE60' : '#F2786B', fontWeight: 600 }}>
+                {item.correct ? '✅' : '❌'} {item.correct ? t('Correct!') : t('Incorrect.')}
+              </p>
+              <p className="muted" style={{ margin: '8px 0 0', fontSize: '0.9rem' }}>{t(item.explanation)}</p>
+            </div>
+          ))}
+          <div style={{ textAlign: 'center', marginTop: '16px', padding: '16px', background: results.correct === challenge.items.length ? 'rgba(39,174,96,0.1)' : 'rgba(242,120,107,0.1)', borderRadius: '16px' }}>
+            <p className={results.correct === challenge.items.length ? 'result-correct' : 'result-incorrect'} style={{ fontSize: '1.3rem' }}>
+              {results.correct === challenge.items.length ? '🎉 Perfect!' : t('{{n}} of {{total}} correct', { n: results.correct, total: challenge.items.length })}
+            </p>
+          </div>
+        </>
+      )}
+    </section>
+  )
+}
+
+// Quiz Component (enhanced)
+function QuizChallenge({ challenge, onComplete, t }) {
+  const [selected, setSelected] = useState(null)
+  const [submitted, setSubmitted] = useState(false)
+
+  const handleSelect = (index) => {
+    if (!submitted) setSelected(index)
+  }
+
+  const handleSubmit = () => {
+    if (selected !== null) {
+      setSubmitted(true)
+      onComplete(selected === challenge.answer)
+    }
+  }
+
+  return (
+    <section className="card daily-challenge">
+      <p className="eyebrow">{t('Daily Quiz')}</p>
+      <p className="fact">{t(challenge.question)}</p>
+
+      <div className="col" style={{ marginTop: '16px' }}>
+        {challenge.options.map((option, i) => (
+          <button
+            key={i}
+            className={`btn ${submitted ? (i === challenge.answer ? 'right' : i === selected ? 'wrong' : 'ghost') : 'ghost'}`}
+            onClick={() => handleSelect(i)}
+            disabled={submitted}
+            style={{ textAlign: 'left', justifyContent: 'flex-start' }}
+          >
+            <span style={{ marginRight: '12px', fontWeight: 700 }}>{String.fromCharCode(65 + i)}.</span>
+            {t(option)}
+            {submitted && i === challenge.answer && <span style={{ marginLeft: 'auto' }}>✅</span>}
+            {submitted && i === selected && i !== challenge.answer && <span style={{ marginLeft: 'auto' }}>❌</span>}
+          </button>
+        ))}
+      </div>
+
+      {submitted && (
+        <div style={{ marginTop: '16px', padding: '16px', background: selected === challenge.answer ? 'rgba(39,174,96,0.1)' : 'rgba(242,120,107,0.1)', borderRadius: '12px', border: `1px solid ${selected === challenge.answer ? '#27AE60' : '#F2786B'}` }}>
+          <p className={selected === challenge.answer ? 'result-correct' : 'result-incorrect'} style={{ margin: '0 0 8px' }}>
+            {selected === challenge.answer ? '✅ ' + t('Correct!') : '❌ ' + t('Not quite.')}
+          </p>
+          <p className="muted" style={{ margin: 0 }}>{t(challenge.explanation)}</p>
+        </div>
+      )}
+
+      {!submitted && selected !== null && (
+        <button className="btn" onClick={handleSubmit} style={{ width: '100%', marginTop: '12px' }}>{t('Submit Answer')}</button>
+      )}
+    </section>
+  )
+}
+
+export default function DailyChallenge() {
+  const { t } = useTranslation()
+  const { points, streak } = useApp()
+  const [challenge, setChallenge] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [today, setToday] = useState(ymd())
+  const [completed, setCompleted] = useState(false)
+
+  useEffect(() => {
+    const loadChallenge = async () => {
+      try {
+        const response = await mockAI.generateDailyChallenge(new Date())
+        setChallenge(response)
+      } catch (error) {
+        console.error('Failed to load challenge:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadChallenge()
+  }, [today])
+
+  const handleComplete = useCallback((success) => {
+    if (success && !completed) {
+      award(15, 'daily-challenge-' + today)
+      setCompleted(true)
+    }
+  }, [today, completed])
+
+  if (loading) return (
+    <section className="card daily-challenge">
+      <p className="eyebrow">{t('Daily Challenge')}</p>
+      <p className="fact">{t('Loading daily challenge…')}</p>
+    </section>
+  )
+
+  if (!challenge) return (
+    <section className="card daily-challenge">
+      <p className="eyebrow">{t('Daily Challenge')}</p>
+      <p className="fact">{t('Service unavailable. Try again later.')}</p>
+    </section>
+  )
+
+  const ChallengeComponent = {
+    [CHALLENGE_TYPES.QUIZ]: QuizChallenge,
+    [CHALLENGE_TYPES.WORD_LADDER]: WordLadder,
+    [CHALLENGE_TYPES.PHOTO_CHALLENGE]: PhotoChallenge,
+    [CHALLENGE_TYPES.FACT_MATCH]: FactMatch
+  }[challenge.type] || QuizChallenge
+
+  return (
+    <section className="card daily-challenge">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+        <p className="eyebrow" style={{ margin: 0 }}>{t('Daily Challenge')}</p>
+        <span style={{ background: 'var(--g-gold)', color: '#3B2F00', padding: '4px 12px', borderRadius: '99px', fontSize: '0.75rem', fontWeight: 700 }}>
+          {t(challenge.topic.toUpperCase())}
+        </span>
+      </div>
+
+      <ChallengeComponent challenge={challenge} onComplete={handleComplete} t={t} />
+    </section>
+  )
+}
+
+// Export types for use elsewhere
+export { CHALLENGE_TYPES }
