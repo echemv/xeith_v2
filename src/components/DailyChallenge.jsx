@@ -486,7 +486,7 @@ export default function DailyChallenge() {
       // Online: attempt live AI generation via /api/challenges
       if (typeof navigator === 'undefined' || navigator.onLine) {
         const ctrl = new AbortController()
-        const timer = setTimeout(() => ctrl.abort(), 4000)
+        const timer = setTimeout(() => ctrl.abort(), 12000)
         try {
           const res = await fetch('/api/challenges', {
             method: 'POST',
@@ -501,7 +501,8 @@ export default function DailyChallenge() {
           })
           clearTimeout(timer)
           if (res.ok) {
-            const data = await res.json()
+            const raw = await res.json()
+            const data = raw?.challenge || raw
             if (data && data.type) {
               const normType = data.type.toLowerCase()
               const normalized = {

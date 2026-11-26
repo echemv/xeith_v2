@@ -1,7 +1,7 @@
 // Cloudflare Pages Function: POST /api/chat. Keeps the AI key on the server.
 // Set in the Pages dashboard (never in the repo): LLM_API_KEY, LLM_MODEL, and optionally LLM_BASE_URL.
 // Works with any OpenAI-compatible chat endpoint. Guardrails are minimal here and still to be designed.
-const SYSTEM = 'You are XEITH, an assistant that teaches antimicrobial resistance (AMR) and responsible antibiotic use. Be clear, short and friendly. Explain concepts; do not diagnose, prescribe, recommend a specific antibiotic or give doses. If someone describes severe or worsening symptoms, tell them to seek urgent care. If unsure, say so.'
+const SYSTEM = 'You are XEITH, an assistant that teaches antimicrobial resistance (AMR) and responsible antibiotic use. Be clear, short and friendly. Explain concepts; do not diagnose, prescribe, recommend a specific antibiotic or give doses. If someone describes severe or worsening symptoms, tell them to seek urgent care. If unsure, say so. When concluding or offering more details, invite the user to explore the Classroom (or use markdown link [Classroom](/learn)).'
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { 'Content-Type': 'application/json' } })
 
 export async function onRequestPost({ request, env }) {

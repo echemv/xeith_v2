@@ -15,9 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
   consent_version INTEGER DEFAULT 1 -- Terms/privacy version agreed to
 );
 
--- Index for leaderboard queries
-CREATE INDEX IF NOT EXISTS idx_users_points ON users(points DESC);
-CREATE INDEX IF NOT EXISTS idx_users_streak ON users(streak DESC);
+-- Index for user updates
 CREATE INDEX IF NOT EXISTS idx_users_updated ON users(updated_at DESC);
 
 -- User stats (points, streak, etc.) - denormalized for fast leaderboard reads
@@ -34,6 +32,10 @@ CREATE TABLE IF NOT EXISTS user_stats (
   facts_learned INTEGER DEFAULT 0,
   updated_at INTEGER NOT NULL
 );
+
+-- Indexes for leaderboard queries
+CREATE INDEX IF NOT EXISTS idx_user_stats_points ON user_stats(points DESC);
+CREATE INDEX IF NOT EXISTS idx_user_stats_streak ON user_stats(streak DESC);
 
 -- Achievements/badges
 CREATE TABLE IF NOT EXISTS achievements (
