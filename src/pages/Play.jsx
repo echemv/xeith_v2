@@ -1,8 +1,17 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { tx } from '../i18n'
 import { award, useApp } from '../store'
 import Bacterium from '../components/Bacterium'
+import StewardshipCommand from '../components/StewardshipCommand'
+
+const PATHOGEN_TO_LESSON = {
+  bacteria: 'bacteria',
+  virus: 'virus',
+  fungus: 'fungi',
+  parasite: 'parasites'
+}
 
 // Pathogen types with unique mechanics
 const PATHOGENS = [
@@ -10,6 +19,7 @@ const PATHOGENS = [
     id: 'bacteria',
     name: tx('Bacteria'),
     icon: '🦠',
+    badge: 'Fast Multiplier',
     color: '#2A8F86',
     gradient: 'linear-gradient(135deg,#2A8F86,#176B65)',
     description: tx('Bacteria multiply fast. Target them with the right antibiotic before they develop resistance!'),
@@ -19,7 +29,8 @@ const PATHOGENS = [
   {
     id: 'virus',
     name: tx('Viruses'),
-    icon: '🦠',
+    icon: '🧪',
+    badge: 'Antibiotics Ineffective',
     color: '#4FB3D9',
     gradient: 'linear-gradient(135deg,#4FB3D9,#176B65)',
     description: tx('Antibiotics DO NOT work on viruses. Avoid wasting antibiotics on viral infections!'),
@@ -30,6 +41,7 @@ const PATHOGENS = [
     id: 'fungus',
     name: tx('Fungi'),
     icon: '🍄',
+    badge: 'Emerging Threat',
     color: '#D6A84B',
     gradient: 'linear-gradient(135deg,#F4B942,#D6A84B)',
     description: tx('Fungal infections need antifungals. Overuse breeds resistant fungi like Candida auris.'),
@@ -40,9 +52,10 @@ const PATHOGENS = [
     id: 'parasite',
     name: tx('Parasites'),
     icon: '🪱',
+    badge: 'Compliance Critical',
     color: '#7A5CC7',
     gradient: 'linear-gradient(135deg,#7A5CC7,#4FB3D9)',
-    description: tx('Parasites like malaria develop resistance to antiparasitic drugs. Use the right drug, right dose, right duration.'),
+    description: tx('Parasites like malaria develop resistance to antiparasitic drugs. Complete the full course!'),
     mechanic: 'compliance-course',
     fact: tx('Malaria parasites have developed resistance to chloroquine and other antimalarials.')
   }
@@ -51,8 +64,10 @@ const PATHOGENS = [
 // Game states
 const GAME_STATES = {
   MENU: 'menu',
+  STEWARDSHIP: 'stewardship',
   PLAYING: 'playing',
   ROUND_END: 'round_end',
+  EARLY_EXIT: 'early_exit',
   GAME_OVER: 'game_over',
   BIG_B_BOSS: 'big_b_boss'
 }
@@ -62,18 +77,36 @@ const BIG_B_HEALTH = 5
 
 export default function Play() {
   const { t } = useTranslation()
-  const { points } = useApp()
+  const { points, done } = useApp()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [gameState, setGameState] = useState(GAME_STATES.MENU)
   const [selectedPathogen, setSelectedPathogen] = useState(null)
   const [round, setRound] = useState(1)
   const [score, setScore] = useState(0)
   const [combo, setCombo] = useState(0)
+  const [goodHits, setGoodHits] = useState(0)
+  const [mistakes, setMistakes] = useState(0)
   const [timeLeft, setTimeLeft] = useState(ROUND_DURATION)
   const [spawnedTargets, setSpawnedTargets] = useState([])
   const [bigBHealth, setBigBHealth] = useState(BIG_B_HEALTH)
   const [bigBPhase, setBigBPhase] = useState(0)
   const [particles, setParticles] = useState([])
   const [showFact, setShowFact] = useState(null)
+  const [pausedFrom, setPausedFrom] = useState(null)
+
+  // Deep-link support: /play?pathogen=bacteria|virus|fungus|parasite OR /play?mode=stewardship
+  useEffect(() => {
+    const mode = searchParams.get('mode')
+    if (mode === 'stewardship') {
+      setGameState(GAME_STATES.STEWARDSHIP)
+      return
+    }
+    const pId = searchParams.get('pathogen')
+    if (pId && gameState === GAME_STATES.MENU) {
+      const found = PATHOGENS.find((p) => p.id === pId)
+      if (found) startGame(found)
+    }
+  }, [searchParams])
 
   // Timer
   useEffect(() => {
@@ -95,50 +128,50 @@ export default function Play() {
     if (gameState !== GAME_STATES.PLAYING) return
     const interval = setInterval(() => {
       setSpawnedTargets(prev => {
-        if (prev.length >= 8) return prev
+        if (prev.length >= 7) return prev
         return [...prev, createTarget()]
       })
-    }, selectedPathogen?.mechanic === 'avoid-antibiotics' ? 1500 : 2000)
+    }, selectedPathogen?.mechanic === 'avoid-antibiotics' ? 1400 : 1800)
     return () => clearInterval(interval)
   }, [gameState, selectedPathogen])
 
   const createTarget = () => {
-    const isBad = Math.random() < 0.3
+    const isBad = Math.random() < 0.35
     let correctAction, wrongAction, label
 
     switch (selectedPathogen?.mechanic) {
-      case 'antibiotic-targeting': // Bacteria - click correct antibiotic
+      case 'antibiotic-targeting': {
         const antibiotics = ['Penicillin', 'Amoxicillin', 'Azithromycin', 'Ciprofloxacin', 'Vancomycin']
-        const resistances = ['Resistant', 'Multi-drug Resistant', 'XDR', 'PDR']
+        const resistances = ['MDR Strain', 'XDR Klebsiella', 'MRSA', 'Carbapenem-Resistant']
         correctAction = antibiotics[Math.floor(Math.random() * antibiotics.length)]
         wrongAction = resistances[Math.floor(Math.random() * resistances.length)]
         label = isBad ? wrongAction : correctAction
-        return { id: Date.now() + Math.random(), type: isBad ? 'resistant' : 'susceptible', label, x: Math.random() * 80 + 10, y: Math.random() * 60 + 20, vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5 }
-
-      case 'avoid-antibiotics': // Virus - avoid clicking antibiotics
-        const viruses = ['Rhinovirus (Cold)', 'Influenza (Flu)', 'RSV', 'Coronavirus', 'Adenovirus']
-        const antibioticsV = ['Antibiotic', 'Antibiotic', 'Antibiotic', 'Antibiotic', 'Antibiotic']
+        return { id: Date.now() + Math.random(), type: isBad ? 'resistant' : 'susceptible', label, x: Math.random() * 74 + 13, y: Math.random() * 60 + 20, vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4 }
+      }
+      case 'avoid-antibiotics': {
+        const viruses = ['Rhinovirus (Cold)', 'Influenza (Flu)', 'RSV', 'SARS-CoV-2', 'Adenovirus']
+        const antibioticsV = ['Antibiotic (Wrong!)', 'Amoxicillin', 'Cipro', 'Ampicillin']
         correctAction = viruses[Math.floor(Math.random() * viruses.length)]
-        wrongAction = 'Antibiotic'
+        wrongAction = antibioticsV[Math.floor(Math.random() * antibioticsV.length)]
         label = isBad ? wrongAction : correctAction
-        return { id: Date.now() + Math.random(), type: isBad ? 'antibiotic' : 'virus', label, x: Math.random() * 80 + 10, y: Math.random() * 60 + 20, vx: (Math.random() - 0.5) * 0.8, vy: (Math.random() - 0.5) * 0.8 }
-
-      case 'targeted-treatment': // Fungi - match antifungal
-        const antifungals = ['Fluconazole', 'Amphotericin B', 'Caspofungin', 'Voriconazole', 'Terbinafine']
-        const fungi = ['Candida', 'Aspergillus', 'Cryptococcus', 'Dermatophyte', 'C. auris']
+        return { id: Date.now() + Math.random(), type: isBad ? 'antibiotic' : 'virus', label, x: Math.random() * 74 + 13, y: Math.random() * 60 + 20, vx: (Math.random() - 0.5) * 0.6, vy: (Math.random() - 0.5) * 0.6 }
+      }
+      case 'targeted-treatment': {
+        const antifungals = ['Fluconazole', 'Amphotericin B', 'Caspofungin', 'Voriconazole']
+        const fungi = ['Candida albicans', 'Aspergillus', 'Cryptococcus', 'C. auris (Superbug)']
         correctAction = antifungals[Math.floor(Math.random() * antifungals.length)]
         wrongAction = fungi[Math.floor(Math.random() * fungi.length)]
         label = isBad ? wrongAction : correctAction
-        return { id: Date.now() + Math.random(), type: isBad ? 'fungus' : 'antifungal', label, x: Math.random() * 80 + 10, y: Math.random() * 60 + 20, vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4 }
-
-      case 'compliance-course': // Parasite - complete full course
-        const stages = ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7', 'Complete']
-        const skips = ['Skip dose', 'Stop early', 'Share meds', 'Wrong dose', 'Save for later']
+        return { id: Date.now() + Math.random(), type: isBad ? 'fungus' : 'antifungal', label, x: Math.random() * 74 + 13, y: Math.random() * 60 + 20, vx: (Math.random() - 0.5) * 0.35, vy: (Math.random() - 0.5) * 0.35 }
+      }
+      case 'compliance-course': {
+        const stages = ['Day 1 (Full)', 'Day 2 (On time)', 'Day 3 (Continued)', 'Day 5 (Almost)', 'Day 7 (Completed)']
+        const skips = ['Skip dose', 'Stop early', 'Share with friend', 'Double dose', 'Save for next time']
         correctAction = stages[Math.floor(Math.random() * stages.length)]
         wrongAction = skips[Math.floor(Math.random() * skips.length)]
         label = isBad ? wrongAction : correctAction
-        return { id: Date.now() + Math.random(), type: isBad ? 'noncompliance' : 'compliance', label, x: Math.random() * 80 + 10, y: Math.random() * 60 + 20, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 }
-
+        return { id: Date.now() + Math.random(), type: isBad ? 'noncompliance' : 'compliance', label, x: Math.random() * 74 + 13, y: Math.random() * 60 + 20, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 }
+      }
       default:
         return { id: Date.now(), type: 'susceptible', label: 'Target', x: 50, y: 50, vx: 0, vy: 0 }
     }
@@ -155,14 +188,15 @@ export default function Play() {
     if (isGoodClick) {
       const newCombo = combo + 1
       setCombo(newCombo)
+      setGoodHits(prev => prev + 1)
       const pointsEarned = 10 * Math.min(newCombo, 5)
       setScore(prev => prev + pointsEarned)
       createParticles(target.x, target.y, 'success')
     } else {
       setCombo(0)
+      setMistakes(prev => prev + 1)
       createParticles(target.x, target.y, 'fail')
       if (selectedPathogen.mechanic === 'avoid-antibiotics') {
-        // Using antibiotics on viruses is especially bad
         setScore(prev => Math.max(0, prev - 15))
       }
     }
@@ -178,7 +212,7 @@ export default function Play() {
       x, y,
       angle: (i / 8) * Math.PI * 2,
       distance: 0,
-      maxDistance: 40 + Math.random() * 30,
+      maxDistance: 35 + Math.random() * 25,
       color: type === 'success' ? (selectedPathogen?.color || '#2A8F86') : '#F2786B',
       type
     }))
@@ -188,29 +222,27 @@ export default function Play() {
     }, 600)
   }
 
-  // Animate particles
   useEffect(() => {
     if (particles.length === 0) return
     const interval = setInterval(() => {
       setParticles(prev => prev.map(p => ({
         ...p,
-        distance: Math.min(p.distance + 2, p.maxDistance),
+        distance: Math.min(p.distance + 2.5, p.maxDistance),
         opacity: 1 - p.distance / p.maxDistance
       })).filter(p => p.distance < p.maxDistance))
     }, 16)
     return () => clearInterval(interval)
   }, [particles.length])
 
-  // Move targets
   useEffect(() => {
     if (gameState !== GAME_STATES.PLAYING) return
     const interval = setInterval(() => {
       setSpawnedTargets(prev => prev.map(t => ({
         ...t,
-        x: Math.max(5, Math.min(95, t.x + t.vx)),
-        y: Math.max(15, Math.min(85, t.y + t.vy)),
-        vx: t.x <= 5 || t.x >= 95 ? -t.vx : t.vx,
-        vy: t.y <= 15 || t.y >= 85 ? -t.vy : t.vy
+        x: Math.max(8, Math.min(92, t.x + t.vx)),
+        y: Math.max(16, Math.min(84, t.y + t.vy)),
+        vx: t.x <= 8 || t.x >= 92 ? -t.vx : t.vx,
+        vy: t.y <= 16 || t.y >= 84 ? -t.vy : t.vy
       })))
     }, 50)
     return () => clearInterval(interval)
@@ -222,6 +254,8 @@ export default function Play() {
     setRound(1)
     setScore(0)
     setCombo(0)
+    setGoodHits(0)
+    setMistakes(0)
     setTimeLeft(ROUND_DURATION)
     setSpawnedTargets([])
     setBigBHealth(BIG_B_HEALTH)
@@ -238,13 +272,18 @@ export default function Play() {
       return
     }
     setGameState(GAME_STATES.ROUND_END)
-    setTimeout(() => {
+  }
+
+  useEffect(() => {
+    if (gameState !== GAME_STATES.ROUND_END) return
+    const timer = setTimeout(() => {
       setRound(prev => prev + 1)
       setTimeLeft(ROUND_DURATION)
       setSpawnedTargets([])
       setGameState(GAME_STATES.PLAYING)
     }, 2000)
-  }
+    return () => clearTimeout(timer)
+  }, [gameState])
 
   const finishGame = () => {
     const bonus = combo > 5 ? 50 : combo > 3 ? 25 : 0
@@ -254,7 +293,6 @@ export default function Play() {
   }
 
   const handleBossAction = (action) => {
-    // Big B boss fight - bacteria edition
     const actions = [
       { name: tx('Narrow-spectrum antibiotic'), damage: 1, resistanceRisk: 0.1 },
       { name: tx('Broad-spectrum antibiotic'), damage: 2, resistanceRisk: 0.4 },
@@ -265,7 +303,6 @@ export default function Play() {
     const newHealth = Math.max(0, bigBHealth - chosen.damage)
     setBigBHealth(newHealth)
 
-    // Resistance development
     if (Math.random() < chosen.resistanceRisk && bigBPhase < 3) {
       setBigBPhase(prev => prev + 1)
     }
@@ -280,153 +317,469 @@ export default function Play() {
   const goBack = () => {
     setGameState(GAME_STATES.MENU)
     setSelectedPathogen(null)
+    setPausedFrom(null)
+    setSearchParams({})
   }
 
+  const requestEarlyExit = () => {
+    setPausedFrom(gameState)
+    setGameState(GAME_STATES.EARLY_EXIT)
+  }
+
+  const resumeGame = () => {
+    setGameState(pausedFrom || GAME_STATES.PLAYING)
+    setPausedFrom(null)
+  }
+
+  // 1. STEWARDSHIP COMMAND GAME MODE
+  if (gameState === GAME_STATES.STEWARDSHIP) {
+    return <StewardshipCommand onExit={goBack} />
+  }
+
+  // 2. MAIN LAB MENU (Spacious, modern layout with Hero Game + Pathogen Carousel)
   if (gameState === GAME_STATES.MENU) {
     return (
-      <>
-        <h1>{t('The AMR Lab')}</h1>
-        <p className="lead">{t('Choose a pathogen to learn how antimicrobial resistance works — and how to fight it.')}</p>
-        <div className="grid">
-          {PATHOGENS.map(p => (
-            <button key={p.id} className="tile glass" onClick={() => startGame(p)} style={{ borderColor: p.color }}>
-              <span className="tile-icon" style={{ background: p.gradient, color: '#fff' }}>{p.icon}</span>
-              <b style={{ color: p.color }}>{t(p.name)}</b>
-              <span className="muted">{t(p.description)}</span>
-            </button>
-          ))}
+      <div className="play-page animate-fade-in">
+        {/* Header with Lab Stats */}
+        <div className="play-header-hero">
+          <div>
+            <span className="badge-pill teal">🎮 Interactive Clinical Simulators</span>
+            <h1 style={{ marginTop: '8px', marginBottom: '8px' }}>{t('The AMR Lab')}</h1>
+            <p className="lead" style={{ margin: 0 }}>
+              {t('Master clinical stewardship, test pathogen triage instincts, and stop hospital resistance spread.')}
+            </p>
+          </div>
+          <div className="lab-stat-box glass">
+            <span className="eyebrow" style={{ color: 'var(--teal)' }}>Lab Reputation</span>
+            <span className="lab-points-display">⭐ {points} pts</span>
+            <span className="muted" style={{ fontSize: '.75rem' }}>Earn points to unlock clinical honors</span>
+          </div>
         </div>
-        <section className="card glass">
-          <p className="eyebrow">{t('How to play')}</p>
-          <ul style={{ margin: 0, paddingLeft: '1.2rem', lineHeight: 2 }}>
-            <li>{t('Each pathogen has unique mechanics teaching real AMR concepts')}</li>
-            <li>{t('Tap the right targets, avoid the wrong ones')}</li>
-            <li>{t('Build combos for bonus points')}</li>
-            <li>{t('Defeat Big B, the super-resistant bacterium, in the final boss battle')}</li>
-          </ul>
+
+        {/* FEATURED: Stewardship Command Card */}
+        <div className="featured-game-banner glass animate-fade-in">
+          <div className="featured-game-content">
+            <div className="featured-badge-row">
+              <span className="badge-tag gold">🌟 FEATURED STRATEGY SIMULATOR</span>
+              <span className="badge-tag live">WHO AWaRe Guidelines</span>
+            </div>
+            <h2>Stewardship Command: Nigerian Ward Rounds</h2>
+            <p className="muted" style={{ maxWidth: '640px', fontSize: '.95rem', margin: '8px 0 20px' }}>
+              Step into the shoes of an Antimicrobial Stewardship Officer at LUTH, UCH, and BUTH. Triage real Nigerian patient scenarios, balance cure rates against resistance pressure, and strictly adhere to Access, Watch, and Reserve protocols.
+            </p>
+            <div className="featured-actions">
+              <button 
+                className="btn primary" 
+                onClick={() => setGameState(GAME_STATES.STEWARDSHIP)}
+                style={{ padding: '12px 24px', fontSize: '1rem', fontWeight: 700 }}
+              >
+                🩺 Start Ward Round (5 Cases) →
+              </button>
+              <Link to="/learn?module=bacteria" className="btn ghost" style={{ padding: '12px 20px' }}>
+                📖 Review Guidelines First
+              </Link>
+            </div>
+          </div>
+          <div className="featured-game-graphic">
+            <div className="graphic-glow-circle">
+              <span style={{ fontSize: '3.8rem' }}>🏥</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Pathogen Rapid Response Arena */}
+        <div style={{ marginTop: '36px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '8px' }}>
+          <div>
+            <span className="eyebrow">Target Practice &amp; Reflexes</span>
+            <h2 style={{ margin: '4px 0 0', fontSize: '1.4rem' }}>Pathogen Rapid Triage Arena</h2>
+          </div>
+          <span className="muted" style={{ fontSize: '.84rem' }}>30s rapid rounds · Combo multipliers · Boss battle</span>
+        </div>
+
+        <div className="pathogen-carousel-grid">
+          {PATHOGENS.map(p => {
+            const lessonKey = PATHOGEN_TO_LESSON[p.id]
+            const isCompleted = done && done[lessonKey]
+            return (
+              <div 
+                key={p.id} 
+                className="pathogen-card glass"
+                style={{ '--card-accent': p.color }}
+              >
+                <div className="pathogen-card-top">
+                  <div className="pathogen-card-icon" style={{ background: p.gradient }}>
+                    {p.icon}
+                  </div>
+                  <span className="pathogen-tag" style={{ color: p.color, background: `${p.color}15` }}>
+                    {p.badge}
+                  </span>
+                </div>
+
+                <div className="pathogen-card-body">
+                  <h3 style={{ color: p.color, margin: '8px 0 6px' }}>{t(p.name)}</h3>
+                  <p className="muted" style={{ fontSize: '.86rem', lineHeight: 1.5, margin: 0, minHeight: '52px' }}>
+                    {t(p.description)}
+                  </p>
+                </div>
+
+                <div className="pathogen-card-footer">
+                  <button 
+                    className="btn" 
+                    onClick={() => startGame(p)}
+                    style={{ 
+                      width: '100%', 
+                      background: p.gradient, 
+                      color: '#fff',
+                      border: 'none',
+                      justifyContent: 'center',
+                      fontWeight: 700
+                    }}
+                  >
+                    ⚡ Play 3 Rounds →
+                  </button>
+                  <Link 
+                    to={`/learn?module=${lessonKey}`} 
+                    className="pathogen-learn-link"
+                    style={{ color: p.color }}
+                  >
+                    {isCompleted ? '✓ Module Mastered' : '📖 Study Module in Classroom'}
+                  </Link>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Global Cross-Links Section */}
+        <section className="card glass play-integration-strip" style={{ marginTop: '36px' }}>
+          <div className="integration-col">
+            <span style={{ fontSize: '1.8rem' }}>🗺️</span>
+            <div>
+              <b style={{ color: 'var(--navy)' }}>Track Real-World Resistance</b>
+              <p className="muted" style={{ margin: 0, fontSize: '.82rem' }}>See where resistant strains are spreading across Nigerian geopolitical zones.</p>
+            </div>
+            <Link to="/map" className="btn ghost" style={{ padding: '6px 14px', fontSize: '.85rem' }}>View Map →</Link>
+          </div>
+          <div className="integration-divider" />
+          <div className="integration-col">
+            <span style={{ fontSize: '1.8rem' }}>🔥</span>
+            <div>
+              <b style={{ color: 'var(--navy)' }}>Daily AI Case Missions</b>
+              <p className="muted" style={{ margin: 0, fontSize: '.82rem' }}>Fresh challenges synthesized daily from WHO &amp; NCDC surveillance feeds.</p>
+            </div>
+            <Link to="/challenges" className="btn ghost" style={{ padding: '6px 14px', fontSize: '.85rem' }}>Daily Tasks →</Link>
+          </div>
         </section>
-      </>
+      </div>
     )
   }
 
+  // 3. ROUND END
   if (gameState === GAME_STATES.ROUND_END) {
     return (
-      <>
-        <button className="btn ghost" onClick={goBack}>← {t('Exit')}</button>
-        <div className="card glass" style={{ textAlign: 'center', maxWidth: '400px', margin: '0 auto' }}>
-          <h2>{t('Round {{n}} Complete!', { n: round })}</h2>
-          <p className="fact" style={{ fontSize: '2.5rem', color: selectedPathogen.color }}>{score} {t('points')}</p>
-          <p className="muted">{combo > 3 ? t('Amazing combo!') : t('Keep going!')}</p>
-          <button className="btn" onClick={() => setGameState(GAME_STATES.PLAYING)} style={{ marginTop: '1rem' }}>{t('Next Round')}</button>
+      <div className="game-screen-wrapper animate-fade-in">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
+          <button className="custom-close-btn framework-close-btn" onClick={requestEarlyExit} aria-label={t('Exit to Lab')} title={t('Exit to Lab')}>
+            <img src="/close-icon.png" alt={t('Exit')} className="custom-close-icon" />
+          </button>
         </div>
-      </>
+        <div className="card glass round-end-card">
+          <span className="badge-pill teal">Round {round} Completed</span>
+          <h2 style={{ marginTop: '12px' }}>{t('Round {{n}} Triage Complete!', { n: round })}</h2>
+          <p className="fact" style={{ fontSize: '3rem', color: selectedPathogen.color, fontWeight: 800 }}>
+            {score} <span style={{ fontSize: '1.2rem', fontWeight: 500 }}>{t('points')}</span>
+          </p>
+          <p className="muted" style={{ fontSize: '1rem', marginBottom: '24px' }}>
+            {combo > 3 ? `🔥 ${t('Incredible streak!')} (${combo}x multiplier)` : t('Great reflexes! Keep pushing the bacteria back.')}
+          </p>
+          <button className="btn primary" onClick={() => setGameState(GAME_STATES.PLAYING)} style={{ width: '100%', padding: '14px', fontSize: '1rem' }}>
+            {round === 2 && selectedPathogen.id === 'bacteria' ? '⚠️ Final Round (Boss Upcoming) →' : t('Next Round →')}
+          </button>
+        </div>
+      </div>
     )
   }
 
-  if (gameState === GAME_STATES.GAME_OVER) {
+  // 3b. EARLY EXIT PROMPT
+  if (gameState === GAME_STATES.EARLY_EXIT && selectedPathogen) {
+    const lessonId = PATHOGEN_TO_LESSON[selectedPathogen.id] || 'bacteria'
     return (
-      <>
-        <button className="btn ghost" onClick={goBack}>← {t('Back to Lab')}</button>
-        <div className="card glass" style={{ textAlign: 'center', maxWidth: '400px', margin: '0 auto' }}>
-          <h2>🎉 {t('Mission Complete!')}</h2>
-          <p className="fact" style={{ fontSize: '3rem', color: selectedPathogen.color }}>{score} {t('points earned')}</p>
-          <p className="muted">{t(selectedPathogen.fact)}</p>
-          <button className="btn" onClick={goBack} style={{ marginTop: '1rem' }}>{t('Back to Lab')}</button>
+      <div className="framework-modal-overlay" role="dialog" aria-modal="true" aria-label={t('Leaving Lab Early')}>
+        <div className="card glass animate-fade-in debrief-card">
+          <button className="custom-close-btn framework-close-btn modal-close-corner" onClick={resumeGame} aria-label={t('Resume Game')} title={t('Resume Game')}>
+            <img src="/close-icon.png" alt={t('Close')} className="custom-close-icon" />
+          </button>
+          <span style={{
+            display: 'inline-block',
+            padding: '5px 14px',
+            borderRadius: '99px',
+            fontSize: '.78rem',
+            fontWeight: 800,
+            letterSpacing: '.05em',
+            textTransform: 'uppercase',
+            background: 'rgba(244,185,66,.16)',
+            color: 'var(--gold)',
+            marginBottom: '12px'
+          }}>
+            ⏸️ {t('Session Paused')}
+          </span>
+
+          <h2 style={{ margin: '0 0 8px' }}>{t('Leaving the Lab Early?')}</h2>
+
+          <p className="muted" style={{ fontSize: '.92rem', marginBottom: '16px' }}>
+            {t('Round {{r}}/3 · {{pts}} points scored so far ({{hits}} targeted)', {
+              r: round,
+              pts: score,
+              hits: goodHits
+            })}
+          </p>
+
+          <div style={{
+            padding: '14px 16px',
+            borderRadius: '14px',
+            background: 'rgba(23,107,101,.08)',
+            border: '1px solid rgba(23,107,101,.25)',
+            textAlign: 'left',
+            marginBottom: '22px'
+          }}>
+            <p style={{ margin: '0 0 4px', fontWeight: 700, fontSize: '.88rem', color: 'var(--navy)' }}>
+              📖 {t('Want to learn more before your next run?')}
+            </p>
+            <p className="muted" style={{ margin: 0, fontSize: '.86rem', lineHeight: 1.5 }}>
+              {t('Head to the {{name}} module in the Classroom Pathway to master how resistance works and earn bonus points.', { name: t(selectedPathogen.name) })}
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <Link
+              to={`/learn?module=${lessonId}`}
+              className="btn primary"
+              style={{ width: '100%', justifyContent: 'center', padding: '12px' }}
+            >
+              📚 {t('Go to Classroom ({{name}}) →', { name: t(selectedPathogen.name) })}
+            </Link>
+
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <button className="btn ghost" onClick={resumeGame} style={{ flex: 1 }}>
+                ▶ {t('Resume Game')}
+              </button>
+              <button className="btn ghost" onClick={goBack} style={{ flex: 1 }}>
+                ← {t('Exit to Lab Menu')}
+              </button>
+            </div>
+          </div>
         </div>
-      </>
+      </div>
     )
   }
 
+  // 4. GAME OVER DEBRIEF
+  if (gameState === GAME_STATES.GAME_OVER) {
+    const totalAttempts = goodHits + mistakes
+    const accuracy = totalAttempts > 0 ? Math.round((goodHits / totalAttempts) * 100) : 0
+    const didWin = score >= 50 && goodHits >= mistakes
+    const lessonId = PATHOGEN_TO_LESSON[selectedPathogen.id] || 'bacteria'
+
+    return (
+      <div className="framework-modal-overlay" role="dialog" aria-modal="true" aria-label={t('Mission Debrief')}>
+        <div className="card glass animate-fade-in debrief-card">
+          <button className="custom-close-btn framework-close-btn modal-close-corner" onClick={goBack} aria-label={t('Lab Menu')} title={t('Lab Menu')}>
+            <img src="/close-icon.png" alt={t('Close')} className="custom-close-icon" />
+          </button>
+          <span style={{
+            display: 'inline-block',
+            padding: '5px 14px',
+            borderRadius: '99px',
+            fontSize: '.78rem',
+            fontWeight: 800,
+            letterSpacing: '.05em',
+            textTransform: 'uppercase',
+            background: didWin ? 'rgba(23,107,101,.16)' : 'rgba(242,120,107,.16)',
+            color: didWin ? 'var(--teal)' : 'var(--coral)',
+            marginBottom: '12px'
+          }}>
+            {didWin ? '🏆 ' + t('Stewardship Victory') : '⚠️ ' + t('Resistance Overwhelmed Treatment')}
+          </span>
+
+          <h2 style={{ margin: '0 0 8px' }}>
+            {didWin ? t('Mission Complete!') : t('Time to Regroup & Study!')}
+          </h2>
+
+          <p className="fact" style={{ fontSize: '2.6rem', color: didWin ? selectedPathogen.color : '#DC3545', margin: '8px 0', fontWeight: 800 }}>
+            {score} <span style={{ fontSize: '1.2rem', fontWeight: 500 }}>{t('points earned')}</span>
+          </p>
+
+          <p className="muted" style={{ fontSize: '.9rem', marginBottom: '14px' }}>
+            {t('Accuracy: {{acc}}% ({{hits}} targeted · {{err}} mistakes)', { acc: accuracy, hits: goodHits, err: mistakes })}
+          </p>
+
+          <div style={{
+            padding: '14px 16px',
+            borderRadius: '14px',
+            background: didWin ? 'rgba(23,107,101,.08)' : 'rgba(244,185,66,.12)',
+            border: `1px solid ${didWin ? 'rgba(23,107,101,.25)' : 'rgba(217,130,43,.3)'}`,
+            textAlign: 'left',
+            marginBottom: '22px'
+          }}>
+            <p style={{ margin: '0 0 4px', fontWeight: 700, fontSize: '.88rem', color: 'var(--navy)' }}>
+              {didWin ? '🛡️ ' + t('Clinical Takeaway:') : '📖 ' + t('Why Resistance Won:')}
+            </p>
+            <p className="muted" style={{ margin: 0, fontSize: '.86rem', lineHeight: 1.5 }}>
+              {didWin
+                ? t(selectedPathogen.fact)
+                : t('Clicking wrong targets or missing susceptible pathogens gives resistant strains room to multiply. Review the {{name}} module in the Classroom Pathway to master the mechanism!', { name: t(selectedPathogen.name) })}
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <Link
+              to={`/learn?module=${lessonId}`}
+              className="btn primary"
+              style={{ width: '100%', justifyContent: 'center', padding: '12px' }}
+            >
+              {didWin
+                ? `📖 ${t('Deepen Mastery in Classroom Pathway →')}`
+                : `📚 ${t('Review {{name}} in Classroom Pathway →', { name: t(selectedPathogen.name) })}`}
+            </Link>
+
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <button className="btn ghost" onClick={() => startGame(selectedPathogen)} style={{ flex: 1 }}>
+                🔄 {t('Play Again')}
+              </button>
+              <button className="btn ghost" onClick={() => setGameState(GAME_STATES.STEWARDSHIP)} style={{ flex: 1 }}>
+                🩺 {t('Stewardship Mode')}
+              </button>
+              <button className="btn ghost" onClick={goBack} style={{ flex: 1 }}>
+                ← {t('Lab Menu')}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // 5. BIG B BOSS BATTLE
   if (gameState === GAME_STATES.BIG_B_BOSS) {
     return (
-      <>
-        <button className="btn ghost" onClick={goBack}>← {t('Exit')}</button>
-        <div className="card glass" style={{ maxWidth: '480px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-            <Bacterium size={100} spin={true} style={{ filter: `hue-rotate(${bigBPhase * 60}deg) saturate(${1 + bigBPhase * 0.3})` }} />
-            <h2 style={{ marginTop: '0.5rem', color: '#7A5CC7' }}>Big B — {t('Superbug')}</h2>
-            <p className="muted">{t('Phase {{n}} of 4', { n: bigBPhase + 1 })}</p>
+      <div className="game-screen-wrapper animate-fade-in">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
+          <button className="custom-close-btn framework-close-btn" onClick={requestEarlyExit} aria-label={t('Exit')} title={t('Exit')}>
+            <img src="/close-icon.png" alt={t('Exit')} className="custom-close-icon" />
+          </button>
+        </div>
+        <div className="card glass" style={{ maxWidth: '520px', margin: '0 auto', padding: '28px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '1.2rem' }}>
+            <Bacterium size={110} spin={true} style={{ filter: `hue-rotate(${bigBPhase * 60}deg) saturate(${1 + bigBPhase * 0.4}) drop-shadow(0 8px 24px rgba(122,92,199,.4))` }} />
+            <h2 style={{ marginTop: '0.8rem', color: '#7A5CC7' }}>Big B — {t('Superbug')}</h2>
+            <p className="muted" style={{ fontSize: '.88rem' }}>{t('Phase {{n}} of 4: Multi-Drug Resistant Mutation Active', { n: bigBPhase + 1 })}</p>
           </div>
-          <div style={{ height: '12px', background: 'rgba(0,0,0,0.1)', borderRadius: '6px', overflow: 'hidden', marginBottom: '1.5rem' }}>
-            <div style={{ width: `${(bigBHealth / BIG_B_HEALTH) * 100}%`, height: '100%', background: bigBPhase > 2 ? 'var(--g-coral)' : 'var(--g-teal)', transition: 'width 0.3s' }} />
+          
+          <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '.8rem', marginBottom: '4px' }}>
+              <span className="muted">Superbug Integrity</span>
+              <b style={{ color: bigBPhase > 2 ? 'var(--coral)' : 'var(--teal)' }}>{bigBHealth} / {BIG_B_HEALTH} HP</b>
+            </div>
+            <div style={{ height: '14px', background: 'var(--line)', borderRadius: '99px', overflow: 'hidden' }}>
+              <div style={{ width: `${(bigBHealth / BIG_B_HEALTH) * 100}%`, height: '100%', background: bigBPhase > 2 ? 'var(--g-coral)' : 'var(--g-teal)', transition: 'width 0.3s' }} />
+            </div>
           </div>
-          <p className="eyebrow" style={{ textAlign: 'center' }}>{t('Choose your treatment strategy:')}</p>
-          <div className="grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-            <button className="btn" onClick={() => handleBossAction(0)} style={{ background: 'var(--g-sky)' }}>{t('Narrow-spectrum')}<br/><small>{t('Low resistance risk')}</small></button>
-            <button className="btn" onClick={() => handleBossAction(1)} style={{ background: 'var(--g-teal)' }}>{t('Broad-spectrum')}<br/><small>{t('High resistance risk')}</small></button>
-            <button className="btn" onClick={() => handleBossAction(2)} style={{ background: 'var(--g-gold)' }}>{t('Combination therapy')}<br/><small>{t('Best resistance prevention')}</small></button>
-            <button className="btn" onClick={() => handleBossAction(3)} style={{ background: 'linear-gradient(135deg,#7A5CC7,#4FB3D9)' }}>{t('Phage therapy')}<br/><small>{t('No resistance risk')}</small></button>
+
+          <p className="eyebrow" style={{ textAlign: 'center', marginBottom: '12px' }}>{t('Choose your treatment strategy:')}</p>
+          <div className="grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <button className="btn" onClick={() => handleBossAction(0)} style={{ background: 'var(--g-sky)', padding: '12px 10px', textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
+              <b>{t('Narrow-spectrum')}</b>
+              <small style={{ opacity: .85 }}>{t('Low resistance risk')}</small>
+            </button>
+            <button className="btn" onClick={() => handleBossAction(1)} style={{ background: 'var(--g-teal)', padding: '12px 10px', textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
+              <b>{t('Broad-spectrum')}</b>
+              <small style={{ opacity: .85 }}>{t('High resistance risk')}</small>
+            </button>
+            <button className="btn" onClick={() => handleBossAction(2)} style={{ background: 'var(--g-gold)', padding: '12px 10px', textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
+              <b>{t('Combination therapy')}</b>
+              <small style={{ opacity: .85 }}>{t('Best prevention')}</small>
+            </button>
+            <button className="btn" onClick={() => handleBossAction(3)} style={{ background: 'linear-gradient(135deg,#7A5CC7,#4FB3D9)', padding: '12px 10px', textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
+              <b>{t('Phage therapy')}</b>
+              <small style={{ opacity: .85 }}>{t('Zero resistance')}</small>
+            </button>
           </div>
+
           {bigBPhase > 0 && (
-            <div className="warn" style={{ marginTop: '1rem', textAlign: 'center' }}>
-              <span className="warn-icon">⚠</span>
+            <div className="warn" style={{ marginTop: '1.2rem', textAlign: 'center' }}>
+              <span className="warn-icon">⚠️</span>
               <div>
-                <p><b>{t('Resistance developing!')}</b></p>
-                <p>{t('Big B is adapting. Choose combination therapy or phage therapy to prevent further resistance.')}</p>
+                <p style={{ margin: 0 }}><b>{t('Resistance developing!')}</b></p>
+                <p style={{ margin: '4px 0 0', fontSize: '.84rem' }}>{t('Big B is adapting. Choose combination therapy or phage therapy to bypass genetic defenses.')}</p>
               </div>
             </div>
           )}
         </div>
-      </>
+      </div>
     )
   }
 
-  // Playing state
+  // 6. PLAYING ARENA
   return (
-    <>
-      <button className="btn ghost" onClick={goBack} style={{ marginBottom: '0.5rem' }}>← {t('Exit')}</button>
+    <div className="game-screen-wrapper animate-fade-in">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', gap: '12px' }}>
+        <div className="game-instruction-pill">
+          {selectedPathogen.mechanic === 'antibiotic-targeting' && '🎯 Click Susceptible Antibiotics · Avoid MDR/XDR'}
+          {selectedPathogen.mechanic === 'avoid-antibiotics' && '🚫 Click Viruses Only · DO NOT use Antibiotics'}
+          {selectedPathogen.mechanic === 'targeted-treatment' && '🍄 Click Antifungals · Avoid Resistant Fungi'}
+          {selectedPathogen.mechanic === 'compliance-course' && '💊 Complete Full Course · Avoid Skips & Halts'}
+        </div>
+        <button className="custom-close-btn framework-close-btn" onClick={requestEarlyExit} aria-label={t('Exit')} title={t('Exit')}>
+          <img src="/close-icon.png" alt={t('Exit')} className="custom-close-icon" />
+        </button>
+      </div>
 
-      <div className="gamebar">
-        <span style={{ background: selectedPathogen.gradient, color: '#fff' }}>
-          {t(selectedPathogen.name)} <Bacterium size={20} spin={true} />
+      <div className="gamebar-spacious">
+        <span className="gamebar-item pathogen-badge" style={{ background: selectedPathogen.gradient, color: '#fff' }}>
+          {selectedPathogen.icon} {t(selectedPathogen.name)}
         </span>
-        <span>⏱ {Math.ceil(timeLeft / 1000)}s</span>
-        <span>🎯 {t('Round')} {round}/3</span>
-        <span>⭐ {score}</span>
-        {combo > 1 && <span style={{ background: 'var(--g-gold)', color: '#3B2F00' }}>🔥 Combo x{combo}</span>}
+        <span className="gamebar-item">⏱ {Math.ceil(timeLeft / 1000)}s</span>
+        <span className="gamebar-item">🎯 {t('Round')} {round}/3</span>
+        <span className="gamebar-item score-badge">⭐ {score}</span>
+        {combo > 1 && (
+          <span className="gamebar-item combo-badge animate-pop">
+            🔥 {combo}x Combo
+          </span>
+        )}
       </div>
 
       {showFact && (
-        <div className="card glass" style={{ position: 'fixed', bottom: '80px', left: '50%', transform: 'translateX(-50%)', zIndex: 20, maxWidth: '90vw', animation: 'pop 0.3s' }}>
-          <p className="eyebrow">{t('Did you know?')}</p>
-          <p className="fact" style={{ fontSize: '1rem' }}>{t(showFact)}</p>
+        <div className="fact-popup glass animate-pop">
+          <p className="eyebrow" style={{ margin: '0 0 2px' }}>{t('Did you know?')}</p>
+          <p className="fact" style={{ fontSize: '.88rem', margin: 0 }}>{t(showFact)}</p>
         </div>
       )}
 
-      <div className="gamearea" style={{ position: 'relative', background: selectedPathogen.gradient + '20', border: `2px solid ${selectedPathogen.color}40` }}>
-        {spawnedTargets.map(target => (
-          <button
-            key={target.id}
-            className={`gamecell ${target.type === 'susceptible' || target.type === 'virus' || target.type === 'antifungal' || target.type === 'compliance' ? 'good' : 'bad'}`}
-            onClick={() => handleTargetClick(target)}
-            style={{
-              position: 'absolute',
-              left: `${target.x}%`,
-              top: `${target.y}%`,
-              transform: 'translate(-50%, -50%)',
-              width: 'clamp(80px, 18vw, 120px)',
-              height: 'clamp(60px, 14vw, 90px)',
-              borderRadius: '16px',
-              border: `3px solid ${target.type === 'susceptible' || target.type === 'virus' || target.type === 'antifungal' || target.type === 'compliance' ? selectedPathogen.color : '#F2786B'}`,
-              background: target.type === 'susceptible' || target.type === 'virus' || target.type === 'antifungal' || target.type === 'compliance'
-                ? `linear-gradient(135deg, ${selectedPathogen.color}20, ${selectedPathogen.color}05)`
-                : 'linear-gradient(135deg, #F2786B20, #F2786B05)',
-              color: selectedPathogen.color,
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              textAlign: 'center',
-              padding: '8px 6px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              cursor: 'pointer',
-              transition: 'transform 0.1s, box-shadow 0.1s'
-            }}
-            onMouseDown={(e) => e.target.style.transform = 'translate(-50%, -50%) scale(0.95)'}
-            onMouseUp={(e) => e.target.style.transform = 'translate(-50%, -50%) scale(1)'}
-            onMouseLeave={(e) => e.target.style.transform = 'translate(-50%, -50%) scale(1)'}
-          >
-            {target.label}
-          </button>
-        ))}
+      <div 
+        className="gamearea-spacious" 
+        style={{ 
+          background: `radial-gradient(ellipse at center, ${selectedPathogen.color}15 0%, rgba(16,45,58,0.04) 100%)`, 
+          borderColor: `${selectedPathogen.color}40` 
+        }}
+      >
+        {spawnedTargets.map(target => {
+          const isGood = target.type === 'susceptible' || target.type === 'virus' || target.type === 'antifungal' || target.type === 'compliance'
+          return (
+            <button
+              key={target.id}
+              className={`gamecell-spacious ${isGood ? 'target-good' : 'target-bad'}`}
+              onClick={() => handleTargetClick(target)}
+              style={{
+                left: `${target.x}%`,
+                top: `${target.y}%`,
+                borderColor: isGood ? selectedPathogen.color : '#F2786B',
+                color: isGood ? selectedPathogen.color : '#E05344'
+              }}
+            >
+              {target.label}
+            </button>
+          )
+        })}
 
         {particles.map(p => (
           <div
@@ -436,24 +789,18 @@ export default function Play() {
               left: `${p.x}%`,
               top: `${p.y}%`,
               transform: `translate(-50%, -50%) translate(${Math.cos(p.angle) * p.distance}px, ${Math.sin(p.angle) * p.distance}px)`,
-              width: '8px',
-              height: '8px',
+              width: '10px',
+              height: '10px',
               borderRadius: '50%',
               background: p.color,
               opacity: p.opacity !== undefined ? p.opacity : 1,
               pointerEvents: 'none',
-              boxShadow: `0 0 8px ${p.color}`
+              boxShadow: `0 0 10px ${p.color}`,
+              zIndex: 10
             }}
           />
         ))}
-
-        <div className="feedback" style={{ gridColumn: '1 / -1', minHeight: '0', fontSize: '0.9rem' }}>
-          {selectedPathogen.mechanic === 'antibiotic-targeting' && t('Click susceptible bacteria. Avoid resistant ones!')}
-          {selectedPathogen.mechanic === 'avoid-antibiotics' && t('Click viruses. DO NOT click antibiotics — they do not work on viruses!')}
-          {selectedPathogen.mechanic === 'targeted-treatment' && t('Click antifungals. Avoid the fungi!')}
-          {selectedPathogen.mechanic === 'compliance-course' && t('Click compliance steps. Avoid non-compliance!')}
-        </div>
       </div>
-    </>
+    </div>
   )
 }

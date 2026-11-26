@@ -1,6 +1,15 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { tx } from '../i18n'
 import { useApp, award, ymd } from '../store'
+
+const TOPIC_TO_LESSON = {
+  bacteria: 'bacteria',
+  virus: 'virus',
+  fungus: 'fungi',
+  parasite: 'parasites'
+}
 
 // Challenge types
 const CHALLENGE_TYPES = {
@@ -20,13 +29,13 @@ const mockAI = {
     const types = Object.values(CHALLENGE_TYPES)
     const type = types[dayOfYear % types.length]
 
-    // Word ladders for AMR terms
+    // Word ladders for AMR terms (consistent 4-letter steps)
     const wordLadders = [
-      { start: 'GERM', end: 'DRUG', steps: ['GERM', 'TERM', 'TERMS', 'TERSE', 'TERES', 'TERAS', 'TERRA', 'TERRA', 'TARRA', 'DARRA', 'DARRY', 'DRUG'], hint: tx('Each step changes one letter. Transform the microbe into the medicine!') },
-      { start: 'VIRUS', end: 'CURES', steps: ['VIRUS', 'VISUS', 'VISAS', 'VIOLS', 'VOILS', 'COILS', 'COALS', 'COALS', 'COALS', 'CORES', 'CORES', 'CORES', 'CURES'], hint: tx('From the problem to the solution.') },
-      { start: 'MOLD', end: 'HEAL', steps: ['MOLD', 'GOLD', 'GOAD', 'GRAD', 'GRADE', 'GRADE', 'GRADE', 'GRADE', 'GRADE', 'GRADE', 'HEAL'], hint: tx('Fungus to recovery.') },
-      { start: 'BUGS', end: 'SAFE', steps: ['BUGS', 'BUGS', 'BAGS', 'BATS', 'BATS', 'BATS', 'BATS', 'BAYS', 'BAYS', 'SAFE'], hint: tx('Stop the bugs, stay safe.') },
-      { start: 'DOSE', end: 'WELL', steps: ['DOSE', 'DOES', 'DOES', 'DOES', 'DOES', 'DOES', 'DOES', 'WELL'], hint: tx('Right dose, get well.') }
+      { start: 'GERM', end: 'DRUG', steps: ['GERM', 'TERM', 'TEEM', 'TEED', 'DEED', 'DEAD', 'DEAR', 'DRAB', 'DRUG'], hint: tx('Transform the microbe into the medicine! (4 letters)') },
+      { start: 'COLD', end: 'CURE', steps: ['COLD', 'CORD', 'CORE', 'CURE'], hint: tx('From the symptom to recovery. (4 letters)') },
+      { start: 'MOLD', end: 'HEAL', steps: ['MOLD', 'HOLD', 'HEAD', 'HEAL'], hint: tx('From fungal mold to healing. (4 letters)') },
+      { start: 'BUGS', end: 'SAFE', steps: ['BUGS', 'BAGS', 'BARE', 'SAFE'], hint: tx('Stop the superbugs, keep patients safe. (4 letters)') },
+      { start: 'DOSE', end: 'WELL', steps: ['DOSE', 'DOLE', 'POLE', 'POLL', 'WELL'], hint: tx('Right dose, get well. (4 letters)') }
     ]
 
     // Photo challenge prompts
@@ -276,7 +285,10 @@ function PhotoChallenge({ challenge, onComplete, t }) {
       {!submitted ? (
         <>
           {!preview ? (
-            <div style={{ border: '2px dashed var(--line)', borderRadius: '16px', padding: '32px', textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.2s', onClick: () => fileInputRef.current?.click() }}>
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              style={{ border: '2px dashed var(--line)', borderRadius: '16px', padding: '32px', textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.2s' }}
+            >
               <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoCapture} style={{ display: 'none' }} />
               <p style={{ fontSize: '3rem', margin: '0 0 8px' }}>📷</p>
               <p className="muted">{t('Tap to take a photo or upload')}</p>
@@ -443,18 +455,88 @@ function QuizChallenge({ challenge, onComplete, t }) {
 }
 
 export default function DailyChallenge() {
-  const { t } = useTranslation()
-  const { points, streak } = useApp()
+  const { t, i18n } = useTranslation()
+  const { points, streak, done } = useApp()
   const [challenge, setChallenge] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [today, setToday] = useState(ymd())
+  const [today] = useState(ymd())
   const [completed, setCompleted] = useState(false)
+
+  const isAlreadyDone = !!done['daily-challenge-' + today] || completed
 
   useEffect(() => {
     const loadChallenge = async () => {
+      const cacheKey = `xeith-daily-challenge-${today}-${i18n.resolvedLanguage || 'en'}`
       try {
-        const response = await mockAI.generateDailyChallenge(new Date())
-        setChallenge(response)
+        const cached = localStorage.getItem(cacheKey)
+        if (cached) {
+          setChallenge(JSON.parse(cached))
+          setLoading(false)
+          return
+        }
+      } catch { /* ignore storage errors */ }
+
+      const day = new Date()
+      const dayOfYear = Math.floor((day - new Date(day.getFullYear(), 0, 0)) / 864e5)
+      const types = Object.values(CHALLENGE_TYPES)
+      const topics = ['bacteria', 'virus', 'fungus', 'parasite']
+      const type = types[dayOfYear % types.length]
+      const topic = topics[dayOfYear % topics.length]
+
+      // Online: attempt live AI generation via /api/challenges
+      if (typeof navigator === 'undefined' || navigator.onLine) {
+        const ctrl = new AbortController()
+        const timer = setTimeout(() => ctrl.abort(), 4000)
+        try {
+          const res = await fetch('/api/challenges', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: ctrl.signal,
+            body: JSON.stringify({
+              type: type.toUpperCase(),
+              topic,
+              lang: i18n.resolvedLanguage || 'en',
+              date: day.toISOString()
+            })
+          })
+          clearTimeout(timer)
+          if (res.ok) {
+            const data = await res.json()
+            if (data && data.type) {
+              const normType = data.type.toLowerCase()
+              const normalized = {
+                ...data,
+                type: normType,
+                topic: data.topic || topic,
+                source: 'ai',
+                title: data.title || (
+                  normType === CHALLENGE_TYPES.WORD_LADDER ? tx('Word Ladder: {{start}} → {{end}}', { start: data.startWord, end: data.endWord })
+                  : normType === CHALLENGE_TYPES.PHOTO_CHALLENGE ? tx('Photo Challenge')
+                  : normType === CHALLENGE_TYPES.FACT_MATCH ? tx('Fact or Myth?')
+                  : tx('Daily Quiz')
+                ),
+                prompt: data.prompt || (normType === CHALLENGE_TYPES.WORD_LADDER
+                  ? tx('Transform "{{start}}" into "{{end}}" by changing one letter at a time.', { start: data.startWord, end: data.endWord })
+                  : normType === CHALLENGE_TYPES.FACT_MATCH
+                  ? tx('Sort: which statements are facts and which are myths?')
+                  : '')
+              }
+              try { localStorage.setItem(cacheKey, JSON.stringify(normalized)) } catch { /* ignore */ }
+              setChallenge(normalized)
+              setLoading(false)
+              return
+            }
+          }
+        } catch {
+          clearTimeout(timer)
+        }
+      }
+
+      // Offline / API unavailable fallback: deterministic local generator
+      try {
+        const response = await mockAI.generateDailyChallenge(day)
+        const fallback = { ...response, source: 'offline' }
+        setChallenge(fallback)
       } catch (error) {
         console.error('Failed to load challenge:', error)
       } finally {
@@ -462,14 +544,14 @@ export default function DailyChallenge() {
       }
     }
     loadChallenge()
-  }, [today])
+  }, [today, i18n.resolvedLanguage])
 
   const handleComplete = useCallback((success) => {
-    if (success && !completed) {
+    if (success && !completed && !done['daily-challenge-' + today]) {
       award(15, 'daily-challenge-' + today)
       setCompleted(true)
     }
-  }, [today, completed])
+  }, [today, completed, done])
 
   if (loading) return (
     <section className="card daily-challenge">
@@ -477,6 +559,33 @@ export default function DailyChallenge() {
       <p className="fact">{t('Loading daily challenge…')}</p>
     </section>
   )
+
+  if (isAlreadyDone) {
+    return (
+      <section className="card daily-challenge is-completed-card" style={{ borderColor: 'rgba(40,167,69,.4)', background: 'rgba(40,167,69,.08)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '8px 0' }}>
+          <span style={{ fontSize: '2.5rem' }}>🎉</span>
+          <div>
+            <h3 style={{ margin: '0 0 4px', color: 'var(--navy)' }}>{t("Today's Daily Challenge Completed!")}</h3>
+            <p className="muted" style={{ margin: 0 }}>
+              {t('+15 Stewardship Points earned · Daily streak active 🔥')}
+            </p>
+          </div>
+        </div>
+        <p className="muted" style={{ fontSize: '0.85rem', marginTop: '12px', marginBottom: '14px' }}>
+          {t('Next daily rotation unlocks tomorrow at midnight. Solve this week’s clinical scenarios below!')}
+        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          <Link to="/learn" className="btn ghost" style={{ fontSize: '.8rem', padding: '6px 12px' }}>
+            📖 {t('Explore Classroom Pathway →')}
+          </Link>
+          <Link to="/play" className="btn ghost" style={{ fontSize: '.8rem', padding: '6px 12px' }}>
+            🧪 {t('Practice in AMR Lab →')}
+          </Link>
+        </div>
+      </section>
+    )
+  }
 
   if (!challenge) return (
     <section className="card daily-challenge">
@@ -494,14 +603,36 @@ export default function DailyChallenge() {
 
   return (
     <section className="card daily-challenge">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
         <p className="eyebrow" style={{ margin: 0 }}>{t('Daily Challenge')}</p>
-        <span style={{ background: 'var(--g-gold)', color: '#3B2F00', padding: '4px 12px', borderRadius: '99px', fontSize: '0.75rem', fontWeight: 700 }}>
-          {t(challenge.topic.toUpperCase())}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ background: challenge.source === 'ai' ? 'rgba(23,107,101,.12)' : 'rgba(16,45,58,.08)', color: challenge.source === 'ai' ? 'var(--teal)' : 'var(--ink)', padding: '4px 10px', borderRadius: '99px', fontSize: '0.72rem', fontWeight: 700 }}>
+            {challenge.source === 'ai' ? '🤖 ' + t('AI Live') : '⚡ ' + t('Offline Verified')}
+          </span>
+          <span style={{ background: 'var(--g-gold)', color: '#3B2F00', padding: '4px 12px', borderRadius: '99px', fontSize: '0.75rem', fontWeight: 700 }}>
+            {t(challenge.topic.toUpperCase())}
+          </span>
+        </div>
       </div>
 
       <ChallengeComponent challenge={challenge} onComplete={handleComplete} t={t} />
+
+      <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+        <Link
+          to={`/learn?module=${TOPIC_TO_LESSON[challenge.topic] || 'bacteria'}`}
+          className="btn ghost"
+          style={{ fontSize: '.8rem', padding: '6px 12px' }}
+        >
+          📖 {t('Need a hint? Study this topic in Classroom →')}
+        </Link>
+        <Link
+          to={`/play?pathogen=${challenge.topic}`}
+          className="btn ghost"
+          style={{ fontSize: '.8rem', padding: '6px 12px' }}
+        >
+          🧪 {t('Practice in Lab →')}
+        </Link>
+      </div>
     </section>
   )
 }

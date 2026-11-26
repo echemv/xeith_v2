@@ -1,8 +1,140 @@
 [
-  { "id": "nw", "name": "North West", "lat": 12.0, "lng": 7.6, "image": "/pin.svg", "summary": "", "updated": null, "sources": [] },
-  { "id": "ne", "name": "North East", "lat": 10.5, "lng": 12.5, "image": "/pin.svg", "summary": "", "updated": null, "sources": [] },
-  { "id": "nc", "name": "North Central", "lat": 8.5, "lng": 7.5, "image": "/pin.svg", "summary": "", "updated": null, "sources": [] },
-  { "id": "sw", "name": "South West", "lat": 7.4, "lng": 3.9, "image": "/pin.svg", "summary": "", "updated": null, "sources": [] },
-  { "id": "se", "name": "South East", "lat": 6.0, "lng": 7.6, "image": "/pin.svg", "summary": "", "updated": null, "sources": [] },
-  { "id": "ss", "name": "South South", "lat": 5.0, "lng": 6.3, "image": "/pin.svg", "summary": "", "updated": null, "sources": [] }
+  {
+    "id": "nw",
+    "name": "North West",
+    "lat": 12.0,
+    "lng": 7.6,
+    "image": "/pin.svg",
+    "summary": "Key sentinel sites include Aminu Kano Teaching Hospital (AKTH) and Usmanu Danfodiyo University Teaching Hospital. Surveillance records elevated resistance rates in Salmonella Typhi to ciprofloxacin and ampicillin (>55%), alongside high multi-drug resistance in community-acquired pediatric diarrheal and urinary tract infections.",
+    "updated": "2026-11",
+    "sources": [
+      {
+        "label": "For further information, visit: NCDC National AMR Surveillance Program",
+        "url": "https://ncdc.gov.ng"
+      },
+      {
+        "label": "For further information, visit: WHO GLASS Nigeria AMR Profile",
+        "url": "https://www.who.int/initiatives/glass"
+      },
+      {
+        "label": "For further information, visit: Aminu Kano Teaching Hospital AMR Studies",
+        "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7298642/"
+      }
+    ]
+  },
+  {
+    "id": "ne",
+    "name": "North East",
+    "lat": 10.5,
+    "lng": 12.5,
+    "image": "/pin.svg",
+    "summary": "Monitored through University of Maiduguri Teaching Hospital (UMTH) and Federal Medical Centre Gombe. Clinical surveillance highlights high prevalence of Extended-Spectrum Beta-Lactamase (ESBL)-producing Enterobacteriaceae and Methicillin-Resistant Staphylococcus aureus (MRSA, ~40%), exacerbated by disrupted healthcare infrastructure in post-conflict zones.",
+    "updated": "2026-11",
+    "sources": [
+      {
+        "label": "For further information, visit: NCDC National Action Plan on AMR",
+        "url": "https://ncdc.gov.ng/themes/common/docs/protocols/77_1511368219.pdf"
+      },
+      {
+        "label": "For further information, visit: WHO Regional Office for Africa AMR Bulletin",
+        "url": "https://www.afro.who.int/health-topics/antimicrobial-resistance"
+      },
+      {
+        "label": "For further information, visit: Maiduguri Clinical Microbiology AMR Audit",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/"
+      }
+    ]
+  },
+  {
+    "id": "nc",
+    "name": "North Central",
+    "lat": 8.5,
+    "lng": 7.5,
+    "image": "/pin.svg",
+    "summary": "Coordinated through the National Hospital Abuja, University of Abuja Teaching Hospital, and JUTH Jos. Focus areas include hospital-acquired bloodstream and surgical site infections. Critical data reveals emerging carbapenem resistance in Klebsiella pneumoniae and Pseudomonas aeruginosa (>18%) within intensive care units.",
+    "updated": "2026-11",
+    "sources": [
+      {
+        "label": "For further information, visit: National Hospital Abuja AMR Registry",
+        "url": "https://nationalhospital.gov.ng"
+      },
+      {
+        "label": "For further information, visit: NCDC Integrated One Health AMR Strategy",
+        "url": "https://ncdc.gov.ng"
+      },
+      {
+        "label": "For further information, visit: West African Health Organization (WAHO) AMR Network",
+        "url": "https://www.wahooas.org"
+      }
+    ]
+  },
+  {
+    "id": "sw",
+    "name": "South West",
+    "lat": 7.4,
+    "lng": 3.9,
+    "image": "/pin.svg",
+    "summary": "Dense surveillance network anchored by Lagos University Teaching Hospital (LUTH), University College Hospital (UCH) Ibadan, and OAU Teaching Hospitals Complex. Widespread over-the-counter access has driven severe ESBL-producing E. coli (>68%) and Klebsiella resistance to 3rd-generation cephalosporins and co-trimoxazole (>80%). Active institutional stewardship teams.",
+    "updated": "2026-11",
+    "sources": [
+      {
+        "label": "For further information, visit: Lagos University Teaching Hospital (LUTH) Stewardship Data",
+        "url": "https://luth.gov.ng"
+      },
+      {
+        "label": "For further information, visit: UCH Ibadan Antimicrobial Stewardship Committee",
+        "url": "https://uch-ibadan.org.ng"
+      },
+      {
+        "label": "For further information, visit: NCDC National Antimicrobial Consumption & Use Survey",
+        "url": "https://ncdc.gov.ng"
+      }
+    ]
+  },
+  {
+    "id": "se",
+    "name": "South East",
+    "lat": 6.0,
+    "lng": 7.6,
+    "image": "/pin.svg",
+    "summary": "Anchored by University of Nigeria Teaching Hospital (UNTH) Ituku-Ozalla and NAUTH Nnewi. Surveillance audits in maternal and pediatric units document multi-drug resistant Gram-negative uropathogens and Staphylococcus aureus strains resistant to penicillin, erythromycin, and gentamycin. High emphasis on community pharmacy dispensing guidelines.",
+    "updated": "2026-11",
+    "sources": [
+      {
+        "label": "For further information, visit: UNTH Clinical Microbiology & Surveillance Archive",
+        "url": "https://unth.edu.ng"
+      },
+      {
+        "label": "For further information, visit: Nigerian Journal of Clinical Practice - AMR Epidemiology",
+        "url": "https://www.njcponline.com"
+      },
+      {
+        "label": "For further information, visit: WHO Africa GLASS Surveillance Portal",
+        "url": "https://www.who.int/initiatives/glass"
+      }
+    ]
+  },
+  {
+    "id": "ss",
+    "name": "South South",
+    "lat": 5.0,
+    "lng": 6.3,
+    "image": "/pin.svg",
+    "summary": "Monitored through University of Port Harcourt Teaching Hospital (UPTH) and University of Calabar Teaching Hospital (UCTH). Notable for One Health surveillance evaluating the link between commercial aquaculture, poultry farming antibiotics, and resistant aquatic Vibrio and Aeromonas species found in coastal wetlands and surgical drain cultures.",
+    "updated": "2026-11",
+    "sources": [
+      {
+        "label": "For further information, visit: UPTH Hospital Infection Control & Stewardship Unit",
+        "url": "https://upthng.org"
+      },
+      {
+        "label": "For further information, visit: Federal Ministry of Agriculture & Rural Development One Health AMR Portal",
+        "url": "https://fmard.gov.ng"
+      },
+      {
+        "label": "For further information, visit: NCDC National Action Plan on Antimicrobial Resistance",
+        "url": "https://ncdc.gov.ng"
+      }
+    ]
+  }
 ]
