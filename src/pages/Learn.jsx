@@ -190,7 +190,7 @@ export default function Learn() {
 
                             <div className="milestone-bottom">
                               <span className="milestone-evidence">
-                                📑 {l.references.length} Scraped Sources
+                                📑 {t('{{n}} sources', { n: l.references.length })}
                               </span>
                               <span className="milestone-cta">
                                 {isCompleted ? t('Review →') : t('Start →')}
@@ -265,7 +265,7 @@ export default function Learn() {
 
                     <div className="module-footer-row">
                       <span className="module-evidence-badge">
-                        📑 {l.references.length} Scraped Sources
+                        📑 {t('{{n}} sources', { n: l.references.length })}
                       </span>
                       <span className="module-action-link">
                         {isCompleted ? t('Review Module →') : t('Start Module →')}
@@ -433,7 +433,7 @@ export default function Learn() {
         )}
       </div>
 
-      {/* Authoritative Scraped References Section */}
+      {/* Scientific references section */}
       {lesson.references && lesson.references.length > 0 && (
         <section className="card lesson-references-card" aria-label={t('Academic & Clinical References')}>
           <div
@@ -446,7 +446,7 @@ export default function Learn() {
             <div className="refs-header-left">
               <span className="refs-icon">📚</span>
               <div>
-                <h3 className="refs-title">{t('Scraped & Authoritative Scientific References')}</h3>
+                <h3 className="refs-title">{t('Scientific references')}</h3>
                 <p className="refs-subtitle">{t('Direct evidence from WHO, NCDC, The Lancet, and peer-reviewed clinical studies.')}</p>
               </div>
             </div>

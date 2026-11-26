@@ -399,7 +399,7 @@ export default function Play() {
         <div className="pathogen-carousel-grid">
           {PATHOGENS.map(p => {
             const lessonKey = PATHOGEN_TO_LESSON[p.id]
-            const isCompleted = done && done[lessonKey]
+            const isCompleted = !!(done && done['lesson-' + lessonKey])
             return (
               <div 
                 key={p.id} 
