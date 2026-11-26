@@ -273,6 +273,14 @@ export default function Account() {
             <section className="card glass" style={{ marginTop: '14px' }}>
               <h3>{t('Already have a cloud account?')}</h3>
               <p className="muted">{t('Paste your Recovery Code to sign back in and restore your points, streak, and friends.')}</p>
+              <div style={{ margin: '10px 0 14px', padding: '10px 12px', borderRadius: '10px', background: 'var(--g-soft)', border: '1px solid var(--line)', fontSize: '0.84rem' }}>
+                <strong>{t('How to get your Recovery Code:')}</strong>
+                <ol style={{ margin: '6px 0 0 18px', padding: 0, lineHeight: 1.6 }}>
+                  <li>{t('On the device where you created your cloud account, open Account → Profile.')}</li>
+                  <li>{t('Find "Your Recovery Code" at the bottom of your cloud profile card.')}</li>
+                  <li>{t('Click "Copy Code" and save it somewhere safe before signing out.')}</li>
+                </ol>
+              </div>
               <label htmlFor="rc">{t('Recovery Code')}</label>
               <input id="rc" value={recoveryCode} onChange={(e) => setRecoveryCode(e.target.value)} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
               <div className="row">
