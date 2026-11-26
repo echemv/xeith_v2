@@ -673,6 +673,11 @@ label{font-weight:600;display:block}
 .msg.assistant ul{margin:8px 0 0 18px;padding-left:10px}
 .msg.assistant ul li{margin:4px 0}
 .msg.assistant strong{display:block;margin-top:8px}
+.chat-inline-link{color:var(--g-teal,#176B65);font-weight:600;text-decoration:underline;text-underline-offset:3px;transition:opacity .15s ease}
+.chat-inline-link:hover{opacity:.8}
+.chat-classroom-link{display:inline-flex;align-items:center;gap:4px;background:rgba(23,107,101,.1);padding:2px 8px;border-radius:6px;text-decoration:none;font-weight:600;border:1px solid rgba(23,107,101,.25)}
+.chat-classroom-link:hover{background:rgba(23,107,101,.18)}
+[data-theme='dark'] .chat-classroom-link{background:rgba(45,212,191,.12);border-color:rgba(45,212,191,.25);color:#5eead4}
 .composer{display:flex;gap:10px;align-items:flex-end} .composer textarea{margin:0;resize:none}
 /* game */
 .gamebar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}

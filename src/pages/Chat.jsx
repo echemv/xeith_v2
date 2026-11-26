@@ -1,14 +1,50 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Thinking from '../components/Thinking'
 import Bacterium from '../components/Bacterium'
 import { faqAnswer } from '../data/faq'
 
-function inline(text, key) {
-  return text.split(/(\*\*[^*]+\*\*)/g).filter(Boolean).map((p, k) =>
-    p.length > 4 && p.startsWith('**') && p.endsWith('**')
-      ? <strong key={k}>{p.slice(2, -2)}</strong>
-      : <span key={k}>{p}</span>)
+function inline(text) {
+  const TOKEN_REGEX = /(\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*|\bLet me know if you(?:'d| would) like more details[!.\s]*|\b(?:the\s+)?Learn section\b|\bClassroom\b)/gi
+  return text.split(TOKEN_REGEX).filter(Boolean).map((p, k) => {
+    const mdLink = p.match(/^\[([^\]]+)\]\(([^)]+)\)$/)
+    if (mdLink) {
+      const [, label, href] = mdLink
+      return href.startsWith('/') ? (
+        <Link key={k} to={href} className="chat-inline-link">
+          {label}
+        </Link>
+      ) : (
+        <a key={k} href={href} target="_blank" rel="noopener noreferrer" className="chat-inline-link">
+          {label}
+        </a>
+      )
+    }
+    if (p.startsWith('**') && p.endsWith('**') && p.length > 4) {
+      return <strong key={k}>{p.slice(2, -2)}</strong>
+    }
+    if (/^Let me know if you(?:'d| would) like more details/i.test(p)) {
+      const trimmed = p.trimEnd()
+      const trailing = p.slice(trimmed.length)
+      return (
+        <span key={k}>
+          <Link to="/learn" className="chat-inline-link chat-classroom-link" title="Explore the Classroom">
+            {trimmed} →
+          </Link>
+          {trailing}
+        </span>
+      )
+    }
+    if (/^(?:the\s+)?(?:Learn section|Classroom)$/i.test(p)) {
+      return (
+        <Link key={k} to="/learn" className="chat-inline-link" title="Go to Classroom">
+          {p}
+        </Link>
+      )
+    }
+    return <span key={k}>{p}</span>
+  })
 }
 
 function Reply({ text }) {
