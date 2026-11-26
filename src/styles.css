@@ -678,6 +678,8 @@ label{font-weight:600;display:block}
 .chat-classroom-link{display:inline-flex;align-items:center;gap:4px;background:rgba(23,107,101,.1);padding:2px 8px;border-radius:6px;text-decoration:none;font-weight:600;border:1px solid rgba(23,107,101,.25)}
 .chat-classroom-link:hover{background:rgba(23,107,101,.18)}
 [data-theme='dark'] .chat-classroom-link{background:rgba(45,212,191,.12);border-color:rgba(45,212,191,.25);color:#5eead4}
+.account-split-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;align-items:stretch}
+.account-split-grid>.card{margin-top:0!important;display:flex;flex-direction:column;justify-content:space-between}
 .composer{display:flex;gap:10px;align-items:flex-end} .composer textarea{margin:0;resize:none}
 /* game */
 .gamebar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}

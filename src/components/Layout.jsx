@@ -44,7 +44,8 @@ export default function Layout() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 16)
+      const y = window.scrollY
+      setScrolled((prev) => (prev ? y > 8 : y > 40))
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
     handleScroll()
