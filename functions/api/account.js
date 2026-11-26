@@ -24,6 +24,25 @@ async function sha256(text) {
   return Array.from(new Uint8Array(buf)).map(x => x.toString(16).padStart(2, '0')).join('')
 }
 
+// Helper: PBKDF2 password hashing ("saltHex:hashHex")
+async function hashPassword(password, saltHex) {
+  const salt = saltHex
+    ? new Uint8Array(saltHex.match(/.{2}/g).map(b => parseInt(b, 16)))
+    : crypto.getRandomValues(new Uint8Array(16))
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits'])
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, key, 256)
+  const sHex = Array.from(salt).map(x => x.toString(16).padStart(2, '0')).join('')
+  const hHex = Array.from(new Uint8Array(bits)).map(x => x.toString(16).padStart(2, '0')).join('')
+  return `${sHex}:${hHex}`
+}
+
+async function verifyPassword(password, stored) {
+  if (!stored || !stored.includes(':')) return false
+  const [saltHex] = stored.split(':')
+  const candidate = await hashPassword(password, saltHex)
+  return candidate === stored
+}
+
 // Helper: get user from auth header (simplified - in production use proper JWT)
 async function getUser(request, env) {
   const auth = request.headers.get('Authorization')
@@ -368,19 +387,31 @@ export async function onRequestPost({ request, env, params }) {
       }))
     }
 
-    // Login / recover existing cloud account via recovery code (userId)
+    // Login / recover existing cloud account via email + password OR recovery code (userId)
     if (path === '/login') {
+      const email = (body.email || '').trim().toLowerCase()
+      const password = body.password || ''
       const code = (body.recoveryCode || '').trim()
-      if (!code) {
-        return baseRes(json({ error: 'Recovery code is required' }, 400))
-      }
 
-      const found = await env.DB.prepare(
-        'SELECT id, display_name, avatar_seed, language FROM users WHERE id = ?'
-      ).bind(code).first()
-
-      if (!found) {
-        return baseRes(json({ error: 'Recovery code not found' }, 404))
+      let found = null
+      if (email && password) {
+        const emailHash = await sha256(email)
+        const row = await env.DB.prepare(
+          'SELECT id, display_name, avatar_seed, language, password_hash FROM users WHERE email_hash = ?'
+        ).bind(emailHash).first()
+        if (!row || !(await verifyPassword(password, row.password_hash))) {
+          return baseRes(json({ error: 'Invalid email or password' }, 401))
+        }
+        found = row
+      } else if (code) {
+        found = await env.DB.prepare(
+          'SELECT id, display_name, avatar_seed, language FROM users WHERE id = ?'
+        ).bind(code).first()
+        if (!found) {
+          return baseRes(json({ error: 'Recovery code not found' }, 404))
+        }
+      } else {
+        return baseRes(json({ error: 'Email and password (or recovery code) required' }, 400))
       }
 
       const now = Math.floor(Date.now() / 1000)
@@ -401,9 +432,12 @@ export async function onRequestPost({ request, env, params }) {
 
     // Register new user (link anonymous local account to cloud)
     if (path === '/register') {
-      const { userId, displayName, email, language = 'en', avatarSeed } = body
+      const { userId, displayName, email, password, language = 'en', avatarSeed } = body
       if (!userId || !displayName) {
         return baseRes(json({ error: 'Missing required fields' }, 400))
+      }
+      if (password && password.length < 6) {
+        return baseRes(json({ error: 'Password must be at least 6 characters' }, 400))
       }
 
       // Check if user exists
@@ -416,10 +450,19 @@ export async function onRequestPost({ request, env, params }) {
       const cleanEmail = (email || '').trim().toLowerCase()
       const emailHash = cleanEmail ? await sha256(cleanEmail) : null
 
+      if (emailHash) {
+        const dupEmail = await env.DB.prepare('SELECT id FROM users WHERE email_hash = ?').bind(emailHash).first()
+        if (dupEmail) {
+          return baseRes(json({ error: 'An account with this email already exists' }, 409))
+        }
+      }
+
+      const passwordHash = password ? await hashPassword(password) : null
+
       await env.DB.prepare(`
-        INSERT INTO users (id, display_name, email_hash, avatar_seed, language, created_at, updated_at, is_anonymous, consent_version)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 0, 1)
-      `).bind(userId, displayName.trim(), emailHash, avatarSeed || crypto.randomUUID(), language, now, now).run()
+        INSERT INTO users (id, display_name, email_hash, password_hash, avatar_seed, language, created_at, updated_at, is_anonymous, consent_version)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 1)
+      `).bind(userId, displayName.trim(), emailHash, passwordHash, avatarSeed || crypto.randomUUID(), language, now, now).run()
 
       // Initialize stats
       await env.DB.prepare(`

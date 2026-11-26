@@ -9,6 +9,7 @@ export default function Account() {
   const { profile, points, streak, done } = useApp()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [tab, setTab] = useState('profile')
   const [cloudUser, setCloudUser] = useState(null)
   const [cloudStats, setCloudStats] = useState(null)
@@ -22,8 +23,7 @@ export default function Account() {
   const [recoveryCode, setRecoveryCode] = useState('')
   const [copiedCode, setCopiedCode] = useState(false)
   const [loginEmail, setLoginEmail] = useState('')
-  const [emailCode, setEmailCode] = useState('')
-  const [codeSent, setCodeSent] = useState(false)
+  const [loginPassword, setLoginPassword] = useState('')
   const [showRecoveryLogin, setShowRecoveryLogin] = useState(false)
 
   // Auth token (stored in localStorage for cloud mode)
@@ -107,7 +107,12 @@ export default function Account() {
 
   const handleCloudRegister = async () => {
     const displayName = (name || profile?.name || '').trim()
+    const cleanEmail = (email || profile?.email || '').trim()
     if (!displayName) return
+    if (!cleanEmail || password.length < 6) {
+      setError(t('Please enter an email and a password (at least 6 characters) to link a cloud account.'))
+      return
+    }
     try {
       setError(null)
       setLoading(true)
@@ -115,24 +120,28 @@ export default function Account() {
       const avatarSeed = crypto.randomUUID()
       await api('/register', {
         method: 'POST',
-        body: JSON.stringify({ userId, displayName, email: email || profile?.email || '', language: i18n.language, avatarSeed })
+        body: JSON.stringify({ userId, displayName, email: cleanEmail, password, language: i18n.language, avatarSeed })
       })
       setAuthToken(userId)
       setCloudUser({ id: userId, displayName, avatarSeed, language: i18n.language })
       setName('')
       setEmail('')
+      setPassword('')
     } catch (e) { setError(e.message) } finally { setLoading(false) }
   }
 
-  const handleCloudLogin = async () => {
-    const code = recoveryCode.trim()
-    if (!code) return
+  const handleCloudLogin = async (useRecovery = false) => {
+    const payload = useRecovery
+      ? { recoveryCode: recoveryCode.trim() }
+      : { email: loginEmail.trim(), password: loginPassword }
+    if (useRecovery && !payload.recoveryCode) return
+    if (!useRecovery && (!payload.email || !payload.password)) return
     try {
       setError(null)
       setLoading(true)
       const data = await api('/login', {
         method: 'POST',
-        body: JSON.stringify({ recoveryCode: code })
+        body: JSON.stringify(payload)
       })
       setAuthToken(data.user.id)
       setCloudUser(data.user)
@@ -143,45 +152,8 @@ export default function Account() {
         streak: data.stats?.streak || 0
       })
       setRecoveryCode('')
-    } catch (e) { setError(e.message) } finally { setLoading(false) }
-  }
-
-  const handleSendEmailCode = async () => {
-    const clean = loginEmail.trim()
-    if (!clean) return
-    try {
-      setError(null)
-      setLoading(true)
-      await api('/send-code', {
-        method: 'POST',
-        body: JSON.stringify({ email: clean })
-      })
-      setCodeSent(true)
-    } catch (e) { setError(e.message) } finally { setLoading(false) }
-  }
-
-  const handleVerifyEmailCode = async () => {
-    const cleanEmail = loginEmail.trim()
-    const cleanCode = emailCode.trim()
-    if (!cleanEmail || !cleanCode) return
-    try {
-      setError(null)
-      setLoading(true)
-      const data = await api('/verify-code', {
-        method: 'POST',
-        body: JSON.stringify({ email: cleanEmail, code: cleanCode })
-      })
-      setAuthToken(data.user.id)
-      setCloudUser(data.user)
-      setCloudStats(data.stats || {})
-      restoreCloudState({
-        displayName: data.user.displayName,
-        points: data.stats?.points || 0,
-        streak: data.stats?.streak || 0
-      })
       setLoginEmail('')
-      setEmailCode('')
-      setCodeSent(false)
+      setLoginPassword('')
     } catch (e) { setError(e.message) } finally { setLoading(false) }
   }
 
@@ -302,48 +274,32 @@ export default function Account() {
               <p className="muted">{t('Everything stays on this device. Link to cloud later for leaderboards and friends.')}</p>
               <label htmlFor="n">{t('Display name')}</label>
               <input id="n" value={name} onChange={(e) => setName(e.target.value)} maxLength={30} placeholder={t('Your name')} />
-              <label htmlFor="e">{t('Email (optional)')}</label>
-              <input id="e" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('For account recovery')} />
+              <label htmlFor="e">{t('Email (required for cloud)')}</label>
+              <input id="e" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('For cross-device sign-in')} />
+              <label htmlFor="pw">{t('Password (required for cloud, min 6 chars)')}</label>
+              <input id="pw" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••" />
               <div className="row">
                 <button className="btn" disabled={!name.trim() || loading} onClick={() => createProfile(name, email)}>
                   {t('Create local profile')}
                 </button>
-                <button className="btn" disabled={!name.trim() || loading} onClick={handleCloudRegister}>
+                <button className="btn" disabled={!name.trim() || !email.trim() || password.length < 6 || loading} onClick={handleCloudRegister}>
                   {t('Create & link to cloud')}
                 </button>
               </div>
             </section>
             <section className="card glass" style={{ marginTop: '14px' }}>
               <h3>{t('Already have a cloud account?')}</h3>
-              <p className="muted">{t('Enter your email to get a 6-digit sign-in code and restore your progress on any device.')}</p>
+              <p className="muted">{t('Sign in with your email and password to restore your points, streak, and friends on any device.')}</p>
 
-              {!codeSent ? (
-                <>
-                  <label htmlFor="le">{t('Email')}</label>
-                  <input id="le" type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="you@example.com" />
-                  <div className="row">
-                    <button className="btn" disabled={!loginEmail.trim() || loading} onClick={handleSendEmailCode}>
-                      {t('Send 6-digit code')}
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p className="muted" style={{ fontSize: '0.88rem' }}>
-                    {t('We sent a 6-digit code to {{email}}. Check your inbox (and spam folder).', { email: loginEmail })}
-                  </p>
-                  <label htmlFor="ec">{t('6-digit code')}</label>
-                  <input id="ec" value={emailCode} onChange={(e) => setEmailCode(e.target.value)} maxLength={6} placeholder="123456" style={{ letterSpacing: '0.2em', fontFamily: 'monospace', fontSize: '1.1rem' }} />
-                  <div className="row">
-                    <button className="btn" disabled={emailCode.trim().length < 6 || loading} onClick={handleVerifyEmailCode}>
-                      {t('Verify & sign in')}
-                    </button>
-                    <button className="btn ghost" disabled={loading} onClick={() => { setCodeSent(false); setEmailCode('') }}>
-                      {t('Change email')}
-                    </button>
-                  </div>
-                </>
-              )}
+              <label htmlFor="le">{t('Email')}</label>
+              <input id="le" type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="you@example.com" />
+              <label htmlFor="lpw">{t('Password')}</label>
+              <input id="lpw" type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="••••••" />
+              <div className="row">
+                <button className="btn" disabled={!loginEmail.trim() || !loginPassword || loading} onClick={() => handleCloudLogin(false)}>
+                  {t('Sign in & restore data')}
+                </button>
+              </div>
 
               <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid var(--line)' }}>
                 <button
@@ -359,8 +315,8 @@ export default function Account() {
                     <label htmlFor="rc">{t('Recovery Code')}</label>
                     <input id="rc" value={recoveryCode} onChange={(e) => setRecoveryCode(e.target.value)} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
                     <div className="row">
-                      <button className="btn" disabled={!recoveryCode.trim() || loading} onClick={handleCloudLogin}>
-                        {t('Sign in & restore data')}
+                      <button className="btn" disabled={!recoveryCode.trim() || loading} onClick={() => handleCloudLogin(true)}>
+                        {t('Sign in with Recovery Code')}
                       </button>
                     </div>
                   </div>

@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,              -- UUID, generated client-side
   display_name TEXT NOT NULL,       -- User-chosen, not unique
   email_hash TEXT,                  -- SHA-256 hash of email for deduplication (optional)
+  password_hash TEXT,               -- Salted PBKDF2 hash for cross-device sign-in
   avatar_seed TEXT,                 -- Deterministic avatar generator seed
   language TEXT DEFAULT 'en',       -- Preferred language
   created_at INTEGER NOT NULL,      -- Unix timestamp
