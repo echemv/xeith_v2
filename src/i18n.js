@@ -2,11 +2,11 @@ import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import rows from './translations'
 
-export const LANGS = [['en', 'English'], ['pid', 'Nigerian Pidgin'], ['ha', 'Hausa'], ['yo', 'Yorùbá'], ['ig', 'Igbo'], ['fr', 'Français']]
+export const LANGS = [['en', 'English'], ['pid', 'Nigerian Pidgin'], ['ha', 'Hausa'], ['yo', 'Yorùbá'], ['ig', 'Igbo']]
 // English text is the key. tx('text') only marks text for translation; t('text') looks it up. Missing rows show English.
 export const tx = (s) => s
 
-const OTHER = ['pid', 'ha', 'yo', 'ig', 'fr']
+const OTHER = ['pid', 'ha', 'yo', 'ig']
 const resources = { en: { translation: {} } }
 OTHER.forEach((c) => { resources[c] = { translation: {} } })
 for (const [en, ...tr] of rows) OTHER.forEach((c, i) => { if (tr[i]) resources[c].translation[en] = tr[i] })

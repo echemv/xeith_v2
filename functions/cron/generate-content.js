@@ -78,7 +78,7 @@ export default {
     }
 
     const today = new Date().toISOString().split('T')[0]
-    const langs = ['en', 'pid', 'ha', 'yo', 'ig', 'fr']
+    const langs = ['en', 'pid', 'ha', 'yo', 'ig']
     const prFiles = []
 
     try {

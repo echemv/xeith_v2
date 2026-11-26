@@ -1,5 +1,10 @@
 // English text -> [Pidgin, Hausa, Yoruba, Igbo, French]. WORKING DRAFTS: need native-speaker and clinician review.
 // A string with no row here shows in English. To translate more, add rows.
+import part1 from './translations/part1.js'
+import part2 from './translations/part2.js'
+import part3 from './translations/part3.js'
+import part4 from './translations/part4.js'
+
 export default [
 ['Learn AMR in a language you understand','Learn AMR for language wey you sabi','Koyi AMR da yaren da ka fahimta','Kọ́ nípa AMR ní èdè tí o gbọ́','Mụta banyere AMR n’asụsụ ị na-aghọta','Apprenez la RAM dans une langue que vous comprenez'],
 ['Choose your language','Choose your language','Zaɓi harshenka','Yan èdè rẹ','Họrọ asụsụ gị','Choisissez votre langue'],
@@ -151,10 +156,14 @@ export default [
 ['Keep them for the next time you feel sick','Keep them for the next time you feel sick','Ajiye shi a watan shekaru da yake farin ci gaba','Gba wọn láti àìjọ kàn','Ọ ga-esi ha maka ụbọchị ọzọ na-ahụ na ahụ mma','Gardez-les pour la prochaine fois où vous vous sentirez malade.'],
 ['Give them to a family member with the same symptoms','Give them to a family member with the same symptoms','Ba shi a cikin ƙaraminu da ke buƙatar ƙarfafa da kawai','Yí wọ́n sí ẹgbẹ́ tí ń ṣe àìsàn wọ́n','Ha pụtara ha maka ndị n’otu ụnọ na-echezọ ihe na-ahụ','Donnez-les à un membre de la famille ayant les mêmes symptômes.'],
 ['Ask a pharmacist how to dispose of them safely.','Ask a pharmacist how to dispose of them safely.','Tambayi mai shirye shirye yadda ake fi daga shi lafiya.','Kọ́kọ́ oníṣègùn oògùn yópọ̀ láti yí wọ́n sìlẹ̀ ṣìntọ́.','Buru onye na-ere ọgwụ maka ị wepụ ha mma.','Demandez à un pharmacien comment les éliminer en toute sécurité.'],
-['Leftovers may be the wrong drug or dose for a new illness. Ask a pharmacist how to dispose of them.','Leftovers may be the wrong drug or dose for a new illness. Ask a pharmacist how to dispose of them.','Ragowar za su iya daɗi da wannan wannan, kuma mutumi da laifin za su iya daɗi da wannan wannan. Tambayi mai shirye shirye yadda ake fi daga shi lafiya.','Oògùn tí ó ṣe̩ ní lè ń fọ́kànsẹ sí àìsàn kàn, tàbí àṣàrò lè ń fọ́kànsẹ sí wọn. Kọ́kọ́ oníṣègùn oògùn yópọ̀ láti yí wọ́n sìlẹ̀ ṣìntọ́.','Les restes peuvent être le mauvais médicament ou la mauvaise dose pour une nouvelle maladie. Demandez à un pharmacien comment les éliminer.'],
+['Leftovers may be the wrong drug or dose for a new illness. Ask a pharmacist how to dispose of them.','Leftovers may be the wrong drug or dose for a new illness. Ask a pharmacist how to dispose of them.','Ragowar za su iya daɗi da wannan wannan, kuma mutumi da laifin za su iya daɗi da wannan wannan. Tambayi mai shirye shirye yadda ake fi daga shi lafiya.','Oògùn tí ó ṣe̩ ní lè ń fọ́kànsẹ sí àìsàn kàn, tàbí àṣàrò lè ń fọ́kànsẹ sí wọn. Kọ́kọ́ oníṣègùn oògùn yópọ̀ láti yí wọ́n sìlẹ̀ ṣìntọ́.','Ọgwụ fọdụrụ nwere ike ịbụ ọgwụ ma ọ bụ oke na-ezighị ezi maka ọrịa ọhụrụ. Jụọ onye na-ere ọgwụ otu e si ekpofu ha.','Les restes peuvent être le mauvais médicament ou la mauvaise dose pour une nouvelle maladie. Demandez à un pharmacien comment les éliminer.'],
 ['Skip','Skip','Ƙara','Dúró','Ọ dị ọ','Passer'],
 ['Language','Language','Harshe','Èdè','Asụsụ','Langue'],
 ['Main','Main','Tarfafa','Mọkan','Ọhụrụ','Principal'],
 ['Thinking','Thinking','Yi tsarin','Bá oṣiṣẹ̀','Nchikọ','Réfléchit'],
 ['Continue in English','Continue in English','Ji a cikin Turanci','Wọ̀lẹ sí èdè Gẹ́ẹ́sí','Lepụ na asụsụ Ọnịcha','Continuer en anglais'],
+  ...part1,
+  ...part2,
+  ...part3,
+  ...part4,
 ]
