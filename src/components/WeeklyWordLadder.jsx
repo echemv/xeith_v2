@@ -48,7 +48,7 @@ const LADDER_POOLS = [
       tx('To satisfy hunger fully (F → S)'),
       tx('Protected from harm! (T → F)')
     ]
-  }
+  },
 ]
 
 const DAYS_OF_WEEK = [
