@@ -35,11 +35,18 @@ export default function MapPage() {
 
     if (!leafletRef.current) return
 
-    const map = L.map(leafletRef.current, { minZoom: 5, maxZoom: 10 }).setView([8.8, 8.7], 6)
+    const nigeriaBounds = L.latLngBounds([3.8, 2.3], [14.2, 15.2])
+    const map = L.map(leafletRef.current, {
+      minZoom: 6,
+      maxZoom: 12,
+      maxBounds: nigeriaBounds,
+      maxBoundsViscosity: 1.0,
+    }).setView([9.08, 8.68], 6)
     mapInstance.current = map
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
+      attribution: '© OpenStreetMap contributors',
+      bounds: nigeriaBounds,
     }).addTo(map)
 
     regions.forEach((r, idx) => {

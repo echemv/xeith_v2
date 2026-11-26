@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
   display_name TEXT NOT NULL,       -- User-chosen, not unique
   email_hash TEXT,                  -- SHA-256 hash of email for deduplication (optional)
   password_hash TEXT,               -- Salted PBKDF2 hash for cross-device sign-in
+  recovery_hash TEXT,               -- SHA-256 hash of separate secret recovery code
   avatar_seed TEXT,                 -- Deterministic avatar generator seed
   language TEXT DEFAULT 'en',       -- Preferred language
   created_at INTEGER NOT NULL,      -- Unix timestamp
@@ -158,8 +159,27 @@ CREATE TABLE IF NOT EXISTS data_requests (
 CREATE TABLE IF NOT EXISTS login_codes (
   email_hash TEXT PRIMARY KEY,
   code_hash TEXT NOT NULL,
+  attempts INTEGER DEFAULT 0,
   expires_at INTEGER NOT NULL
 );
+
+-- Rate limiting counters
+CREATE TABLE IF NOT EXISTS rate_limits (
+  key TEXT PRIMARY KEY,
+  count INTEGER NOT NULL DEFAULT 1,
+  expires_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_rate_limits_expires ON rate_limits(expires_at);
+
+-- User active authentication sessions (cryptographic bearer token hash)
+CREATE TABLE IF NOT EXISTS user_sessions (
+  token_hash TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_user ON user_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires ON user_sessions(expires_at);
 
 -- Insert default achievements
 INSERT OR IGNORE INTO achievements (id, name, description, icon, category, points_reward, criteria) VALUES

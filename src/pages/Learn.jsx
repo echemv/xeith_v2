@@ -7,6 +7,8 @@ import AiUpdateFramework from '../components/AiUpdateFramework'
 import { award, useApp } from '../store'
 
 const LESSON_TO_PATHOGEN = {
+  'intro-pathogens': 'bacteria',
+  'what-is-amr': 'bacteria',
   bacteria: 'bacteria',
   virus: 'virus',
   fungi: 'fungus',
@@ -36,6 +38,12 @@ export default function Learn() {
     setOpen(id)
     setStep(0)
     setSearchParams(id ? { module: id } : {})
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }
+
+  const changeStep = (nextStep) => {
+    setStep(nextStep)
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
   }
 
   const lesson = LESSONS.find((l) => l.id === open)
@@ -46,24 +54,24 @@ export default function Learn() {
 
   // Determine User Stewardship Rank
   let userRank = {
-    title: t('Novice Steward'),
+    title: t('Beginner Explorer'),
     level: 1,
     icon: '🌱',
-    desc: t('Building core foundational knowledge on pathogens and mechanisms.')
+    desc: t('Starting from the basics: learning what microbes, pathogens, and AMR are.')
   }
-  if (completedCount >= 5) {
+  if (completedCount >= 7) {
     userRank = {
-      title: t('Master One Health Sentinel'),
+      title: t('AMR Champion'),
       level: 3,
       icon: '🌍',
-      desc: t('Advanced mastery across clinical stewardship and agro-environmental policy.')
+      desc: t('Mastering infection prevention, One Health, and safe medicine habits.')
     }
   } else if (completedCount >= 3) {
     userRank = {
-      title: t('Clinical Advocate'),
+      title: t('Pathogen Detective'),
       level: 2,
-      icon: '🩺',
-      desc: t('Intermediate expertise in diagnostic stewardship and clinical regimens.')
+      icon: '🔬',
+      desc: t('Understanding bacteria, viruses, fungi, and parasites—and which medicines treat them.')
     }
   }
 
@@ -93,7 +101,7 @@ export default function Learn() {
 
           <h1>{t('The AMR Classroom')}</h1>
           <p className="lead">
-            {t('Follow a structured Beginner-to-Advanced pathway across biological mechanisms, clinical diagnostic protocols, and One Health systems in Nigeria.')}
+            {t('Start from the basics of microbes and pathogens, explore how bacteria, viruses, fungi, and parasites work, and build your way up step by step.')}
           </p>
 
           {/* User Rank & Progression Card */}
@@ -320,7 +328,7 @@ export default function Learn() {
             role="tab"
             aria-selected={step === idx}
             className={'step-tab-btn' + (step === idx ? ' is-active' : '') + (step > idx ? ' is-done' : '')}
-            onClick={() => setStep(idx)}
+            onClick={() => changeStep(idx)}
           >
             <span className="tab-idx">{step > idx ? '✓' : idx + 1}</span>
             <span className="tab-title">{t(s.heading.split(':')[0])}</span>
@@ -330,7 +338,7 @@ export default function Learn() {
           role="tab"
           aria-selected={isQuizStep}
           className={'step-tab-btn check-tab' + (isQuizStep ? ' is-active' : '')}
-          onClick={() => setStep(totalSteps)}
+          onClick={() => changeStep(totalSteps)}
         >
           <span className="tab-idx">🎯</span>
           <span className="tab-title">{t('Verification Check')}</span>
@@ -355,24 +363,24 @@ export default function Learn() {
             </div>
 
             {currentStepData.caseStudy && (
-              <aside className="lesson-callout callout-vignette" role="note" aria-label={t('Nigerian Field Reality')}>
+              <aside className="lesson-callout callout-vignette" role="note" aria-label={t('Real-Life Example')}>
                 <div className="callout-icon-col">
                   <span>🏥</span>
                 </div>
                 <div>
-                  <h4 className="callout-title">{t('Nigerian Field Reality & Clinical Context')}</h4>
+                  <h4 className="callout-title">{t('Real-Life Example & Nigerian Context')}</h4>
                   <p className="callout-body">{t(currentStepData.caseStudy)}</p>
                 </div>
               </aside>
             )}
 
             {currentStepData.takeaway && (
-              <aside className="lesson-callout callout-rule" role="note" aria-label={t('Stewardship Rule of Thumb')}>
+              <aside className="lesson-callout callout-rule" role="note" aria-label={t('Key Takeaway')}>
                 <div className="callout-icon-col">
                   <span>🛡️</span>
                 </div>
                 <div>
-                  <h4 className="callout-title">{t('Stewardship Rule of Thumb')}</h4>
+                  <h4 className="callout-title">{t('Key Takeaway to Remember')}</h4>
                   <p className="callout-body">{t(currentStepData.takeaway)}</p>
                 </div>
               </aside>
@@ -382,13 +390,13 @@ export default function Learn() {
               <button
                 className="btn ghost"
                 disabled={step === 0}
-                onClick={() => setStep((s) => Math.max(0, s - 1))}
+                onClick={() => changeStep(Math.max(0, step - 1))}
               >
                 ← {t('Previous')}
               </button>
               <button
                 className="btn primary"
-                onClick={() => setStep((s) => s + 1)}
+                onClick={() => changeStep(step + 1)}
               >
                 {step === totalSteps - 1 ? t('Proceed to Verification Check →') : t('Next Step →')}
               </button>
@@ -397,9 +405,9 @@ export default function Learn() {
         ) : (
           <div className="lesson-quiz-step">
             <div className="quiz-header-banner">
-              <h2>🎯 {t('Mastery Verification Check')}</h2>
+              <h2>🎯 {t('Quick Check')}</h2>
               <p className="muted">
-                {t('Test your comprehension of the biological mechanisms and clinical stewardship protocols covered in this module. Pass this check to earn 10 points!')}
+                {t('Check what you just learned in this lesson. Answer the questions below to earn 10 points!')}
               </p>
             </div>
             <Quiz

@@ -43,6 +43,10 @@ export default function Layout() {
   }
 
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [pathname])
+
+  useEffect(() => {
     const handleScroll = () => {
       const y = window.scrollY
       setScrolled((prev) => (prev ? y > 8 : y > 40))

@@ -25,6 +25,9 @@ export default function Account() {
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
   const [showRecoveryLogin, setShowRecoveryLogin] = useState(false)
+  const [userRecoveryCode, setUserRecoveryCode] = useState(() => {
+    try { return localStorage.getItem('xeith-recovery-code') || '' } catch { return '' }
+  })
 
   // Auth token (stored in localStorage for cloud mode)
   const [authToken, setAuthToken] = useState(() => {
@@ -116,14 +119,17 @@ export default function Account() {
     try {
       setError(null)
       setLoading(true)
-      const userId = crypto.randomUUID()
       const avatarSeed = crypto.randomUUID()
-      await api('/register', {
+      const data = await api('/register', {
         method: 'POST',
-        body: JSON.stringify({ userId, displayName, email: cleanEmail, password, language: i18n.language, avatarSeed })
+        body: JSON.stringify({ displayName, email: cleanEmail, password, language: i18n.language, avatarSeed })
       })
-      setAuthToken(userId)
-      setCloudUser({ id: userId, displayName, avatarSeed, language: i18n.language })
+      if (data.token) setAuthToken(data.token)
+      if (data.recoveryCode) {
+        setUserRecoveryCode(data.recoveryCode)
+        try { localStorage.setItem('xeith-recovery-code', data.recoveryCode) } catch {}
+      }
+      setCloudUser(data.user || { id: data.userId, displayName, avatarSeed, language: i18n.language })
       setName('')
       setEmail('')
       setPassword('')
@@ -143,7 +149,7 @@ export default function Account() {
         method: 'POST',
         body: JSON.stringify(payload)
       })
-      setAuthToken(data.user.id)
+      if (data.token) setAuthToken(data.token)
       setCloudUser(data.user)
       setCloudStats(data.stats || {})
       restoreCloudState({
@@ -151,6 +157,10 @@ export default function Account() {
         points: data.stats?.points || 0,
         streak: data.stats?.streak || 0
       })
+      if (useRecovery && payload.recoveryCode) {
+        setUserRecoveryCode(payload.recoveryCode)
+        try { localStorage.setItem('xeith-recovery-code', payload.recoveryCode) } catch {}
+      }
       setRecoveryCode('')
       setLoginEmail('')
       setLoginPassword('')
@@ -158,9 +168,10 @@ export default function Account() {
   }
 
   const copyRecoveryCode = async () => {
-    if (!cloudUser?.id) return
+    const code = userRecoveryCode || cloudUser?.id
+    if (!code) return
     try {
-      await navigator.clipboard.writeText(cloudUser.id)
+      await navigator.clipboard.writeText(code)
       setCopiedCode(true)
       setTimeout(() => setCopiedCode(false), 2000)
     } catch { /* ignore */ }
@@ -170,6 +181,8 @@ export default function Account() {
     setAuthToken(null)
     setCloudUser(null)
     setCloudStats(null)
+    setUserRecoveryCode('')
+    try { localStorage.removeItem('xeith-recovery-code') } catch {}
     setAchievements([])
     setLeaderboard({ global: [], weekly: [], streak: [] })
     setFriends({ followers: [], following: [], activity: [] })
@@ -403,9 +416,15 @@ export default function Account() {
                         {copiedCode ? '✓ ' + t('Copied') : t('Copy Code')}
                       </button>
                     </div>
-                    <code style={{ display: 'block', marginTop: '8px', fontSize: '0.82rem', wordBreak: 'break-all', opacity: 0.9 }}>
-                      {cloudUser.id}
-                    </code>
+                    {userRecoveryCode ? (
+                      <code style={{ display: 'block', marginTop: '8px', fontSize: '0.82rem', wordBreak: 'break-all', opacity: 0.9 }}>
+                        {userRecoveryCode}
+                      </code>
+                    ) : (
+                      <span className="muted" style={{ display: 'block', marginTop: '8px', fontSize: '0.8rem', fontStyle: 'italic' }}>
+                        {t('Available upon registration or recovery login')}
+                      </span>
+                    )}
                   </div>
                 </section>
               )}

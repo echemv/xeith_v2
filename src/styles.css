@@ -700,8 +700,8 @@ label{font-weight:600;display:block}
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  padding-bottom: 16px;
-  margin-bottom: 16px;
+  padding-bottom: 12px;
+  margin-bottom: 8px;
   border-bottom: 1px solid var(--line);
 }
 
@@ -985,7 +985,12 @@ label{font-weight:600;display:block}
 
 /* Suggested questions in welcome state */
 .chat-welcome-state {
-  margin: 20px 0;
+  margin: 4px 0 14px;
+}
+
+.chat-welcome-state > p {
+  margin-top: 0;
+  margin-bottom: 10px;
 }
 
 .chat-suggestions-box {
@@ -1031,6 +1036,281 @@ label{font-weight:600;display:block}
   color: var(--teal);
   background: rgba(23, 107, 101, 0.08);
   transform: translateY(-1px);
+}
+
+.chat-starter-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.chat-starter-pill .pill-arrow {
+  opacity: 0.55;
+  font-weight: 700;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.chat-starter-pill:hover .pill-arrow {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+/* Compartmentalized Offline FAQ Explorer */
+.chat-faq-explorer {
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--g-soft);
+  border: 1px solid var(--line);
+}
+
+.chat-faq-explorer.is-compact {
+  margin-top: 12px;
+  margin-bottom: 12px;
+  padding: 14px;
+  max-height: 290px;
+  overflow-y: auto;
+}
+
+.chat-suggestions-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.chat-faq-corner-link {
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--teal);
+  cursor: pointer;
+  text-decoration: none;
+  opacity: 0.9;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+[data-theme='dark'] .chat-faq-corner-link {
+  color: var(--mint, #7FD1B9);
+}
+
+.chat-faq-corner-link:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.chat-faq-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-faq-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-faq-back-btn,
+.chat-faq-close-btn {
+  background: var(--paper, #fff);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  border-radius: 99px;
+  padding: 4px 11px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+[data-theme='dark'] .chat-faq-back-btn,
+[data-theme='dark'] .chat-faq-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.chat-faq-back-btn:hover,
+.chat-faq-close-btn:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+.chat-faq-compartments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.chat-faq-compartment-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  padding: 12px 14px;
+  border-radius: 13px;
+  background: var(--paper, #fff);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+[data-theme='dark'] .chat-faq-compartment-card {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.chat-faq-compartment-card:hover {
+  border-color: var(--teal);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(16, 45, 58, 0.08);
+}
+
+.compartment-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.compartment-icon {
+  font-size: 1.35rem;
+}
+
+.compartment-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(23, 107, 101, 0.12);
+  color: var(--teal);
+}
+
+[data-theme='dark'] .compartment-count {
+  background: rgba(127, 209, 185, 0.16);
+  color: var(--mint, #7FD1B9);
+}
+
+.compartment-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.compartment-desc {
+  font-size: 0.76rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.chat-faq-cat-subtitle {
+  margin: 0 0 10px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.chat-faq-questions-list .chat-starter-pill {
+  width: 100%;
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+
+.chat-offline-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: rgba(244, 185, 66, 0.18);
+  color: #966100;
+  border: 1px solid rgba(244, 185, 66, 0.45);
+}
+
+[data-theme='dark'] .chat-offline-pill {
+  color: #F4B942;
+}
+
+.chat-faq-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--g-soft);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chat-faq-toggle-btn:hover,
+.chat-faq-toggle-btn.active {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+.chat-offline-tag {
+  display: inline-block;
+  margin-top: 6px;
+  opacity: 0.8;
+  font-weight: 600;
+}
+
+.chat-related-faqs {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.chat-related-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.chat-related-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chat-related-pill {
+  background: var(--paper, #fff);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  border-radius: 99px;
+  padding: 5px 11px;
+  font-size: 0.77rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+[data-theme='dark'] .chat-related-pill {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.chat-related-pill:hover:not(:disabled) {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+.chat-related-pill.is-topic-btn {
+  font-weight: 700;
+  background: rgba(23, 107, 101, 0.1);
+  border-color: rgba(23, 107, 101, 0.3);
 }
 
 /* Mobile & Tablet Drawer overlay */
