@@ -5,6 +5,7 @@ import Mascot from './Mascot'
 import Sidebar from './Sidebar'
 import PageLoader from './PageLoader'
 import LanguageDropdown from './LanguageDropdown'
+import { useTheme } from '../store'
 
 const PILL_NAV = [
   ['/', 'Home'],
@@ -22,6 +23,7 @@ export default function Layout() {
   const { t, i18n } = useTranslation()
   const lang = i18n.resolvedLanguage
   const { pathname } = useLocation()
+  const theme = useTheme()
   const [scrolled, setScrolled] = useState(false)
   const [isPinned, setIsPinned] = useState(() => {
     try {
@@ -40,6 +42,13 @@ export default function Layout() {
       return next
     })
   }
+
+  // Keep the browser chrome colour in step with the active theme's --bg token
+  useEffect(() => {
+    const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()
+    const meta = document.querySelector('meta[name="theme-color"]')
+    if (meta && bg) meta.setAttribute('content', bg)
+  }, [theme])
 
   useEffect(() => {
     const handleScroll = () => {
