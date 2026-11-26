@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { tx } from '../i18n'
 import { useApp, award, weekNumber } from '../store'
 import DailyChallenge from '../components/DailyChallenge'
+import WeeklyWordLadder from '../components/WeeklyWordLadder'
 import AiUpdateFramework from '../components/AiUpdateFramework'
 
 const DEFAULT_WEEKLY_CHALLENGES = [
@@ -130,7 +131,7 @@ export default function Challenges() {
 
       const topics = ['bacteria', 'virus', 'parasite']
       const ctrl = new AbortController()
-      const timer = setTimeout(() => ctrl.abort(), 4500)
+      const timer = setTimeout(() => ctrl.abort(), 12000)
       try {
         const results = await Promise.all(
           topics.map((topic) =>
@@ -139,7 +140,7 @@ export default function Challenges() {
               headers: { 'Content-Type': 'application/json' },
               signal: ctrl.signal,
               body: JSON.stringify({ type: 'QUIZ', topic, lang, date: new Date().toISOString() })
-            }).then((r) => (r.ok ? r.json() : null))
+            }).then((r) => (r.ok ? r.json() : null)).then(raw => raw?.challenge || raw)
           )
         )
         clearTimeout(timer)
@@ -202,6 +203,9 @@ export default function Challenges() {
 
       {/* Daily Challenge - directly rendered without awkward outer wrapper */}
       <DailyChallenge />
+
+      {/* 7-Step Weekly Word Ladder */}
+      <WeeklyWordLadder />
 
       <h2 style={{ marginTop: '28px', marginBottom: '14px' }}>{t('This Week')}</h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
