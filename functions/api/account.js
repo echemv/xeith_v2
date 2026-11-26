@@ -35,6 +35,10 @@ export async function onRequestGet({ request, env, params }) {
   // Add CORS to all responses
   const baseRes = async (res) => addCors(res)
 
+  if (!env.DB) {
+    return baseRes(json({ error: 'Database not connected yet. Please bind Cloudflare D1 (DB) in wrangler.toml or Dashboard.' }, 503))
+  }
+
   try {
     // Profile endpoint
     if (path === '/' || path === '/profile') {
@@ -249,6 +253,10 @@ export async function onRequestPost({ request, env, params }) {
   const path = url.pathname.replace('/api/account', '') || '/'
 
   const baseRes = async (res) => addCors(res)
+
+  if (!env.DB) {
+    return baseRes(json({ error: 'Database not connected yet. Please bind Cloudflare D1 (DB) in wrangler.toml or Dashboard.' }, 503))
+  }
 
   try {
     const user = await getUser(request, env)
@@ -475,6 +483,10 @@ export async function onRequestDelete({ request, env, params }) {
   const path = url.pathname.replace('/api/account', '') || '/'
 
   const baseRes = async (res) => addCors(res)
+
+  if (!env.DB) {
+    return baseRes(json({ error: 'Database not connected yet. Please bind Cloudflare D1 (DB) in wrangler.toml or Dashboard.' }, 503))
+  }
 
   try {
     const user = await getUser(request, env)
