@@ -216,7 +216,6 @@ function WordLadder({ challenge, onComplete, t }) {
               border: '2px solid var(--line)'
             }}
             maxLength={challenge.startWord.length}
-            autoFocus
           />
           <button className="btn" onClick={handleSubmit} style={{ alignSelf: 'flex-end' }}>{t('Submit')}</button>
         </div>

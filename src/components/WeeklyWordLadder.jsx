@@ -311,7 +311,6 @@ export default function WeeklyWordLadder() {
                     borderRadius: '8px',
                     border: '2px solid var(--line)'
                   }}
-                  autoFocus
                 />
                 <button className="btn" onClick={handleWordSubmit}>
                   {t('Submit Daily Step (+10 pts)')}

@@ -926,10 +926,13 @@ label{font-weight:600;display:block}
   .top-header-inner{padding:6px 12px}
   .pill-nav{display:none} /* Mobile relies on bottom rail dock */
 
-  /* Transform rail into floating bottom dock */
-  .nav-rail{
+  /* Transform rail into floating bottom dock (match .is-floating/.is-pinned specificity so it wins) */
+  .nav-rail,
+  .nav-rail.is-floating,
+  .nav-rail.is-pinned{
+    position:fixed;
     top:auto;
-    bottom:12px;
+    bottom:calc(12px + env(safe-area-inset-bottom));
     left:12px;
     right:12px;
     width:auto;
@@ -938,6 +941,8 @@ label{font-weight:600;display:block}
     justify-content:space-around;
     padding:6px 12px;
     border-radius:99px;
+    border:1px solid var(--line);
+    box-shadow:0 10px 30px rgba(11,34,48,.14);
   }
   .rail-logo{display:none}
   .rail-menu{
@@ -959,7 +964,23 @@ label{font-weight:600;display:block}
     border-radius:99px;
     padding:3px;
   }
-  .theme-btn{width:28px;height:28px}
+  .theme-btn{width:32px;height:32px}
+
+  /* Five-tab dock (Home, Classroom, Lab, Challenges, My XEITH) so it fits a 360px screen */
+  .rail-item.desktop-only,
+  .rail-top-group{display:none}
+  .rail-item{width:44px;height:44px}
+  .nav-rail.is-floating,.nav-rail.is-pinned{padding:6px 8px}
+
+  /* Keep the mascot above the dock instead of on top of it */
+  .mascot{right:10px;bottom:calc(84px + env(safe-area-inset-bottom));max-width:min(220px,62vw)}
+  .avatar{width:60px;height:60px}
+  .avatar svg{width:50px;height:50px}
+  .say{display:none} /* the greeting bubble covered page content on phones; the avatar alone opens the chat */
+}
+@media (max-width:420px){
+  .lang-current-label{max-width:72px}
+  .lang-trigger-btn{padding:7px 10px;min-height:40px}
 }
 
 /* ==========================================================================
