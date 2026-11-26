@@ -179,7 +179,7 @@ export default function Learn() {
                           >
                             <div className="milestone-top">
                               <span className="milestone-num">
-                                {isCompleted ? '✓' : `Step ${l.order}`}
+                                {isCompleted ? '✓' : t('Step {{n}}', { n: l.order })}
                               </span>
                               <span className="milestone-time">⏱️ {l.readTime}</span>
                             </div>
@@ -464,7 +464,7 @@ export default function Learn() {
                     </p>
                     {ref.stat && (
                       <div className="ref-key-stat">
-                        <span className="stat-label">Key finding:</span> {ref.stat}
+                        <span className="stat-label">{t('Key finding:')}</span> {ref.stat}
                       </div>
                     )}
                     {ref.url && (

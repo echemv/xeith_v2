@@ -110,7 +110,7 @@ export default function Layout() {
               </div>
             )}
             <p className="foot-disclaimer">
-              XEITH · Education about antimicrobial resistance, not medical advice. Translations and content are drafts awaiting clinician review.
+              XEITH · {t('Education about antimicrobial resistance, not medical advice. Translations and content are drafts awaiting clinician review.')}
             </p>
           </div>
         </footer>
