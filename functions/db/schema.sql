@@ -153,6 +153,13 @@ CREATE TABLE IF NOT EXISTS data_requests (
   download_url TEXT                 -- For export requests
 );
 
+-- Email 6-digit login codes (10-minute expiry)
+CREATE TABLE IF NOT EXISTS login_codes (
+  email_hash TEXT PRIMARY KEY,
+  code_hash TEXT NOT NULL,
+  expires_at INTEGER NOT NULL
+);
+
 -- Insert default achievements
 INSERT OR IGNORE INTO achievements (id, name, description, icon, category, points_reward, criteria) VALUES
 ('first-lesson', 'First Steps', 'Complete your first AMR lesson', '🎓', 'learning', 10, '{"type": "lessons_completed", "threshold": 1}'),

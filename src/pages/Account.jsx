@@ -21,6 +21,10 @@ export default function Account() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [recoveryCode, setRecoveryCode] = useState('')
   const [copiedCode, setCopiedCode] = useState(false)
+  const [loginEmail, setLoginEmail] = useState('')
+  const [emailCode, setEmailCode] = useState('')
+  const [codeSent, setCodeSent] = useState(false)
+  const [showRecoveryLogin, setShowRecoveryLogin] = useState(false)
 
   // Auth token (stored in localStorage for cloud mode)
   const [authToken, setAuthToken] = useState(() => {
@@ -139,6 +143,45 @@ export default function Account() {
         streak: data.stats?.streak || 0
       })
       setRecoveryCode('')
+    } catch (e) { setError(e.message) } finally { setLoading(false) }
+  }
+
+  const handleSendEmailCode = async () => {
+    const clean = loginEmail.trim()
+    if (!clean) return
+    try {
+      setError(null)
+      setLoading(true)
+      await api('/send-code', {
+        method: 'POST',
+        body: JSON.stringify({ email: clean })
+      })
+      setCodeSent(true)
+    } catch (e) { setError(e.message) } finally { setLoading(false) }
+  }
+
+  const handleVerifyEmailCode = async () => {
+    const cleanEmail = loginEmail.trim()
+    const cleanCode = emailCode.trim()
+    if (!cleanEmail || !cleanCode) return
+    try {
+      setError(null)
+      setLoading(true)
+      const data = await api('/verify-code', {
+        method: 'POST',
+        body: JSON.stringify({ email: cleanEmail, code: cleanCode })
+      })
+      setAuthToken(data.user.id)
+      setCloudUser(data.user)
+      setCloudStats(data.stats || {})
+      restoreCloudState({
+        displayName: data.user.displayName,
+        points: data.stats?.points || 0,
+        streak: data.stats?.streak || 0
+      })
+      setLoginEmail('')
+      setEmailCode('')
+      setCodeSent(false)
     } catch (e) { setError(e.message) } finally { setLoading(false) }
   }
 
@@ -272,21 +315,56 @@ export default function Account() {
             </section>
             <section className="card glass" style={{ marginTop: '14px' }}>
               <h3>{t('Already have a cloud account?')}</h3>
-              <p className="muted">{t('Paste your Recovery Code to sign back in and restore your points, streak, and friends.')}</p>
-              <div style={{ margin: '10px 0 14px', padding: '10px 12px', borderRadius: '10px', background: 'var(--g-soft)', border: '1px solid var(--line)', fontSize: '0.84rem' }}>
-                <strong>{t('How to get your Recovery Code:')}</strong>
-                <ol style={{ margin: '6px 0 0 18px', padding: 0, lineHeight: 1.6 }}>
-                  <li>{t('On the device where you created your cloud account, open Account → Profile.')}</li>
-                  <li>{t('Find "Your Recovery Code" at the bottom of your cloud profile card.')}</li>
-                  <li>{t('Click "Copy Code" and save it somewhere safe before signing out.')}</li>
-                </ol>
-              </div>
-              <label htmlFor="rc">{t('Recovery Code')}</label>
-              <input id="rc" value={recoveryCode} onChange={(e) => setRecoveryCode(e.target.value)} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
-              <div className="row">
-                <button className="btn" disabled={!recoveryCode.trim() || loading} onClick={handleCloudLogin}>
-                  {t('Sign in & restore data')}
+              <p className="muted">{t('Enter your email to get a 6-digit sign-in code and restore your progress on any device.')}</p>
+
+              {!codeSent ? (
+                <>
+                  <label htmlFor="le">{t('Email')}</label>
+                  <input id="le" type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="you@example.com" />
+                  <div className="row">
+                    <button className="btn" disabled={!loginEmail.trim() || loading} onClick={handleSendEmailCode}>
+                      {t('Send 6-digit code')}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="muted" style={{ fontSize: '0.88rem' }}>
+                    {t('We sent a 6-digit code to {{email}}. Check your inbox (and spam folder).', { email: loginEmail })}
+                  </p>
+                  <label htmlFor="ec">{t('6-digit code')}</label>
+                  <input id="ec" value={emailCode} onChange={(e) => setEmailCode(e.target.value)} maxLength={6} placeholder="123456" style={{ letterSpacing: '0.2em', fontFamily: 'monospace', fontSize: '1.1rem' }} />
+                  <div className="row">
+                    <button className="btn" disabled={emailCode.trim().length < 6 || loading} onClick={handleVerifyEmailCode}>
+                      {t('Verify & sign in')}
+                    </button>
+                    <button className="btn ghost" disabled={loading} onClick={() => { setCodeSent(false); setEmailCode('') }}>
+                      {t('Change email')}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid var(--line)' }}>
+                <button
+                  type="button"
+                  className="btn ghost"
+                  style={{ fontSize: '0.82rem', padding: '6px 10px' }}
+                  onClick={() => setShowRecoveryLogin((v) => !v)}
+                >
+                  {showRecoveryLogin ? t('Hide Recovery Code sign-in') : t('Or sign in with a Recovery Code')}
                 </button>
+                {showRecoveryLogin && (
+                  <div style={{ marginTop: '10px' }}>
+                    <label htmlFor="rc">{t('Recovery Code')}</label>
+                    <input id="rc" value={recoveryCode} onChange={(e) => setRecoveryCode(e.target.value)} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+                    <div className="row">
+                      <button className="btn" disabled={!recoveryCode.trim() || loading} onClick={handleCloudLogin}>
+                        {t('Sign in & restore data')}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
             </>
