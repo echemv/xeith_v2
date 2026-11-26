@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useApp, createProfile, signOut, exportData, deleteAll, maskEmail } from '../store'
+import { useApp, createProfile, restoreCloudState, signOut, exportData, deleteAll, maskEmail } from '../store'
 
 const API_BASE = '/api/account'
 
@@ -19,6 +19,8 @@ export default function Account() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [recoveryCode, setRecoveryCode] = useState('')
+  const [copiedCode, setCopiedCode] = useState(false)
 
   // Auth token (stored in localStorage for cloud mode)
   const [authToken, setAuthToken] = useState(() => {
@@ -100,20 +102,53 @@ export default function Account() {
   }, [authToken, loadCloudProfile, loadLeaderboard, loadFriends, loadPhotos])
 
   const handleCloudRegister = async () => {
-    if (!name.trim()) return
+    const displayName = (name || profile?.name || '').trim()
+    if (!displayName) return
     try {
+      setError(null)
       setLoading(true)
       const userId = crypto.randomUUID()
       const avatarSeed = crypto.randomUUID()
       await api('/register', {
         method: 'POST',
-        body: JSON.stringify({ userId, displayName: name.trim(), email, language: i18n.language, avatarSeed })
+        body: JSON.stringify({ userId, displayName, email: email || profile?.email || '', language: i18n.language, avatarSeed })
       })
       setAuthToken(userId)
-      setCloudUser({ id: userId, displayName: name.trim(), avatarSeed, language: i18n.language })
+      setCloudUser({ id: userId, displayName, avatarSeed, language: i18n.language })
       setName('')
       setEmail('')
     } catch (e) { setError(e.message) } finally { setLoading(false) }
+  }
+
+  const handleCloudLogin = async () => {
+    const code = recoveryCode.trim()
+    if (!code) return
+    try {
+      setError(null)
+      setLoading(true)
+      const data = await api('/login', {
+        method: 'POST',
+        body: JSON.stringify({ recoveryCode: code })
+      })
+      setAuthToken(data.user.id)
+      setCloudUser(data.user)
+      setCloudStats(data.stats || {})
+      restoreCloudState({
+        displayName: data.user.displayName,
+        points: data.stats?.points || 0,
+        streak: data.stats?.streak || 0
+      })
+      setRecoveryCode('')
+    } catch (e) { setError(e.message) } finally { setLoading(false) }
+  }
+
+  const copyRecoveryCode = async () => {
+    if (!cloudUser?.id) return
+    try {
+      await navigator.clipboard.writeText(cloudUser.id)
+      setCopiedCode(true)
+      setTimeout(() => setCopiedCode(false), 2000)
+    } catch { /* ignore */ }
   }
 
   const handleCloudSignOut = () => {
@@ -218,6 +253,7 @@ export default function Account() {
       {tab === 'profile' && (
         <>
           {!profile && !cloudUser ? (
+            <>
             <section className="card glass">
               <h3>{t('Create your local profile')}</h3>
               <p className="muted">{t('Everything stays on this device. Link to cloud later for leaderboards and friends.')}</p>
@@ -234,6 +270,18 @@ export default function Account() {
                 </button>
               </div>
             </section>
+            <section className="card glass" style={{ marginTop: '14px' }}>
+              <h3>{t('Already have a cloud account?')}</h3>
+              <p className="muted">{t('Paste your Recovery Code to sign back in and restore your points, streak, and friends.')}</p>
+              <label htmlFor="rc">{t('Recovery Code')}</label>
+              <input id="rc" value={recoveryCode} onChange={(e) => setRecoveryCode(e.target.value)} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+              <div className="row">
+                <button className="btn" disabled={!recoveryCode.trim() || loading} onClick={handleCloudLogin}>
+                  {t('Sign in & restore data')}
+                </button>
+              </div>
+            </section>
+            </>
           ) : (
             <>
               {/* Local profile section */}
@@ -295,6 +343,21 @@ export default function Account() {
                   <div className="row">
                     <button className="btn" onClick={handleSync} disabled={loading}>{t('Sync local progress')}</button>
                     <button className="btn ghost" onClick={handleCloudSignOut}>{t('Sign out')}</button>
+                  </div>
+
+                  <div style={{ marginTop: '16px', padding: '12px', borderRadius: '10px', background: 'var(--g-soft)', border: '1px solid var(--line)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <div>
+                        <strong style={{ fontSize: '0.85rem', display: 'block' }}>{t('Your Recovery Code')}</strong>
+                        <span className="muted" style={{ fontSize: '0.78rem' }}>{t('Save this code to sign in and restore your data on any device.')}</span>
+                      </div>
+                      <button className="btn ghost" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={copyRecoveryCode}>
+                        {copiedCode ? '✓ ' + t('Copied') : t('Copy Code')}
+                      </button>
+                    </div>
+                    <code style={{ display: 'block', marginTop: '8px', fontSize: '0.82rem', wordBreak: 'break-all', opacity: 0.9 }}>
+                      {cloudUser.id}
+                    </code>
                   </div>
                 </section>
               )}

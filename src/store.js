@@ -62,6 +62,14 @@ export function award(points, id) {
   commit({ ...state, points: state.points + points, streak, lastActive: t, done: id ? { ...state.done, [id]: true } : state.done })
 }
 export const createProfile = (name, email) => commit({ ...state, profile: { name: name.trim(), email: email.trim(), created: ymd() } })
+export function restoreCloudState({ displayName, points = 0, streak = 0 }) {
+  commit({
+    ...state,
+    profile: state.profile || { name: displayName, email: '', created: ymd() },
+    points: Math.max(state.points, points),
+    streak: Math.max(state.streak, streak),
+  })
+}
 export const signOut = () => commit({ ...state, profile: null })
 export const exportData = () => JSON.stringify({ exportedAt: new Date().toISOString(), ...state }, null, 2)
 export function deleteAll() {

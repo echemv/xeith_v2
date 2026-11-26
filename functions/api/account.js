@@ -260,11 +260,42 @@ export async function onRequestPost({ request, env, params }) {
 
   try {
     const user = await getUser(request, env)
-    if (!user && path !== '/register') {
+    if (!user && path !== '/register' && path !== '/login') {
       return baseRes(json({ error: 'Unauthorized' }, 401))
     }
 
     const body = await request.json().catch(() => ({}))
+
+    // Login / recover existing cloud account via recovery code (userId)
+    if (path === '/login') {
+      const code = (body.recoveryCode || '').trim()
+      if (!code) {
+        return baseRes(json({ error: 'Recovery code is required' }, 400))
+      }
+
+      const found = await env.DB.prepare(
+        'SELECT id, display_name, avatar_seed, language FROM users WHERE id = ?'
+      ).bind(code).first()
+
+      if (!found) {
+        return baseRes(json({ error: 'Recovery code not found' }, 404))
+      }
+
+      const now = Math.floor(Date.now() / 1000)
+      await env.DB.prepare('UPDATE users SET last_active_at = ? WHERE id = ?').bind(now, found.id).run()
+      const stats = await env.DB.prepare('SELECT * FROM user_stats WHERE user_id = ?').bind(found.id).first()
+
+      return baseRes(json({
+        success: true,
+        user: {
+          id: found.id,
+          displayName: found.display_name,
+          avatarSeed: found.avatar_seed,
+          language: found.language
+        },
+        stats: stats || {}
+      }))
+    }
 
     // Register new user (link anonymous local account to cloud)
     if (path === '/register') {
