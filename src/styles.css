@@ -289,7 +289,7 @@ main{padding-top:24px;padding-bottom:120px}
   text-decoration:none;
 }
 .logo-full-img{
-  height:38px;
+  height:32px;
   width:auto;
   max-width:170px;
   object-fit:contain;
@@ -3775,5 +3775,8 @@ label{font-weight:600;display:block}
   }
   .gamearea-spacious {
     height: 380px;
+  }
+  .logo-full-img{
+    height: 28px;
   }
 }

@@ -65,7 +65,7 @@ export default function Layout() {
           <div className="top-header-inner">
             <div className="header-brand-wrap">
               <NavLink to="/" className="logo-text" aria-label="XEITH AMR Home">
-                <img src="/logo-full.png" alt="XEITH AMR" className="logo-full-img" />
+                <img src="/logo-full-bigtext.png" alt="XEITH AMR" className="logo-full-img" />
               </NavLink>
             </div>
 
