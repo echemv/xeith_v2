@@ -581,7 +581,7 @@ export default function DailyChallenge() {
             📖 {t('Explore Classroom Pathway →')}
           </Link>
           <Link to="/play" className="btn ghost" style={{ fontSize: '.8rem', padding: '6px 12px' }}>
-            🧪 {t('Practice in AMR Lab →')}
+            🧪 {t('Practice in The AMR Lab →')}
           </Link>
         </div>
       </section>
@@ -631,7 +631,7 @@ export default function DailyChallenge() {
           className="btn ghost"
           style={{ fontSize: '.8rem', padding: '6px 12px' }}
         >
-          🧪 {t('Practice in Lab →')}
+          🧪 {t('Practice in The AMR Lab →')}
         </Link>
       </div>
     </section>

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { LANGS } from '../i18n'
 import Mascot from './Mascot'
 import Sidebar from './Sidebar'
 import PageLoader from './PageLoader'
@@ -13,8 +12,8 @@ const PILL_NAV = [
   ['/play', 'Lab'],
   ['/challenges', 'Challenges'],
   ['/map', 'Map'],
-  ['/chat', 'Ask AI'],
-  ['/account', 'Account']
+  ['/chat', 'Ask XEITH'],
+  ['/account', 'My XEITH']
 ]
 
 const PIN_STORAGE_KEY = 'xeith-sidebar-pinned'
@@ -88,7 +87,7 @@ export default function Layout() {
             <div className="header-actions">
               <LanguageDropdown />
 
-              <NavLink to="/account" className="header-avatar-btn" title={t('Account')} aria-label={t('Account')}>
+              <NavLink to="/account" className="header-avatar-btn" title={t('My XEITH')} aria-label={t('My XEITH')}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
                   <circle cx="12" cy="7" r="4"/>
