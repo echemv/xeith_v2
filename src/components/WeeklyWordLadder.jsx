@@ -20,33 +20,33 @@ const LADDER_POOLS = [
     ]
   },
   {
-    start: 'COLD',
-    target: 'SAFE',
-    theme: tx('From Viral Cold to Antimicrobial Safety: 7 daily steps to keep patients safe.'),
-    steps: ['COLD', 'CORD', 'CARD', 'WARD', 'WARM', 'WORM', 'SORE', 'SAFE'],
+    start: 'SICK',
+    target: 'WELL',
+    theme: tx('From SICK to WELL: 7 daily steps, one letter at a time.'),
+    steps: ['SICK', 'SACK', 'SANK', 'SINK', 'SILK', 'SILL', 'SELL', 'WELL'],
     hints: [
-      tx('A flexible cable or string (L → R)'),
-      tx('A piece of thick paper or ID badge (O → A)'),
-      tx('A hospital division or room (C → W)'),
-      tx('Having a moderate degree of heat (D → M)'),
-      tx('An invertebrate that aerates soil (A → O)'),
-      tx('Painful or tender to the touch (W → S)'),
-      tx('Protected from danger or superbug harm! (O → A)')
+      tx('A large bag for carrying goods (I → A)'),
+      tx('Went down under water (C → N)'),
+      tx('Where you wash your hands with soap (A → I)'),
+      tx('A smooth, shiny fabric (N → L)'),
+      tx('The ledge under a window (K → L)'),
+      tx('To exchange something for money (I → E)'),
+      tx('Healthy again! (S → W)')
     ]
   },
   {
-    start: 'BUGS',
-    target: 'CURE',
-    theme: tx('From Resistant BUGS to CURE: 7 daily steps of stewardship.'),
-    steps: ['BUGS', 'BAGS', 'BARE', 'CARE', 'CORE', 'CORN', 'CURN', 'CURE'],
+    start: 'RISK',
+    target: 'SAFE',
+    theme: tx('From RISK to SAFE: 7 daily steps of stewardship.'),
+    steps: ['RISK', 'RISE', 'RICE', 'RACE', 'FACE', 'FATE', 'SATE', 'SAFE'],
     hints: [
-      tx('Containers used for carrying goods (U → A)'),
-      tx('Exposed, uncovered, or plain (G → R)'),
-      tx('Compassion, medical attention, and stewardship (B → C)'),
-      tx('The central or most vital part (A → O)'),
-      tx('A cereal plant producing yellow kernels (E → N)'),
-      tx('A small grain or dialect term (O → U)'),
-      tx('To relieve a person of the symptoms of a disease! (N → E)')
+      tx('To go up or get higher (K → E)'),
+      tx('A grain eaten across Nigeria (S → C)'),
+      tx('A contest of speed (I → A)'),
+      tx('The front of your head (R → F)'),
+      tx('What is destined to happen (C → T)'),
+      tx('To satisfy hunger fully (F → S)'),
+      tx('Protected from harm! (T → F)')
     ]
   }
 ]
@@ -121,7 +121,7 @@ export default function WeeklyWordLadder() {
     // Validate against solution path or verify valid word
     const expectedWord = ladder.steps[savedSteps.length]
     if (word !== expectedWord && word !== ladder.target) {
-      setErrorMsg(t('Not the expected stewardship step word. Hint: {{hint}}', { hint: ladder.hints[savedSteps.length - 1] }))
+      setErrorMsg(t('Not the expected stewardship step word. Hint: {{hint}}', { hint: t(ladder.hints[savedSteps.length - 1]) }))
       return
     }
 
@@ -289,7 +289,7 @@ export default function WeeklyWordLadder() {
                 {t('Day {{n}} Step', { n: savedSteps.length })}: {t('Change 1 letter from')} <code>{savedSteps[savedSteps.length - 1]}</code>
               </p>
               <p className="muted" style={{ margin: '0 0 12px', fontSize: '0.85rem' }}>
-                💡 <b>{t('Hint')}:</b> {ladder.hints[savedSteps.length - 1]}
+                💡 <b>{t('Hint')}:</b> {t(ladder.hints[savedSteps.length - 1])}
               </p>
 
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>

@@ -31,11 +31,11 @@ const mockAI = {
 
     // Word ladders for AMR terms (consistent 4-letter steps)
     const wordLadders = [
-      { start: 'GERM', end: 'DRUG', steps: ['GERM', 'TERM', 'TEEM', 'TEED', 'DEED', 'DEAD', 'DEAR', 'DRAB', 'DRUG'], hint: tx('Transform the microbe into the medicine! (4 letters)') },
+      { start: 'SICK', end: 'WELL', steps: ['SICK', 'SILK', 'SILL', 'SELL', 'WELL'], hint: tx('From feeling sick to feeling well. (4 letters)') },
       { start: 'COLD', end: 'CURE', steps: ['COLD', 'CORD', 'CORE', 'CURE'], hint: tx('From the symptom to recovery. (4 letters)') },
-      { start: 'MOLD', end: 'HEAL', steps: ['MOLD', 'HOLD', 'HEAD', 'HEAL'], hint: tx('From fungal mold to healing. (4 letters)') },
-      { start: 'BUGS', end: 'SAFE', steps: ['BUGS', 'BAGS', 'BARE', 'SAFE'], hint: tx('Stop the superbugs, keep patients safe. (4 letters)') },
-      { start: 'DOSE', end: 'WELL', steps: ['DOSE', 'DOLE', 'POLE', 'POLL', 'WELL'], hint: tx('Right dose, get well. (4 letters)') }
+      { start: 'MOLD', end: 'HEAL', steps: ['MOLD', 'HOLD', 'HELD', 'HEAD', 'HEAL'], hint: tx('From fungal mold to healing. (4 letters)') },
+      { start: 'SORE', end: 'CURE', steps: ['SORE', 'CORE', 'CURE'], hint: tx('From a sore to a cure. (4 letters)') },
+      { start: 'PILL', end: 'FULL', steps: ['PILL', 'POLL', 'PULL', 'FULL'], hint: tx('Take medicine exactly as your prescriber says. (4 letters)') }
     ]
 
     // Photo challenge prompts
