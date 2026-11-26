@@ -18,6 +18,12 @@ export async function onRequestOptions() {
   return addCors(new Response(null, { status: 204 }))
 }
 
+// Helper: SHA-256 hex digest
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))
+  return Array.from(new Uint8Array(buf)).map(x => x.toString(16).padStart(2, '0')).join('')
+}
+
 // Helper: get user from auth header (simplified - in production use proper JWT)
 async function getUser(request, env) {
   const auth = request.headers.get('Authorization')
@@ -260,11 +266,107 @@ export async function onRequestPost({ request, env, params }) {
 
   try {
     const user = await getUser(request, env)
-    if (!user && path !== '/register' && path !== '/login') {
+    const publicPaths = ['/register', '/login', '/send-code', '/verify-code']
+    if (!user && !publicPaths.includes(path)) {
       return baseRes(json({ error: 'Unauthorized' }, 401))
     }
 
     const body = await request.json().catch(() => ({}))
+
+    // Send 6-digit email sign-in code
+    if (path === '/send-code') {
+      const email = (body.email || '').trim().toLowerCase()
+      if (!email || !email.includes('@')) {
+        return baseRes(json({ error: 'Please enter a valid email address' }, 400))
+      }
+      if (!env.RESEND_API_KEY) {
+        return baseRes(json({ error: 'Email sign-in is not configured yet (missing RESEND_API_KEY)' }, 503))
+      }
+
+      const emailHash = await sha256(email)
+      const found = await env.DB.prepare('SELECT id, display_name FROM users WHERE email_hash = ?').bind(emailHash).first()
+      if (!found) {
+        return baseRes(json({ error: 'No cloud account found for that email' }, 404))
+      }
+
+      const code = String((crypto.getRandomValues(new Uint32Array(1))[0] % 900000) + 100000)
+      const codeHash = await sha256(`${code}:${emailHash}`)
+      const expiresAt = Math.floor(Date.now() / 1000) + 600
+
+      await env.DB.prepare(
+        'INSERT OR REPLACE INTO login_codes (email_hash, code_hash, expires_at) VALUES (?, ?, ?)'
+      ).bind(emailHash, codeHash, expiresAt).run()
+
+      const emailRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${env.RESEND_API_KEY}`
+        },
+        body: JSON.stringify({
+          from: env.EMAIL_FROM || 'XEITH <onboarding@resend.dev>',
+          to: [email],
+          subject: 'Your XEITH sign-in code',
+          text: `Hi ${found.display_name},\n\nYour XEITH sign-in code is: ${code}\n\nThis code expires in 10 minutes. If you didn't request this, you can ignore this email.`,
+          html: `<p>Hi <strong>${found.display_name}</strong>,</p><p>Your XEITH sign-in code is:</p><h2 style="letter-spacing:4px;font-family:monospace;">${code}</h2><p>This code expires in 10 minutes.</p>`
+        })
+      })
+
+      if (!emailRes.ok) {
+        const errText = await emailRes.text().catch(() => '')
+        console.error('Resend error:', errText)
+        return baseRes(json({ error: 'Failed to send email. Check email sender configuration.' }, 502))
+      }
+
+      return baseRes(json({ success: true }))
+    }
+
+    // Verify 6-digit email sign-in code
+    if (path === '/verify-code') {
+      const email = (body.email || '').trim().toLowerCase()
+      const code = (body.code || '').trim()
+      if (!email || !code) {
+        return baseRes(json({ error: 'Email and code are required' }, 400))
+      }
+
+      const emailHash = await sha256(email)
+      const record = await env.DB.prepare(
+        'SELECT code_hash, expires_at FROM login_codes WHERE email_hash = ?'
+      ).bind(emailHash).first()
+
+      const now = Math.floor(Date.now() / 1000)
+      if (!record || record.expires_at < now) {
+        return baseRes(json({ error: 'Code expired or not found. Please request a new one.' }, 401))
+      }
+
+      const expectedHash = await sha256(`${code}:${emailHash}`)
+      if (record.code_hash !== expectedHash) {
+        return baseRes(json({ error: 'Invalid code' }, 401))
+      }
+
+      await env.DB.prepare('DELETE FROM login_codes WHERE email_hash = ?').bind(emailHash).run()
+
+      const found = await env.DB.prepare(
+        'SELECT id, display_name, avatar_seed, language FROM users WHERE email_hash = ?'
+      ).bind(emailHash).first()
+      if (!found) {
+        return baseRes(json({ error: 'Account not found' }, 404))
+      }
+
+      await env.DB.prepare('UPDATE users SET last_active_at = ? WHERE id = ?').bind(now, found.id).run()
+      const stats = await env.DB.prepare('SELECT * FROM user_stats WHERE user_id = ?').bind(found.id).first()
+
+      return baseRes(json({
+        success: true,
+        user: {
+          id: found.id,
+          displayName: found.display_name,
+          avatarSeed: found.avatar_seed,
+          language: found.language
+        },
+        stats: stats || {}
+      }))
+    }
 
     // Login / recover existing cloud account via recovery code (userId)
     if (path === '/login') {
@@ -311,7 +413,8 @@ export async function onRequestPost({ request, env, params }) {
       }
 
       const now = Math.floor(Date.now() / 1000)
-      const emailHash = email ? await crypto.subtle.digest('SHA-256', new TextEncoder().encode(email.toLowerCase())).then(b => Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join('')) : null
+      const cleanEmail = (email || '').trim().toLowerCase()
+      const emailHash = cleanEmail ? await sha256(cleanEmail) : null
 
       await env.DB.prepare(`
         INSERT INTO users (id, display_name, email_hash, avatar_seed, language, created_at, updated_at, is_anonymous, consent_version)
