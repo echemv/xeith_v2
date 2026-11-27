@@ -5,6 +5,8 @@ import { useApp, award, weekNumber } from '../store'
 import DailyChallenge from '../components/DailyChallenge'
 import WeeklyWordLadder from '../components/WeeklyWordLadder'
 import AiUpdateFramework from '../components/AiUpdateFramework'
+import FourWorlds from '../components/FourWorlds'
+import CaseFiles from '../components/CaseFiles'
 
 const DEFAULT_WEEKLY_CHALLENGES = [
   {
@@ -207,6 +209,10 @@ export default function Challenges() {
       {/* 7-Step Weekly Word Ladder */}
       <WeeklyWordLadder />
 
+      {/* Games and branching scenarios (draft content) */}
+      <FourWorlds />
+      <CaseFiles />
+
       <h2 style={{ marginTop: '28px', marginBottom: '14px' }}>{t('This Week')}</h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         {weeklyIds.map((id, k) => (
@@ -222,6 +228,8 @@ export default function Challenges() {
           <li>{t('Photo Challenge: Take a real-world photo matching the prompt')}</li>
           <li>{t('Fact Check: Sort facts from myths about antimicrobial resistance')}</li>
           <li>{t('Weekly: 3 questions, 5 points each. Build your streak for bonus points!')}</li>
+          <li>{t('Four Worlds: Group 16 AMR terms into 4 hidden categories before 4 mistakes')}</li>
+          <li>{t('Case Files: Make 3 stewardship decisions in real-world scenarios')}</li>
         </ul>
       </section>
 

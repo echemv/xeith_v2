@@ -1,0 +1,73 @@
+{
+  "game": "Four Worlds",
+  "status": "draft",
+  "note": "Draft content. Needs review by a microbiologist or pharmacist before publishing. Source links still need a reviewer to confirm and date them.",
+  "maxMistakes": 4,
+  "puzzles": [
+    {
+      "id": "fw-1",
+      "title": "Meet the microbes",
+      "level": "beginner",
+      "status": "draft",
+      "source": { "name": "OpenStax Microbiology", "url": "https://openstax.org/details/books/microbiology", "licence": "CC BY 4.0", "retrieved": null },
+      "groups": [
+        { "label": "Bacteria", "tiles": ["E. coli", "Salmonella", "Klebsiella", "Staphylococcus"], "explain": "Single-celled organisms with no nucleus. Antibiotics act on bacteria." },
+        { "label": "Viruses", "tiles": ["Influenza", "Measles", "HIV", "Rotavirus"], "explain": "Viruses copy themselves inside our cells. Antibiotics do not work on them." },
+        { "label": "Fungi", "tiles": ["Candida", "Aspergillus", "Cryptococcus", "Mould"], "explain": "Yeasts and moulds. Antifungal medicines act on them." },
+        { "label": "Parasites", "tiles": ["Plasmodium", "Hookworm", "Giardia", "Tapeworm"], "explain": "Organisms that live on or in a host. Plasmodium causes malaria." }
+      ]
+    },
+    {
+      "id": "fw-2",
+      "title": "One Health connections",
+      "level": "beginner",
+      "status": "draft",
+      "source": { "name": "WHO fact sheet: Antimicrobial resistance", "url": "https://www.who.int/news-room/fact-sheets/detail/antimicrobial-resistance", "licence": "WHO terms of use", "retrieved": null },
+      "groups": [
+        { "label": "Farm animals", "tiles": ["Poultry", "Cattle", "Goats", "Fish ponds"], "explain": "Antimicrobial use in animals also adds selection pressure." },
+        { "label": "The environment", "tiles": ["Soil", "Rivers", "Sewage", "Wastewater"], "explain": "Resistant microbes and genes can move through soil and water." },
+        { "label": "Places people get care", "tiles": ["Clinic", "Pharmacy", "Hospital", "Health centre"], "explain": "Where people, medicines and microbes meet." },
+        { "label": "Ways to prevent infection", "tiles": ["Soap", "Vaccines", "Clean water", "Toilets"], "explain": "Fewer infections means fewer antimicrobials are needed." }
+      ]
+    },
+    {
+      "id": "fw-3",
+      "title": "How resistance happens",
+      "level": "intermediate",
+      "status": "draft",
+      "source": { "name": "CDC: About antimicrobial resistance", "url": "https://www.cdc.gov/antimicrobial-resistance/about/index.html", "licence": "Public domain (US government)", "retrieved": null },
+      "groups": [
+        { "label": "Sources of genetic change", "tiles": ["Mutation", "Conjugation", "Transformation", "Transduction"], "explain": "Random mutation, plus three ways bacteria pass genes to each other." },
+        { "label": "Resistance mechanisms", "tiles": ["Efflux pump", "Drug-breaking enzyme", "Changed target", "Reduced entry"], "explain": "Ways a resistant bacterium survives a medicine." },
+        { "label": "Drivers of selection pressure", "tiles": ["Self-medication", "Farm overuse", "Unneeded prescriptions", "Fake medicines"], "explain": "Each one exposes microbes to medicines without need, so resistant ones survive and spread." },
+        { "label": "Prevention", "tiles": ["Handwashing", "Vaccination", "Sanitation", "Infection control"], "explain": "Stopping infections before they start." }
+      ]
+    },
+    {
+      "id": "fw-4",
+      "title": "What causes it?",
+      "level": "intermediate",
+      "status": "draft",
+      "source": { "name": "WHO fact sheet: Antimicrobial resistance", "url": "https://www.who.int/news-room/fact-sheets/detail/antimicrobial-resistance", "licence": "WHO terms of use", "retrieved": null },
+      "groups": [
+        { "label": "Caused by bacteria", "tiles": ["Tuberculosis", "Typhoid", "Cholera", "Gonorrhoea"], "explain": "Bacterial infections. Only a health worker can decide if antibiotics are needed." },
+        { "label": "Caused by viruses", "tiles": ["Common cold", "Flu", "COVID-19", "Chickenpox"], "explain": "Viral infections. Antibiotics do not help them." },
+        { "label": "Caused by fungi", "tiles": ["Thrush", "Ringworm", "Athlete’s foot", "Aspergillosis"], "explain": "Ringworm is a fungus, not a worm." },
+        { "label": "Caused by parasites", "tiles": ["Malaria", "Bilharzia", "Sleeping sickness", "Scabies"], "explain": "Caused by protozoa, worms or mites." }
+      ]
+    },
+    {
+      "id": "fw-5",
+      "title": "In the lab",
+      "level": "expert",
+      "status": "draft",
+      "source": { "name": "OpenStax Microbiology", "url": "https://openstax.org/details/books/microbiology", "licence": "CC BY 4.0", "retrieved": null },
+      "groups": [
+        { "label": "Bacterial shapes", "tiles": ["Cocci", "Bacilli", "Spirilla", "Vibrio"], "explain": "Round, rod, spiral and comma shapes." },
+        { "label": "Bacterial structures", "tiles": ["Flagellum", "Pilus", "Capsule", "Cell wall"], "explain": "Parts that help bacteria move, attach, hide and keep their shape." },
+        { "label": "Lab tests", "tiles": ["Culture", "Gram stain", "Microscopy", "Susceptibility test"], "explain": "Tools that show which microbe is present and which medicines still work on it." },
+        { "label": "Infection control", "tiles": ["Hand hygiene", "Gloves", "Isolation", "Sterilisation"], "explain": "Stops microbes spreading in health facilities." }
+      ]
+    }
+  ]
+}

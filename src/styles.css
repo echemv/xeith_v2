@@ -3766,3 +3766,11 @@ label{font-weight:600;display:block}
 .ladder-complete{text-align:center;padding:16px;border-radius:12px;background:var(--success-soft);border:1px solid var(--success)}
 .ladder-complete h4{margin:6px 0 2px;color:var(--success)}
 .ladder-complete p.muted{margin:0;font-size:.88rem}
+.ladder-hint-actions {
+  margin-top: 12px;
+  gap: 10px;
+}
+
+.ladder-hint {
+  animation: fadeIn 0.25s ease-out;
+}
