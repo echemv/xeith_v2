@@ -128,8 +128,8 @@ const mockAI = {
   }
 }
 
-// Word Ladder Component
-function WordLadder({ challenge, onComplete, t }) {
+// Word Ladder Component (kept in English due to 4-letter English spelling steps)
+function WordLadder({ challenge, onComplete }) {
   const [currentWord, setCurrentWord] = useState(challenge.startWord)
   const [steps, setSteps] = useState([challenge.startWord])
   const [message, setMessage] = useState('')
@@ -138,17 +138,17 @@ function WordLadder({ challenge, onComplete, t }) {
   const handleSubmit = () => {
     const word = currentWord.toUpperCase().trim()
     if (word.length !== challenge.startWord.length) {
-      setMessage(t('Word must be {{n}} letters', { n: challenge.startWord.length }))
+      setMessage(`Word must be ${challenge.startWord.length} letters`)
       return
     }
     if (word === steps[steps.length - 1]) {
-      setMessage(t('That\'s the current word!'))
+      setMessage("That's the current word!")
       return
     }
     // Check one letter difference
     const diff = word.split('').filter((c, i) => c !== steps[steps.length - 1][i]).length
     if (diff !== 1) {
-      setMessage(t('Change only one letter from the previous word'))
+      setMessage('Change only one letter from the previous word')
       return
     }
     // Check if it's the end word
@@ -171,9 +171,29 @@ function WordLadder({ challenge, onComplete, t }) {
 
   return (
     <section className="card daily-challenge">
-      <p className="eyebrow">{t(challenge.title)}</p>
-      <p className="fact">{t(challenge.prompt)}</p>
-      <p className="muted" style={{ fontSize: '0.85rem' }}>{t(challenge.hint)}</p>
+      <div
+        role="note"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '8px 12px',
+          marginBottom: '12px',
+          borderRadius: '10px',
+          background: 'rgba(244, 185, 66, 0.14)',
+          border: '1px solid rgba(244, 185, 66, 0.4)',
+          fontSize: '0.78rem',
+          color: 'var(--ink)'
+        }}
+      >
+        <span aria-hidden="true">🌐</span>
+        <span>
+          <b>English-Only Challenge (Awaiting Translation Review):</b> This word puzzle depends on English letter steps and is not translated.
+        </span>
+      </div>
+      <p className="eyebrow">{challenge.title}</p>
+      <p className="fact">{challenge.prompt}</p>
+      <p className="muted" style={{ fontSize: '0.85rem' }}>{challenge.hint}</p>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', margin: '16px 0' }}>
         {steps.map((step, i) => (
@@ -203,7 +223,7 @@ function WordLadder({ challenge, onComplete, t }) {
             value={currentWord}
             onChange={handleInput}
             onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-            placeholder={t('Enter next word...')}
+            placeholder="Enter next word..."
             style={{
               width: '140px',
               textAlign: 'center',
@@ -217,7 +237,7 @@ function WordLadder({ challenge, onComplete, t }) {
             }}
             maxLength={challenge.startWord.length}
           />
-          <button className="btn" onClick={handleSubmit} style={{ alignSelf: 'flex-end' }}>{t('Submit')}</button>
+          <button className="btn" onClick={handleSubmit} style={{ alignSelf: 'flex-end' }}>Submit</button>
         </div>
       )}
 
@@ -225,8 +245,8 @@ function WordLadder({ challenge, onComplete, t }) {
 
       {solved && (
         <div style={{ textAlign: 'center', marginTop: '16px', animation: 'pop 0.5s' }}>
-          <p className="result-correct" style={{ fontSize: '1.5rem' }}>🎉 {t('Solved!')}</p>
-          <p className="muted">{t('Steps taken: {{n}}', { n: steps.length - 1 })}</p>
+          <p className="result-correct" style={{ fontSize: '1.5rem' }}>🎉 Solved!</p>
+          <p className="muted">Steps taken: {steps.length - 1}</p>
         </div>
       )}
     </section>

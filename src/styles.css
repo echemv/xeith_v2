@@ -4341,18 +4341,42 @@ label{font-weight:600;display:block}
 }
 
 .fact-popup {
-  position: fixed;
-  bottom: 90px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100;
-  padding: 12px 20px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.95);
+  position: relative;
+  margin: 12px auto 0;
+  padding: 11px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
   border: 1px solid var(--teal);
-  box-shadow: 0 12px 32px rgba(16, 45, 58, 0.2);
-  max-width: 90vw;
-  width: 480px;
+  box-shadow: 0 4px 14px rgba(16, 45, 58, 0.08);
+  width: 100%;
+  transition: border-color 0.2s ease;
+}
+
+.fact-ticker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.fact-next-btn {
+  background: none;
+  border: none;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--teal);
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+[data-theme='dark'] .fact-next-btn {
+  color: var(--mint, #7FD1B9);
+}
+
+.fact-next-btn:hover {
+  opacity: 1;
+  text-decoration: underline;
 }
 
 .round-end-card, .debrief-card {

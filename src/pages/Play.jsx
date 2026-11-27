@@ -13,7 +13,7 @@ const PATHOGEN_TO_LESSON = {
   parasite: 'parasites'
 }
 
-// Pathogen types with unique mechanics
+// Pathogen types with unique mechanics and dynamic rotating fact pools
 const PATHOGENS = [
   {
     id: 'bacteria',
@@ -24,7 +24,15 @@ const PATHOGENS = [
     gradient: 'linear-gradient(135deg,#2A8F86,#176B65)',
     description: tx('Bacteria multiply fast. Target them with the right antibiotic before they develop resistance!'),
     mechanic: 'antibiotic-targeting',
-    fact: tx('Bacteria can share resistance genes with each other through horizontal gene transfer.')
+    fact: tx('Bacteria can share resistance genes with each other through horizontal gene transfer.'),
+    facts: [
+      tx('Bacteria can pass resistance "cheat codes" (plasmids) directly to neighboring bacteria through horizontal gene transfer.'),
+      tx('It is the bacteria that become resistant to antibiotics—never the human body itself.'),
+      tx('Under the WHO Traffic-Light rule, at least 60% of antibiotics used should come from the Green "Access" group.'),
+      tx('Buying 2 or 3 loose capsules from a chemist kills only weak bacteria and trains tougher survivors into superbugs.'),
+      tx('Over 1.27 million deaths every year are directly caused by antibiotic-resistant bacterial infections worldwide.'),
+      tx('Some resistant bacteria build tiny "efflux pumps" in their cell walls to spit antibiotics right back out!')
+    ]
   },
   {
     id: 'virus',
@@ -35,7 +43,15 @@ const PATHOGENS = [
     gradient: 'linear-gradient(135deg,#4FB3D9,#176B65)',
     description: tx('Antibiotics DO NOT work on viruses. Avoid wasting antibiotics on viral infections!'),
     mechanic: 'avoid-antibiotics',
-    fact: tx('Most colds, flu, and COVID-19 are caused by viruses. Antibiotics are useless against them.')
+    fact: tx('Most colds, flu, and COVID-19 are caused by viruses. Antibiotics are useless against them.'),
+    facts: [
+      tx('Most colds (catarrh), flu, and coughs are caused by viruses—antibiotics have zero power against them.'),
+      tx('Viruses have no cell walls or ribosomes, so antibiotics like Amoxicillin or Ampiclox have nothing to attack.'),
+      tx('Thick yellow or green nasal mucus during a cold is just your white blood cells clearing a virus—not proof you need an antibiotic!'),
+      tx('Taking antibiotics for a viral cold wipes out billions of friendly gut bacteria that protect your digestion.'),
+      tx('Over 90% of sore throats accompanied by a runny nose or cough are viral and heal without antibiotics.'),
+      tx('Rest, hydration, and simple symptom care help your immune system clear common respiratory viruses.')
+    ]
   },
   {
     id: 'fungus',
@@ -46,7 +62,15 @@ const PATHOGENS = [
     gradient: 'linear-gradient(135deg,#F4B942,#D6A84B)',
     description: tx('Fungal infections need antifungals. Overuse breeds resistant fungi like Candida auris.'),
     mechanic: 'targeted-treatment',
-    fact: tx('Candida auris is a multidrug-resistant fungus spreading in hospitals worldwide.')
+    fact: tx('Candida auris is a multidrug-resistant fungus spreading in hospitals worldwide.'),
+    facts: [
+      tx('Candida auris is a multidrug-resistant hospital yeast placed in the WHO Critical Priority tier.'),
+      tx('Because fungal cells closely resemble human cells, modern medicine has only 4 main classes of systemic antifungal drugs.'),
+      tx('Spraying "azole" fungicides on farm crops trains soil molds to resist the same azole antifungal pills used in hospitals.'),
+      tx('Ringworm is caused by a fungus (not a worm!) and needs a proper antifungal—not an antibiotic.'),
+      tx('Unprescribed "triple-action" steroid creams can weaken skin immunity and make fungal rashes spread wider.'),
+      tx('Candida auris can cling to hospital bed rails and plastic equipment for weeks if not specially disinfected.')
+    ]
   },
   {
     id: 'parasite',
@@ -57,7 +81,15 @@ const PATHOGENS = [
     gradient: 'linear-gradient(135deg,#7A5CC7,#4FB3D9)',
     description: tx('Parasites like malaria develop resistance to antiparasitic drugs. Complete the full course!'),
     mechanic: 'compliance-course',
-    fact: tx('Malaria parasites have developed resistance to chloroquine and other antimalarials.')
+    fact: tx('Malaria parasites have developed resistance to chloroquine and other antimalarials.'),
+    facts: [
+      tx('Not every fever in Nigeria is malaria! Over 60% of unconfirmed fevers test negative for malaria parasites.'),
+      tx('Always "Test Before You Treat" with a 15-minute Rapid Diagnostic Test (RDT) or lab test before taking malaria tablets.'),
+      tx('Chloroquine stopped working across Africa because it was overused for every fever without testing.'),
+      tx('Modern ACT malaria tablets combine TWO drugs in one pill so the partner drug clears any surviving parasites.'),
+      tx('Even if your fever disappears on Day 2 of malaria treatment, you must finish all 6 doses across all 3 days!'),
+      tx('Nigeria accounts for roughly 27% of global malaria cases—making ACT stewardship vital for every family.')
+    ]
   }
 ]
 
@@ -91,7 +123,7 @@ export default function Play() {
   const [bigBHealth, setBigBHealth] = useState(BIG_B_HEALTH)
   const [bigBPhase, setBigBPhase] = useState(0)
   const [particles, setParticles] = useState([])
-  const [showFact, setShowFact] = useState(null)
+  const [factIndex, setFactIndex] = useState(0)
   const [pausedFrom, setPausedFrom] = useState(null)
 
   // Deep-link support: /play?pathogen=bacteria|virus|fungus|parasite OR /play?mode=stewardship
@@ -202,8 +234,11 @@ export default function Play() {
     }
 
     setSpawnedTargets(prev => prev.filter(t => t.id !== target.id))
-    setShowFact(selectedPathogen.fact)
-    setTimeout(() => setShowFact(null), 3000)
+    // Rotate to the next dynamic fact every 2 hits (or on mistake) without flashing a fixed overlay over the arena
+    if (!isGoodClick || (goodHits + 1) % 2 === 0) {
+      const poolLen = selectedPathogen.facts?.length || 1
+      setFactIndex(prev => (prev + 1) % poolLen)
+    }
   }
 
   const createParticles = (x, y, type) => {
@@ -248,8 +283,18 @@ export default function Play() {
     return () => clearInterval(interval)
   }, [gameState])
 
+  // Automatically cycle through the pathogen's Did You Know pool every 6 seconds during gameplay
+  useEffect(() => {
+    if (gameState !== GAME_STATES.PLAYING || !selectedPathogen?.facts?.length) return
+    const ticker = setInterval(() => {
+      setFactIndex(prev => (prev + 1) % selectedPathogen.facts.length)
+    }, 6000)
+    return () => clearInterval(ticker)
+  }, [gameState, selectedPathogen])
+
   const startGame = (pathogen) => {
     setSelectedPathogen(pathogen)
+    setFactIndex(Math.floor(Math.random() * (pathogen.facts?.length || 1)))
     setGameState(GAME_STATES.PLAYING)
     setRound(1)
     setScore(0)
@@ -748,13 +793,6 @@ export default function Play() {
         )}
       </div>
 
-      {showFact && (
-        <div className="fact-popup glass animate-pop">
-          <p className="eyebrow" style={{ margin: '0 0 2px' }}>{t('Did you know?')}</p>
-          <p className="fact" style={{ fontSize: '.88rem', margin: 0 }}>{t(showFact)}</p>
-        </div>
-      )}
-
       <div 
         className="gamearea-spacious" 
         style={{ 
@@ -800,6 +838,25 @@ export default function Play() {
             }}
           />
         ))}
+      </div>
+
+      {/* Dynamic, non-blocking Did You Know ticker bar docked cleanly below the arena */}
+      <div className="fact-popup glass" key={factIndex} style={{ borderColor: `${selectedPathogen.color}55` }}>
+        <div className="fact-ticker-header">
+          <span className="eyebrow" style={{ margin: 0, color: selectedPathogen.color }}>
+            💡 {t('Did you know?')} · {(factIndex % (selectedPathogen.facts?.length || 1)) + 1}/{selectedPathogen.facts?.length || 1}
+          </span>
+          <button
+            type="button"
+            className="fact-next-btn"
+            onClick={() => setFactIndex(prev => (prev + 1) % (selectedPathogen.facts?.length || 1))}
+          >
+            {t('Next tip →')}
+          </button>
+        </div>
+        <p className="fact" style={{ fontSize: '.86rem', margin: '4px 0 0' }}>
+          {t(selectedPathogen.facts?.[factIndex % selectedPathogen.facts.length] || selectedPathogen.fact)}
+        </p>
       </div>
     </div>
   )

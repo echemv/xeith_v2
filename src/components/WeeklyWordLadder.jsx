@@ -101,27 +101,27 @@ export default function WeeklyWordLadder() {
     const expectedLength = ladder.start.length
 
     if (word.length !== expectedLength) {
-      setErrorMsg(t('Word must be {{n}} letters', { n: expectedLength }))
+      setErrorMsg(`Word must be ${expectedLength} letters`)
       return
     }
 
     const prevWord = savedSteps[savedSteps.length - 1]
     if (word === prevWord) {
-      setErrorMsg(t("That's the same as the previous word!"))
+      setErrorMsg("That's the same as the previous word!")
       return
     }
 
     // Check one letter difference
     const diff = word.split('').filter((char, i) => char !== prevWord[i]).length
     if (diff !== 1) {
-      setErrorMsg(t('Change exactly one letter from {{prev}}', { prev: prevWord }))
+      setErrorMsg(`Change exactly one letter from ${prevWord}`)
       return
     }
 
     // Validate against solution path or verify valid word
     const expectedWord = ladder.steps[savedSteps.length]
     if (word !== expectedWord && word !== ladder.target) {
-      setErrorMsg(t('Not the expected stewardship step word. Hint: {{hint}}', { hint: ladder.hints[savedSteps.length - 1] }))
+      setErrorMsg(`Not the expected stewardship step word. Hint: ${ladder.hints[savedSteps.length - 1]}`)
       return
     }
 
@@ -148,16 +148,37 @@ export default function WeeklyWordLadder() {
 
   return (
     <section className="card weekly-ladder-card" style={{ marginTop: '24px', position: 'relative', overflow: 'hidden' }}>
+      <div
+        role="note"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '8px 12px',
+          marginBottom: '14px',
+          borderRadius: '10px',
+          background: 'rgba(244, 185, 66, 0.14)',
+          border: '1px solid rgba(244, 185, 66, 0.4)',
+          fontSize: '0.78rem',
+          color: 'var(--ink)'
+        }}
+      >
+        <span aria-hidden="true">🌐</span>
+        <span>
+          <b>English-Only Challenge (Awaiting Translation Review):</b> Word Ladder puzzles rely on 4-letter English spelling steps and are kept in English while localized adaptations undergo review.
+        </span>
+      </div>
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
         <div>
           <p className="eyebrow" style={{ color: 'var(--g-teal)', fontWeight: 700 }}>
-            🧗 {t('7-Day Weekly Word Ladder')} · {t('Week {{wk}}', { wk })}
+            🧗 7-Day Weekly Word Ladder · Week {wk}
           </p>
           <h3 style={{ margin: '4px 0 6px', color: 'var(--navy)' }}>
             {ladder.start} <span style={{ opacity: 0.5 }}>→</span> {ladder.target}
           </h3>
           <p className="muted" style={{ margin: 0, fontSize: '0.88rem' }}>
-            {t(ladder.theme)}
+            {ladder.theme}
           </p>
         </div>
         <div style={{ textAlign: 'right' }}>
@@ -170,7 +191,7 @@ export default function WeeklyWordLadder() {
             fontWeight: 700,
             border: '1px solid var(--line)'
           }}>
-            {isCompletedForWeek ? '🏆 ' + t('Ladder Complete (+50 pts)') : `${Math.min(savedSteps.length - 1, 7)} / 7 ${t('Steps')}`}
+            {isCompletedForWeek ? '🏆 Ladder Complete (+50 pts)' : `${Math.min(savedSteps.length - 1, 7)} / 7 Steps`}
           </span>
         </div>
       </div>
@@ -193,7 +214,7 @@ export default function WeeklyWordLadder() {
           fontFamily: 'monospace',
           letterSpacing: '0.1em'
         }}>
-          <span style={{ fontSize: '0.7rem', display: 'block', opacity: 0.7, fontWeight: 500 }}>{t('START')}</span>
+          <span style={{ fontSize: '0.7rem', display: 'block', opacity: 0.7, fontWeight: 500 }}>START</span>
           <span style={{ fontSize: '1.05rem' }}>{ladder.start}</span>
         </div>
 
@@ -231,7 +252,7 @@ export default function WeeklyWordLadder() {
                 {filledWord ? (
                   <span>{filledWord} ✓</span>
                 ) : isUnlocked ? (
-                  <span style={{ fontStyle: 'italic', fontSize: '0.82rem' }}>{isCurrentActiveInput ? t('Ready') : '—'}</span>
+                  <span style={{ fontStyle: 'italic', fontSize: '0.82rem' }}>{isCurrentActiveInput ? 'Ready' : '—'}</span>
                 ) : (
                   <span>🔒</span>
                 )}
@@ -252,7 +273,7 @@ export default function WeeklyWordLadder() {
           border: '1px solid var(--line)',
           letterSpacing: '0.1em'
         }}>
-          <span style={{ fontSize: '0.7rem', display: 'block', opacity: 0.7, fontWeight: 500 }}>{t('TARGET')} 🏁</span>
+          <span style={{ fontSize: '0.7rem', display: 'block', opacity: 0.7, fontWeight: 500 }}>TARGET 🏁</span>
           <span style={{ fontSize: '1.05rem' }}>{ladder.target}</span>
         </div>
       </div>
@@ -272,9 +293,9 @@ export default function WeeklyWordLadder() {
             }}>
               <span style={{ fontSize: '1.5rem' }}>✅</span>
               <div>
-                <b style={{ color: 'var(--navy)' }}>{t("Today's ladder step is complete!")}</b>
+                <b style={{ color: 'var(--navy)' }}>Today’s ladder step is complete!</b>
                 <p className="muted" style={{ margin: '2px 0 0', fontSize: '0.84rem' }}>
-                  {t('Come back tomorrow for the next word step. Keep your streak burning! 🔥')}
+                  Come back tomorrow for the next word step. Keep your streak burning! 🔥
                 </p>
               </div>
             </div>
@@ -286,10 +307,10 @@ export default function WeeklyWordLadder() {
               border: '1px solid var(--line)'
             }}>
               <p style={{ margin: '0 0 8px', fontSize: '0.9rem', fontWeight: 600, color: 'var(--navy)' }}>
-                {t('Day {{n}} Step', { n: savedSteps.length })}: {t('Change 1 letter from')} <code>{savedSteps[savedSteps.length - 1]}</code>
+                Day {savedSteps.length} Step: Change 1 letter from <code>{savedSteps[savedSteps.length - 1]}</code>
               </p>
               <p className="muted" style={{ margin: '0 0 12px', fontSize: '0.85rem' }}>
-                💡 <b>{t('Hint')}:</b> {ladder.hints[savedSteps.length - 1]}
+                💡 <b>Hint:</b> {ladder.hints[savedSteps.length - 1]}
               </p>
 
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -298,7 +319,7 @@ export default function WeeklyWordLadder() {
                   value={currentInput}
                   onChange={(e) => { setCurrentInput(e.target.value.toUpperCase()); setErrorMsg('') }}
                   onKeyDown={(e) => e.key === 'Enter' && handleWordSubmit()}
-                  placeholder={t('4-letter word')}
+                  placeholder="4-letter word"
                   maxLength={ladder.start.length}
                   style={{
                     width: '130px',
@@ -313,7 +334,7 @@ export default function WeeklyWordLadder() {
                   }}
                 />
                 <button className="btn" onClick={handleWordSubmit}>
-                  {t('Submit Daily Step (+10 pts)')}
+                  Submit Daily Step (+10 pts)
                 </button>
               </div>
 
@@ -336,9 +357,9 @@ export default function WeeklyWordLadder() {
           border: '1px solid #27AE60'
         }}>
           <p style={{ fontSize: '1.8rem', margin: 0 }}>🎉 🏆</p>
-          <h4 style={{ margin: '6px 0 2px', color: '#27AE60' }}>{t('Weekly Ladder Conquered!')}</h4>
+          <h4 style={{ margin: '6px 0 2px', color: '#27AE60' }}>Weekly Ladder Conquered!</h4>
           <p className="muted" style={{ margin: 0, fontSize: '0.88rem' }}>
-            {t('You successfully transformed {{start}} to {{target}} across all 7 days (+50 points awarded).', { start: ladder.start, target: ladder.target })}
+            You successfully transformed {ladder.start} to {ladder.target} across all 7 days (+50 points awarded).
           </p>
         </div>
       )}
