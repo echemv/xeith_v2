@@ -17,3 +17,12 @@ binding = "DB"
 database_name = "xeith-db"
 database_id = "eb06f59b-ca5a-4fb7-8342-21c370dc8923"
 
+[previews.vars]
+LLM_BASE_URL = "https://api.groq.com/openai/v1"
+LLM_MODEL = "qwen/qwen3.8-27b"
+
+[[previews.d1_databases]]
+binding = "DB"
+database_name = "xeith-db"
+database_id = "eb06f59b-ca5a-4fb7-8342-21c370dc8923"
+
