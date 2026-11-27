@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { LESSONS } from '../data/lessons'
@@ -105,7 +105,29 @@ async function generateCardPngBlob({ title, subtitle, rarity, icon, playerName, 
 export function ShareCardModal({ cardData, onClose }) {
   const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
+  const [copiedImage, setCopiedImage] = useState(false)
   const [downloading, setDownloading] = useState(false)
+  const [shareNote, setShareNote] = useState('')
+  const [cardFile, setCardFile] = useState(null)
+  const [cardBlob, setCardBlob] = useState(null)
+
+  useEffect(() => {
+    let active = true
+    if (!cardData) {
+      setCardBlob(null)
+      setCardFile(null)
+      return
+    }
+    generateCardPngBlob(cardData)
+      .then((blob) => {
+        if (!active || !blob) return
+        setCardBlob(blob)
+        const slug = (cardData.id || 'steward').toLowerCase().replace(/[^a-z0-9-_]/g, '-')
+        setCardFile(new File([blob], `xeith-card-${slug}.png`, { type: 'image/png' }))
+      })
+      .catch(() => {})
+    return () => { active = false }
+  }, [cardData])
 
   if (!cardData) return null
 
@@ -119,6 +141,8 @@ export function ShareCardModal({ cardData, onClose }) {
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(fullShareMessage)}`
   const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`
   const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`
+  const canNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+  const canShareFiles = canNativeShare && typeof navigator.canShare === 'function' && cardFile && navigator.canShare({ files: [cardFile] })
 
   const handleCopyText = async () => {
     try {
@@ -128,10 +152,32 @@ export function ShareCardModal({ cardData, onClose }) {
     } catch {}
   }
 
+  const handleCopyImageAndText = async () => {
+    try {
+      const blob = cardBlob || (await generateCardPngBlob(cardData))
+      if (blob && typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            'image/png': blob,
+            'text/plain': new Blob([fullShareMessage], { type: 'text/plain' })
+          })
+        ])
+        setCopiedImage(true)
+        setShareNote(t('Card image and caption copied — paste directly into WhatsApp, X, or LinkedIn!'))
+        setTimeout(() => setCopiedImage(false), 2600)
+        return
+      }
+    } catch {}
+    // Fallback: copy caption + download PNG
+    await handleCopyText()
+    await handleDownloadPng()
+    setShareNote(t('Caption copied and card PNG downloaded so you can attach it with your post.'))
+  }
+
   const handleDownloadPng = async () => {
     try {
       setDownloading(true)
-      const blob = await generateCardPngBlob(cardData)
+      const blob = cardBlob || (await generateCardPngBlob(cardData))
       if (!blob) return
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -146,13 +192,14 @@ export function ShareCardModal({ cardData, onClose }) {
 
   const handleNativeShare = async () => {
     try {
-      const blob = await generateCardPngBlob(cardData)
-      const file = blob ? new File([blob], 'xeith-steward-card.png', { type: 'image/png' }) : null
+      const file = cardFile || await (async () => {
+        const blob = await generateCardPngBlob(cardData)
+        return blob ? new File([blob], 'xeith-steward-card.png', { type: 'image/png' }) : null
+      })()
       if (navigator.canShare && file && navigator.canShare({ files: [file] })) {
         await navigator.share({
           title: cardData.title,
-          text: shareText,
-          url: shareUrl,
+          text: fullShareMessage,
           files: [file]
         })
         return
@@ -160,7 +207,11 @@ export function ShareCardModal({ cardData, onClose }) {
       if (navigator.share) {
         await navigator.share({ title: cardData.title, text: shareText, url: shareUrl })
       }
-    } catch {}
+    } catch (err) {
+      if (err?.name !== 'AbortError') {
+        await handleCopyImageAndText()
+      }
+    }
   }
 
   return (
@@ -200,6 +251,13 @@ export function ShareCardModal({ cardData, onClose }) {
         </p>
 
         <div className="share-social-grid">
+          {canNativeShare && (
+            <button className="btn primary" onClick={handleNativeShare} style={{ gridColumn: '1 / -1', justifyContent: 'center' }}>
+              📤 {canShareFiles
+                ? t('Share Card Image + Message (WhatsApp, IG, X...)')
+                : t('Share via Device Apps')}
+            </button>
+          )}
           <a
             href={whatsappUrl}
             target="_blank"
@@ -224,18 +282,21 @@ export function ShareCardModal({ cardData, onClose }) {
           >
             💼 {t('Share on LinkedIn')}
           </a>
+          <button className="btn ghost" onClick={handleCopyImageAndText}>
+            🖼️ {copiedImage ? t('Image + Caption Copied!') : t('Copy Image + Caption')}
+          </button>
           <button className="btn ghost" onClick={handleDownloadPng} disabled={downloading}>
-            🖼️ {downloading ? t('Generating PNG...') : t('Download Card PNG')}
+            ⬇️ {downloading ? t('Generating PNG...') : t('Download Card PNG')}
           </button>
           <button className="btn ghost" onClick={handleCopyText}>
             📋 {copied ? t('Copied to Clipboard!') : t('Copy Share Caption')}
           </button>
-          {typeof navigator !== 'undefined' && navigator.share && (
-            <button className="btn primary" onClick={handleNativeShare}>
-              📤 {t('More Apps (Instagram / Device Share)')}
-            </button>
-          )}
         </div>
+        {shareNote && (
+          <p className="muted" role="status" style={{ fontSize: '0.78rem', margin: '10px 0 0', color: 'var(--teal)' }}>
+            {shareNote}
+          </p>
+        )}
       </div>
     </div>
   )
