@@ -1638,7 +1638,7 @@ label{font-weight:600;display:block}
   /* Mascot sits above the tab bar; content and footer reserve room for both */
   .mascot{right:12px;bottom:calc(76px + env(safe-area-inset-bottom))}
   .avatar{width:56px;height:56px}
-  .avatar svg{width:46px;height:46px}
+  .avatar svg,.avatar img{width:46px;height:46px}
   .mascot .say{display:none}
   .app-shell.sidebar-floating .content-container,
   .content-container{padding-bottom:calc(152px + env(safe-area-inset-bottom))}

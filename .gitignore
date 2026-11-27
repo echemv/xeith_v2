@@ -57,3 +57,5 @@ dist
 /data/
 skills-lock.json
 skills/
+# macOS metadata
+.DS_Store
