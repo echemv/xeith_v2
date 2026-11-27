@@ -268,18 +268,21 @@ export default function Account() {
       {tab === 'profile' && (
         <>
           {!profile && !cloudUser ? (
-            <>
+            <div className="account-split-grid">
             <section className="card glass">
-              <h3>{t('Create your local profile')}</h3>
-              <p className="muted">{t('Everything stays on this device. Link to cloud later for leaderboards and friends.')}</p>
-              <label htmlFor="n">{t('Display name')}</label>
-              <input id="n" value={name} onChange={(e) => setName(e.target.value)} maxLength={30} placeholder={t('Your name')} />
-              <label htmlFor="e">{t('Email (required for cloud)')}</label>
-              <input id="e" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('For cross-device sign-in')} />
-              <label htmlFor="pw">{t('Password (required for cloud, min 6 chars)')}</label>
-              <input id="pw" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••" />
-              <div className="row">
-                <button className="btn" disabled={!name.trim() || loading} onClick={() => createProfile(name, email)}>
+              <div>
+                <p className="eyebrow">{t('New here')}</p>
+                <h3>{t('Local Profile & Cloud Sign-Up')}</h3>
+                <p className="muted">{t('Keep data on this device only, or link to the cloud for leaderboards, streaks, and friends.')}</p>
+                <label htmlFor="n">{t('Display name')}</label>
+                <input id="n" value={name} onChange={(e) => setName(e.target.value)} maxLength={30} placeholder={t('Your name')} />
+                <label htmlFor="e">{t('Email (required for cloud)')}</label>
+                <input id="e" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('For cross-device sign-in')} />
+                <label htmlFor="pw">{t('Password (required for cloud, min 6 chars)')}</label>
+                <input id="pw" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••" />
+              </div>
+              <div className="row" style={{ marginTop: '12px' }}>
+                <button className="btn ghost" disabled={!name.trim() || loading} onClick={() => createProfile(name, email)}>
                   {t('Create local profile')}
                 </button>
                 <button className="btn" disabled={!name.trim() || !email.trim() || password.length < 6 || loading} onClick={handleCloudRegister}>
@@ -287,18 +290,21 @@ export default function Account() {
                 </button>
               </div>
             </section>
-            <section className="card glass" style={{ marginTop: '14px' }}>
-              <h3>{t('Already have a cloud account?')}</h3>
-              <p className="muted">{t('Sign in with your email and password to restore your points, streak, and friends on any device.')}</p>
+            <section className="card glass">
+              <div>
+                <p className="eyebrow">{t('Returning')}</p>
+                <h3>{t('Cloud Account Sign-In')}</h3>
+                <p className="muted">{t('Sign in with your email and password to restore your points, streak, and friends on any device.')}</p>
 
-              <label htmlFor="le">{t('Email')}</label>
-              <input id="le" type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="you@example.com" />
-              <label htmlFor="lpw">{t('Password')}</label>
-              <input id="lpw" type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="••••••" />
-              <div className="row">
-                <button className="btn" disabled={!loginEmail.trim() || !loginPassword || loading} onClick={() => handleCloudLogin(false)}>
-                  {t('Sign in & restore data')}
-                </button>
+                <label htmlFor="le">{t('Email')}</label>
+                <input id="le" type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="you@example.com" />
+                <label htmlFor="lpw">{t('Password')}</label>
+                <input id="lpw" type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="••••••" />
+                <div className="row" style={{ marginTop: '12px' }}>
+                  <button className="btn" disabled={!loginEmail.trim() || !loginPassword || loading} onClick={() => handleCloudLogin(false)}>
+                    {t('Sign in & restore data')}
+                  </button>
+                </div>
               </div>
 
               <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid var(--line)' }}>
@@ -323,9 +329,9 @@ export default function Account() {
                 )}
               </div>
             </section>
-            </>
+            </div>
           ) : (
-            <>
+            <div className="account-split-grid">
               {/* Local profile section */}
               {profile && !cloudUser && (
                 <section className="card glass">
@@ -417,7 +423,7 @@ export default function Account() {
                   <button className="btn" onClick={handleSync} disabled={loading} style={{ marginTop: '12px', width: '100%' }}>{t('Sync to cloud now')}</button>
                 </section>
               )}
-            </>
+            </div>
           )}
 
           {/* Achievements preview on profile tab */}
