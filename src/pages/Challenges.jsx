@@ -5,6 +5,8 @@ import { useApp, award, weekNumber } from '../store'
 import DailyChallenge from '../components/DailyChallenge'
 import WeeklyWordLadder from '../components/WeeklyWordLadder'
 import AiUpdateFramework from '../components/AiUpdateFramework'
+import FourWorlds from '../components/FourWorlds'
+import CaseFiles from '../components/CaseFiles'
 
 const DEFAULT_WEEKLY_CHALLENGES = [
   {
@@ -206,6 +208,10 @@ export default function Challenges() {
 
       {/* 7-Step Weekly Word Ladder */}
       <WeeklyWordLadder />
+
+      {/* Games and branching scenarios (draft content) */}
+      <FourWorlds />
+      <CaseFiles />
 
       <h2 style={{ marginTop: '28px', marginBottom: '14px' }}>{t('This Week')}</h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
