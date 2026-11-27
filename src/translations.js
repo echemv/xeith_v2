@@ -1,5 +1,10 @@
 // English text -> [Pidgin, Hausa, Yoruba, Igbo, French]. WORKING DRAFTS: need native-speaker and clinician review.
 // A string with no row here shows in English. To translate more, add rows.
+import part1 from './translations/part1.js'
+import part2 from './translations/part2.js'
+import part3 from './translations/part3.js'
+import part4 from './translations/part4.js'
+
 export default [
 ['Learn AMR in a language you understand','Learn AMR for language wey you sabi','Koyi AMR da yaren da ka fahimta','Kọ́ nípa AMR ní èdè tí o gbọ́','Mụta banyere AMR n’asụsụ ị na-aghọta','Apprenez la RAM dans une langue que vous comprenez'],
 ['Choose your language','Choose your language','Zaɓi harshenka','Yan èdè rẹ','Họrọ asụsụ gị','Choisissez votre langue'],
@@ -151,10 +156,31 @@ export default [
 ['Keep them for the next time you feel sick','Keep them for the next time you feel sick','Ajiye shi a watan shekaru da yake farin ci gaba','Gba wọn láti àìjọ kàn','Ọ ga-esi ha maka ụbọchị ọzọ na-ahụ na ahụ mma','Gardez-les pour la prochaine fois où vous vous sentirez malade.'],
 ['Give them to a family member with the same symptoms','Give them to a family member with the same symptoms','Ba shi a cikin ƙaraminu da ke buƙatar ƙarfafa da kawai','Yí wọ́n sí ẹgbẹ́ tí ń ṣe àìsàn wọ́n','Ha pụtara ha maka ndị n’otu ụnọ na-echezọ ihe na-ahụ','Donnez-les à un membre de la famille ayant les mêmes symptômes.'],
 ['Ask a pharmacist how to dispose of them safely.','Ask a pharmacist how to dispose of them safely.','Tambayi mai shirye shirye yadda ake fi daga shi lafiya.','Kọ́kọ́ oníṣègùn oògùn yópọ̀ láti yí wọ́n sìlẹ̀ ṣìntọ́.','Buru onye na-ere ọgwụ maka ị wepụ ha mma.','Demandez à un pharmacien comment les éliminer en toute sécurité.'],
-['Leftovers may be the wrong drug or dose for a new illness. Ask a pharmacist how to dispose of them.','Leftovers may be the wrong drug or dose for a new illness. Ask a pharmacist how to dispose of them.','Ragowar za su iya daɗi da wannan wannan, kuma mutumi da laifin za su iya daɗi da wannan wannan. Tambayi mai shirye shirye yadda ake fi daga shi lafiya.','Oògùn tí ó ṣe̩ ní lè ń fọ́kànsẹ sí àìsàn kàn, tàbí àṣàrò lè ń fọ́kànsẹ sí wọn. Kọ́kọ́ oníṣègùn oògùn yópọ̀ láti yí wọ́n sìlẹ̀ ṣìntọ́.','Les restes peuvent être le mauvais médicament ou la mauvaise dose pour une nouvelle maladie. Demandez à un pharmacien comment les éliminer.'],
+['Leftovers may be the wrong drug or dose for a new illness. Ask a pharmacist how to dispose of them.','Leftovers may be the wrong drug or dose for a new illness. Ask a pharmacist how to dispose of them.','Ragowar za su iya daɗi da wannan wannan, kuma mutumi da laifin za su iya daɗi da wannan wannan. Tambayi mai shirye shirye yadda ake fi daga shi lafiya.','Oògùn tí ó ṣe̩ ní lè ń fọ́kànsẹ sí àìsàn kàn, tàbí àṣàrò lè ń fọ́kànsẹ sí wọn. Kọ́kọ́ oníṣègùn oògùn yópọ̀ láti yí wọ́n sìlẹ̀ ṣìntọ́.','Ọgwụ fọdụrụ nwere ike ịbụ ọgwụ ma ọ bụ oke na-ezighị ezi maka ọrịa ọhụrụ. Jụọ onye na-ere ọgwụ otu e si ekpofu ha.','Les restes peuvent être le mauvais médicament ou la mauvaise dose pour une nouvelle maladie. Demandez à un pharmacien comment les éliminer.'],
 ['Skip','Skip','Ƙara','Dúró','Ọ dị ọ','Passer'],
 ['Language','Language','Harshe','Èdè','Asụsụ','Langue'],
 ['Main','Main','Tarfafa','Mọkan','Ọhụrụ','Principal'],
 ['Thinking','Thinking','Yi tsarin','Bá oṣiṣẹ̀','Nchikọ','Réfléchit'],
 ['Continue in English','Continue in English','Ji a cikin Turanci','Wọ̀lẹ sí èdè Gẹ́ẹ́sí','Lepụ na asụsụ Ọnịcha','Continuer en anglais'],
+['New Chat','New Chat','Sabuwar Hira','Ìfọ̀rọ̀wánilẹ́nuwò Tuntun','Mkparịta ụka Ọhụrụ'],
+['Chat History','Chat History','Tarihin Hira','Àkọsílẹ̀ Ìfọ̀rọ̀wánilẹ́nuwò','Akụkọ Mkparịta ụka'],
+['History','History','Tarihi','Ìtàn','Akụkọ ihe mere eme'],
+['Conversations','Conversations','Hirarraki','Àwọn Ìfọ̀rọ̀wánilẹ́nuwò','Mkparịta ụka'],
+['No conversations yet','No chat history yet','Babu tarihin hira tukuna','Kò tíì sí àkọsílẹ̀','Enwebeghị mkparịta ụka'],
+['Delete conversation','Delete chat','Goge hira','Pa ìfọ̀rọ̀wánilẹ́nuwò rẹ́','Hichapụ mkparịta ụka'],
+['Clear all conversations','Clear all chats','Goge duk hirarraki','Pa gbogbo rẹ́','Hichapụcha mkparịta ụka niile'],
+['Are you sure you want to delete all conversations?','You sure say you wan delete all chats?','Ka tabbata kana son share duk hirarrakin?','Ṣé o dá ẹ lójú pé o fẹ́ pa gbogbo rẹ̀ rẹ́?','O doro gị anya na ị chọrọ ihichapụ mkparịta ụka niile?'],
+['Today','Today','Yau','Lónìí','Taa'],
+['Yesterday','Yesterday','Jiya','Lánàá','Nnyahụ'],
+['{{count}} messages','{{count}} messages','Saƙonni {{count}}','Àwọn ifiranṣẹ {{count}}','Ozi {{count}}'],
+['Suggested questions','Suggested questions','Tambayoyi da aka ba da shawara','Àwọn ìbéèrè tí a dámọ̀ràn','Ajụjụ ndị a tụrụ aro'],
+['What is AMR and why does it matter?','Wetin be AMR and why e matter?','Menene AMR kuma me yasa yake da muhimmanci?','Kí ni AMR àti èéṣe tí ó fi ṣe pàtàkì?','Gịnị bụ AMR na gịnị kpatara o ji dị mkpa?'],
+['Can antibiotics treat the flu or colds?','Antibiotics fit cure cold or catarrh?','Maganin kashe ƙwayoyin cuta zai iya warkar da mura?','Ṣé oògùn apakòkòrò le wo ibà tàbí òtútù?','Ọgwụ nje nwere ike ịgwọ flu ma ọ bụ oyi?'],
+['Why must I finish my antibiotic course?','Why I must finish all my antibiotic dose?','Me yasa dole in gama shan maganin rigakafi?','Èéṣe tí mo fi gbọ́dọ̀ parí oògùn apakòkòrò mi?','Gịnị kpatara m ji kwesị imecha ọgwụ nje m niile?'],
+['How do superbugs spread?','How superbugs take dey spread?','Yaya ƙwayoyin cuta masu ƙarfi ke yaɗuwa?','Báwo ni àwọn kòkòrò búburú ṣe ń tàn kálẹ̀?','Kedu ka nje ndị siri ike si agbasa?'],
+['Ask anything about antimicrobial resistance. I teach and explain. I can’t diagnose or prescribe.','Ask anything about antimicrobial resistance. I dey teach and explain. I no fit give diagnosis or prescribe medicine.','Tambayi kowane abu game da juriya ga maganin rigakafi. Ina koyarwa da bayani. Ba zan iya bincikar rashin lafiya ko rubuta magani ba.','Béèrè ohun gbogbo nípa ìdènà oògùn apakòkòrò. Mo ń kọ́ni àti ṣàlàyé. Èmi kò le ṣe àyẹ̀wò tàbí kọ oògùn sílẹ̀.','Jụọ ihe ọ bụla gbasara nguzogide ọgwụ nje. M na-akụzi ma na-akọwa. Enweghị m ike ịchọpụta ọrịa ma ọ bụ depụta ọgwụ.'],
+  ...part1,
+  ...part2,
+  ...part3,
+  ...part4,
 ]
