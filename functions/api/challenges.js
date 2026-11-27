@@ -90,9 +90,34 @@ Return JSON:
   return prompts[type] || prompts.QUIZ
 }
 
+const ALLOWED_LANGS = ['en', 'pid', 'ha', 'yo', 'ig']
+
 export async function onRequestPost({ request, env }) {
   try {
+    // Rate-limiting check if D1 database is bound
+    if (env.DB) {
+      const clientIp = request.headers.get('cf-connecting-ip') || 'unknown'
+      const windowSec = Math.floor(Date.now() / 1000 / 60) // 1-minute window
+      const ipKey = `challenges:${clientIp}:${windowSec}`
+      try {
+        await env.DB.prepare(
+          'CREATE TABLE IF NOT EXISTS rate_limits (key TEXT PRIMARY KEY, count INTEGER, expires_at INTEGER)'
+        ).run()
+        const nowSec = Math.floor(Date.now() / 1000)
+        await env.DB.prepare(
+          'INSERT INTO rate_limits (key, count, expires_at) VALUES (?, 1, ?) ON CONFLICT(key) DO UPDATE SET count = count + 1'
+        ).bind(ipKey, nowSec + 120).run()
+        const record = await env.DB.prepare('SELECT count FROM rate_limits WHERE key = ?').bind(ipKey).first()
+        if (record && record.count > 20) {
+          return json({ error: 'Rate limit exceeded. Please wait a moment.' }, 429)
+        }
+      } catch {
+        // Continue if rate limit check fails
+      }
+    }
+
     const { type, topic, lang = 'en', date } = await request.json()
+    const cleanLang = ALLOWED_LANGS.includes(lang) ? lang : 'en'
 
     // Validate
     if (!CHALLENGE_TYPES.includes(type)) {
@@ -107,7 +132,7 @@ export async function onRequestPost({ request, env }) {
       return json({ error: 'AI not configured' }, 503)
     }
 
-    const prompt = buildPrompt(type, topic, lang, date || new Date().toISOString())
+    const prompt = buildPrompt(type, topic, cleanLang, date || new Date().toISOString())
 
     const r = await fetch((env.LLM_BASE_URL || 'https://api.openai.com/v1') + '/chat/completions', {
       method: 'POST',
