@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { LESSONS, TIERS } from '../data/lessons'
 import Quiz from '../components/Quiz'
 import AiUpdateFramework from '../components/AiUpdateFramework'
+import { ClassroomSectionCardBanner } from '../components/PlayerAchievementCards'
+import { getPlayerRank } from '../data/achievements'
 import { award, useApp } from '../store'
 
 const LESSON_TO_PATHOGEN = {
@@ -15,16 +17,27 @@ const LESSON_TO_PATHOGEN = {
   parasites: 'parasite'
 }
 
+const KEY_TERMS_GLOSSARY = [
+  { term: 'Microbe', def: 'A tiny living organism (like bacteria or yeast) only visible under a microscope—most are harmless or helpful.' },
+  { term: 'Pathogen', def: 'A disease-causing germ (bacteria, virus, fungus, or parasite) that can make people, animals, or plants sick.' },
+  { term: 'AMR', def: 'Antimicrobial Resistance—when germs evolve armor or pumps so the medicines that used to kill them stop working.' },
+  { term: 'ACT', def: 'Artemisinin-based Combination Therapy—the 3-day (6-dose) gold-standard tablet course for confirmed malaria.' },
+  { term: 'RDT', def: 'Rapid Diagnostic Test—a quick 15-minute finger-prick blood test to confirm malaria before taking medicine.' },
+  { term: 'NAFDAC MAS', def: 'Mobile Authentication Service—scratch the panel on a medicine pack and SMS the code to 38353 for free to verify it is genuine.' }
+]
+
 export default function Learn() {
   const { t } = useTranslation()
-  const { done } = useApp()
+  const { done, points, streak, profile } = useApp()
   const [searchParams, setSearchParams] = useSearchParams()
   const [open, setOpen] = useState(() => searchParams.get('module') || null)
   const [step, setStep] = useState(0)
   const [activeCategory, setActiveCategory] = useState('ALL')
   const [viewMode, setViewMode] = useState('pathway') // 'pathway' | 'grid'
-  const [showRefs, setShowRefs] = useState(true)
+  const [showRefs, setShowRefs] = useState(false)
   const [showFramework, setShowFramework] = useState(false)
+  const [showGlossary, setShowGlossary] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)
 
   useEffect(() => {
     const mod = searchParams.get('module')
@@ -33,6 +46,13 @@ export default function Learn() {
       setStep(0)
     }
   }, [searchParams])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel()
+      setIsSpeaking(false)
+    }
+  }, [open, step])
 
   const openModule = (id) => {
     setOpen(id)
@@ -46,34 +66,29 @@ export default function Learn() {
     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
   }
 
+  const toggleSpeakStep = (headingText, bodyText) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return
+    if (isSpeaking) {
+      window.speechSynthesis.cancel()
+      setIsSpeaking(false)
+      return
+    }
+    window.speechSynthesis.cancel()
+    const utter = new SpeechSynthesisUtterance(`${headingText}. ${bodyText}`)
+    utter.rate = 0.98
+    utter.onend = () => setIsSpeaking(false)
+    utter.onerror = () => setIsSpeaking(false)
+    setIsSpeaking(true)
+    window.speechSynthesis.speak(utter)
+  }
+
   const lesson = LESSONS.find((l) => l.id === open)
 
-  // Calculate completed modules
+  // Calculate completed modules & unified rank
   const completedCount = LESSONS.filter((l) => done['lesson-' + l.id]).length
   const progressPercent = Math.round((completedCount / LESSONS.length) * 100)
-
-  // Determine User Stewardship Rank
-  let userRank = {
-    title: t('Beginner Explorer'),
-    level: 1,
-    icon: '🌱',
-    desc: t('Starting from the basics: learning what microbes, pathogens, and AMR are.')
-  }
-  if (completedCount >= 7) {
-    userRank = {
-      title: t('AMR Champion'),
-      level: 3,
-      icon: '🌍',
-      desc: t('Mastering infection prevention, One Health, and safe medicine habits.')
-    }
-  } else if (completedCount >= 3) {
-    userRank = {
-      title: t('Pathogen Detective'),
-      level: 2,
-      icon: '🔬',
-      desc: t('Understanding bacteria, viruses, fungi, and parasites—and which medicines treat them.')
-    }
-  }
+  const userRank = getPlayerRank(done, null, points)
+  const nextUnfinishedLesson = [...LESSONS].sort((a, b) => a.order - b.order).find((l) => !done['lesson-' + l.id])
 
   // Categories list for filtering in Grid view
   const categories = ['ALL', ...new Set(LESSONS.map((l) => l.category))]
@@ -90,44 +105,80 @@ export default function Learn() {
             <div className="classroom-hero-badge">
               <span>🎓</span> {t('Evidence-Based Stewardship Curriculum')}
             </div>
-            <button
-              className="btn ghost ai-framework-btn"
-              onClick={() => setShowFramework(true)}
-              title={t('View how the AI continuously verifies and updates surveillance info')}
-            >
-              🤖 {t('AI Knowledge Update Framework')}
-            </button>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                className="btn ghost ai-framework-btn"
+                onClick={() => setShowGlossary(!showGlossary)}
+              >
+                📖 {showGlossary ? t('Hide Key Terms Glossary') : t('Quick Key Terms Glossary')}
+              </button>
+              <button
+                className="btn ghost ai-framework-btn"
+                onClick={() => setShowFramework(true)}
+                title={t('View how the AI continuously verifies and updates surveillance info')}
+              >
+                🤖 {t('AI Knowledge Update Framework')}
+              </button>
+            </div>
           </div>
 
           <h1>{t('The AMR Classroom')}</h1>
           <p className="lead">
-            {t('Start from the basics of microbes and pathogens, explore how bacteria, viruses, fungi, and parasites work, and build your way up step by step.')}
+            {t('Start from the basics of microbes and pathogens, explore how bacteria, viruses, fungi, and parasites work, and build your way up step by step. Complete each section to unlock shareable Collector Cards and new game levels!')}
           </p>
 
-          {/* User Rank & Progression Card */}
+          {showGlossary && (
+            <div className="classroom-glossary-drawer animate-fade-in">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <h4 style={{ margin: 0, fontSize: '0.95rem' }}>📖 {t('Everyday AMR Key Terms Glossary')}</h4>
+                <button className="btn ghost" style={{ padding: '4px 10px', fontSize: '0.78rem' }} onClick={() => setShowGlossary(false)}>✕</button>
+              </div>
+              <div className="glossary-chips-grid">
+                {KEY_TERMS_GLOSSARY.map((g) => (
+                  <div key={g.term} className="glossary-term-card">
+                    <b>{t(g.term)}</b>
+                    <p>{t(g.def)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* User Rank, Next Module CTA & Unlock Milestones Card */}
           <div className="classroom-progress-card">
             <div className="progress-info-row">
               <div className="user-rank-info">
                 <span className="user-rank-badge">
-                  {userRank.icon} {t('Rank: {{title}} (Level {{lvl}})', { title: userRank.title, lvl: userRank.level })}
+                  {userRank.icon} {t('Rank: {{title}} (Level {{lvl}})', { title: t(userRank.title), lvl: userRank.level })}
                 </span>
                 <p className="progress-count">
                   <b>{completedCount}</b> / {LESSONS.length} {t('Modules Mastered')} • {progressPercent}%
                 </p>
               </div>
-              <div className="view-mode-toggle" role="group" aria-label={t('Curriculum Layout')}>
-                <button
-                  className={'toggle-btn' + (viewMode === 'pathway' ? ' active' : '')}
-                  onClick={() => setViewMode('pathway')}
-                >
-                  🗺️ {t('Pathway View')}
-                </button>
-                <button
-                  className={'toggle-btn' + (viewMode === 'grid' ? ' active' : '')}
-                  onClick={() => setViewMode('grid')}
-                >
-                  ▦ {t('Grid View')}
-                </button>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                {nextUnfinishedLesson && (
+                  <button
+                    className="btn primary"
+                    style={{ fontSize: '0.84rem', padding: '9px 16px' }}
+                    onClick={() => openModule(nextUnfinishedLesson.id)}
+                  >
+                    ▶ {t('Continue Step {{n}}: {{title}}', { n: nextUnfinishedLesson.order, title: t(nextUnfinishedLesson.title) })}
+                  </button>
+                )}
+                <div className="view-mode-toggle" role="group" aria-label={t('Curriculum Layout')}>
+                  <button
+                    className={'toggle-btn' + (viewMode === 'pathway' ? ' active' : '')}
+                    onClick={() => setViewMode('pathway')}
+                  >
+                    🗺️ {t('Pathway View')}
+                  </button>
+                  <button
+                    className={'toggle-btn' + (viewMode === 'grid' ? ' active' : '')}
+                    onClick={() => setViewMode('grid')}
+                  >
+                    ▦ {t('Grid View')}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -136,6 +187,22 @@ export default function Learn() {
                 className="classroom-progress-fill"
                 style={{ width: `${progressPercent}%` }}
               />
+            </div>
+
+            {/* Unified Classroom Unlock Milestones Strip */}
+            <div className="classroom-unlock-milestones">
+              <div className={`unlock-milestone-pill ${completedCount >= 2 ? 'is-reached' : ''}`}>
+                <span>{completedCount >= 2 ? '✅' : '🔒'}</span>
+                <span>{t('2 Modules: Section 1 Card + Level 2 Scenarios & Outbreak Surge')}</span>
+              </div>
+              <div className={`unlock-milestone-pill ${completedCount >= 5 ? 'is-reached' : ''}`}>
+                <span>{completedCount >= 5 ? '✅' : '🔒'}</span>
+                <span>{t('5 Modules: Level 3 Superbug Crisis & ICU Scenarios')}</span>
+              </div>
+              <div className={`unlock-milestone-pill ${completedCount >= 9 ? 'is-reached' : ''}`}>
+                <span>{completedCount >= 9 ? '✅' : '🔒'}</span>
+                <span>{t('9 Modules: All 3 Section Cards + Grand Steward Legendary Card')}</span>
+              </div>
             </div>
           </div>
         </header>
@@ -158,7 +225,7 @@ export default function Learn() {
                       <div>
                         <div className="tier-meta-badges">
                           <span className="tier-level-tag">
-                            {t('Level {{lvl}}: {{badge}}', { lvl: tier.level, badge: tier.badge })}
+                            {t('Level {{lvl}}: {{badge}}', { lvl: tier.level, badge: t(tier.badge) })}
                           </span>
                           <span className="tier-progress-tag">
                             {tierDoneCount}/{tierLessons.length} {t('Completed')}
@@ -169,9 +236,20 @@ export default function Learn() {
                       </div>
                     </div>
                     {isTierComplete && (
-                      <span className="tier-mastered-badge">✅ {t('Tier Mastered')}</span>
+                      <span className="tier-mastered-badge">✅ {t('Section Mastered')}</span>
                     )}
                   </div>
+
+                  {/* Section Mastery Collector Card with Social Media Sharing */}
+                  <ClassroomSectionCardBanner
+                    tier={tier}
+                    isTierComplete={isTierComplete}
+                    tierDoneCount={tierDoneCount}
+                    tierTotalCount={tierLessons.length}
+                    points={points}
+                    streak={streak}
+                    playerName={profile?.name}
+                  />
 
                   <div className="pathway-milestones-track">
                     {tierLessons.map((l, mIdx) => {
@@ -298,6 +376,11 @@ export default function Learn() {
   const totalSteps = lesson.steps.length
   const isQuizStep = step === totalSteps
   const currentStepData = !isQuizStep ? lesson.steps[step] : null
+  const nextModuleInOrder = LESSONS.find((l) => l.order === lesson.order + 1) || null
+  const currentTier = TIERS.find((tr) => tr.moduleIds.includes(lesson.id))
+  const currentTierLessons = currentTier ? LESSONS.filter((l) => currentTier.moduleIds.includes(l.id)) : []
+  const currentTierDoneCount = currentTierLessons.filter((l) => done['lesson-' + l.id]).length
+  const isCurrentTierComplete = currentTierLessons.length > 0 && currentTierDoneCount === currentTierLessons.length
 
   return (
     <div className="lesson-reader-container animate-fade-in">
@@ -349,11 +432,23 @@ export default function Learn() {
       <div className="card lesson-body-card">
         {!isQuizStep ? (
           <article className="step-content-article">
-            <div className="step-content-header">
-              <span className="step-counter-tag">
-                {t('Part {{curr}} of {{total}}', { curr: step + 1, total: totalSteps })}
-              </span>
-              <h2 className="step-heading">{t(currentStepData.heading)}</h2>
+            <div className="step-content-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
+              <div>
+                <span className="step-counter-tag">
+                  {t('Part {{curr}} of {{total}}', { curr: step + 1, total: totalSteps })}
+                </span>
+                <h2 className="step-heading">{t(currentStepData.heading)}</h2>
+              </div>
+              {typeof window !== 'undefined' && 'speechSynthesis' in window && (
+                <button
+                  type="button"
+                  className={`btn ${isSpeaking ? 'primary' : 'ghost'}`}
+                  style={{ fontSize: '0.8rem', padding: '7px 13px' }}
+                  onClick={() => toggleSpeakStep(t(currentStepData.heading), t(currentStepData.content))}
+                >
+                  {isSpeaking ? `⏹ ${t('Stop Audio')}` : `🔊 ${t('Listen to Step')}`}
+                </button>
+              )}
             </div>
 
             <div className="step-paragraphs">
@@ -361,6 +456,56 @@ export default function Learn() {
                 <p key={pIdx} className="step-p">{paragraph}</p>
               ))}
             </div>
+
+            {/* Interactive Visual Quick-Reference Cards for Key Modules */}
+            {lesson.id === 'intro-pathogens' && step === 2 && (
+              <div className="lesson-visual-grid">
+                <div className="visual-match-card">
+                  <span className="vm-icon">🦠</span>
+                  <b>{t('Bacteria')}</b>
+                  <span className="vm-pill">{t('Antibiotics ONLY')}</span>
+                  <small>{t('Typhoid, Strep throat, UTIs')}</small>
+                </div>
+                <div className="visual-match-card">
+                  <span className="vm-icon">🛡️</span>
+                  <b>{t('Viruses')}</b>
+                  <span className="vm-pill">{t('Rest, Fluids & Antivirals')}</span>
+                  <small>{t('Common cold, Flu, COVID-19 (No Antibiotics!)')}</small>
+                </div>
+                <div className="visual-match-card">
+                  <span className="vm-icon">🍄</span>
+                  <b>{t('Fungi')}</b>
+                  <span className="vm-pill">{t('Antifungals')}</span>
+                  <small>{t('Ringworm, Athlete’s foot, Thrush')}</small>
+                </div>
+                <div className="visual-match-card">
+                  <span className="vm-icon">🦟</span>
+                  <b>{t('Parasites')}</b>
+                  <span className="vm-pill">{t('Antimalarials (3-Day ACT)')}</span>
+                  <small>{t('Malaria—always test with RDT first!')}</small>
+                </div>
+              </div>
+            )}
+
+            {lesson.id === 'systems-quality' && step === 0 && (
+              <div className="lesson-visual-grid">
+                <div className="visual-match-card">
+                  <span className="vm-icon">🔢</span>
+                  <b>{t('1. NAFDAC Reg. No.')}</b>
+                  <small>{t('Check for a clear NAFDAC Registration Number printed on the box.')}</small>
+                </div>
+                <div className="visual-match-card">
+                  <span className="vm-icon">📱</span>
+                  <b>{t('2. Scratch & SMS 38353')}</b>
+                  <small>{t('Scratch the MAS panel and text the PIN to 38353 for free instant verification.')}</small>
+                </div>
+                <div className="visual-match-card">
+                  <span className="vm-icon">💊</span>
+                  <b>{t('3. Sealed Blister Pack')}</b>
+                  <small>{t('Never buy loose, unlabelled capsules or cut blister strips with no expiry date.')}</small>
+                </div>
+              </div>
+            )}
 
             {currentStepData.caseStudy && (
               <aside className="lesson-callout callout-vignette" role="note" aria-label={t('Real-Life Example')}>
@@ -417,6 +562,51 @@ export default function Learn() {
               }}
             />
 
+            {/* Module & Section Completion Celebration + Next Module CTA */}
+            {done['lesson-' + lesson.id] && (
+              <div className="module-completion-celebration animate-fade-in">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                  <div>
+                    <span className="badge-completed" style={{ display: 'inline-block', marginBottom: '6px' }}>
+                      🎉 {t('Module Completed! (+10 Stewardship Pts)')}
+                    </span>
+                    <h3 style={{ margin: '0 0 4px' }}>
+                      {isCurrentTierComplete
+                        ? t('You completed all modules in {{tier}}!', { tier: t(currentTier.title) })
+                        : t('Great job mastering {{title}}!', { title: t(lesson.title) })}
+                    </h3>
+                    <p className="muted" style={{ margin: 0, fontSize: '0.85rem' }}>
+                      {isCurrentTierComplete
+                        ? t('Your shareable Section Collector Card is now unlocked below!')
+                        : t('Keep going to finish this section and unlock your shareable Section Collector Card.')}
+                    </p>
+                  </div>
+                  {nextModuleInOrder && (
+                    <button
+                      className="btn primary"
+                      onClick={() => openModule(nextModuleInOrder.id)}
+                    >
+                      {t('Next Module: Step {{n}} →', { n: nextModuleInOrder.order })}
+                    </button>
+                  )}
+                </div>
+
+                {currentTier && (
+                  <div style={{ marginTop: '14px' }}>
+                    <ClassroomSectionCardBanner
+                      tier={currentTier}
+                      isTierComplete={isCurrentTierComplete}
+                      tierDoneCount={currentTierDoneCount}
+                      tierTotalCount={currentTierLessons.length}
+                      points={points}
+                      streak={streak}
+                      playerName={profile?.name}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="cross-section-bridge" style={{ marginTop: '24px', paddingTop: '18px', borderTop: '1px solid var(--line)', display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', justifyContent: 'space-between' }}>
               <span className="muted" style={{ fontSize: '.85rem', fontWeight: 600 }}>
                 🔗 {t('Apply this module across XEITH:')}
@@ -454,8 +644,8 @@ export default function Learn() {
             <div className="refs-header-left">
               <span className="refs-icon">📚</span>
               <div>
-                <h3 className="refs-title">{t('Scraped & Authoritative Scientific References')}</h3>
-                <p className="refs-subtitle">{t('Direct evidence from WHO, NCDC, The Lancet, and peer-reviewed clinical studies.')}</p>
+                <h3 className="refs-title">{t('Scraped & Authoritative Scientific References')} ({lesson.references.length})</h3>
+                <p className="refs-subtitle">{t('Click to expand direct evidence from WHO, NCDC, The Lancet, and peer-reviewed clinical studies.')}</p>
               </div>
             </div>
             <span className="refs-toggle-arrow">{showRefs ? '▲' : '▼'}</span>

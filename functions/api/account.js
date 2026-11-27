@@ -180,15 +180,21 @@ export async function onRequestGet({ request, env, params }) {
       }))
     }
 
-    // Leaderboards
+    // Leaderboards (live dynamic ranking from user_stats + users)
     if (path === '/leaderboard/global') {
       const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100)
       const offset = parseInt(url.searchParams.get('offset') || '0')
 
       const board = await env.DB.prepare(`
-        SELECT rank, user_id, points, display_name, avatar_seed
-        FROM leaderboard_global
-        ORDER BY rank
+        SELECT
+          ROW_NUMBER() OVER (ORDER BY s.points DESC, s.updated_at ASC) AS rank,
+          u.id AS user_id,
+          s.points AS points,
+          u.display_name AS display_name,
+          u.avatar_seed AS avatar_seed
+        FROM user_stats s
+        JOIN users u ON u.id = s.user_id
+        ORDER BY s.points DESC, s.updated_at ASC
         LIMIT ? OFFSET ?
       `).bind(limit, offset).all()
 
@@ -196,8 +202,17 @@ export async function onRequestGet({ request, env, params }) {
       const user = await getUser(request, env)
       let myRank = null
       if (user) {
-        const myEntry = await env.DB.prepare('SELECT rank FROM leaderboard_global WHERE user_id = ?').bind(user.id).first()
-        myRank = myEntry?.rank || null
+        const myEntry = (board.results || []).find((r) => r.user_id === user.id)
+        if (myEntry) {
+          myRank = myEntry.rank
+        } else {
+          const rankRow = await env.DB.prepare(`
+            SELECT COUNT(*) + 1 AS rank
+            FROM user_stats
+            WHERE points > COALESCE((SELECT points FROM user_stats WHERE user_id = ?), 0)
+          `).bind(user.id).first()
+          myRank = rankRow?.rank || null
+        }
       }
 
       return baseRes(json({ leaderboard: board.results || [], myRank }))
@@ -207,14 +222,22 @@ export async function onRequestGet({ request, env, params }) {
       const week = parseInt(url.searchParams.get('week')) || new Date().getISOWeek()
       const year = parseInt(url.searchParams.get('year')) || new Date().getFullYear()
       const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100)
+      const weekStartSec = Math.floor(Date.now() / 1000) - 7 * 86400
 
-      const board = await env.DB.prepare(`
-        SELECT rank, user_id, points, display_name, avatar_seed
-        FROM leaderboard_weekly
-        WHERE week = ? AND year = ?
-        ORDER BY rank
+      let board = await env.DB.prepare(`
+        SELECT
+          ROW_NUMBER() OVER (ORDER BY COALESCE(SUM(c.points_earned), s.points) DESC) AS rank,
+          u.id AS user_id,
+          COALESCE(SUM(c.points_earned), s.points) AS points,
+          u.display_name AS display_name,
+          u.avatar_seed AS avatar_seed
+        FROM user_stats s
+        JOIN users u ON u.id = s.user_id
+        LEFT JOIN challenge_completions c ON c.user_id = u.id AND c.completed_at >= ?
+        GROUP BY u.id
+        ORDER BY points DESC
         LIMIT ?
-      `).bind(week, year, limit).all()
+      `).bind(weekStartSec, limit).all()
 
       return baseRes(json({ leaderboard: board.results || [], week, year }))
     }
@@ -223,9 +246,15 @@ export async function onRequestGet({ request, env, params }) {
       const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100)
 
       const board = await env.DB.prepare(`
-        SELECT rank, user_id, streak, display_name, avatar_seed
-        FROM leaderboard_streak
-        ORDER BY rank
+        SELECT
+          ROW_NUMBER() OVER (ORDER BY MAX(s.streak, s.longest_streak) DESC, s.points DESC) AS rank,
+          u.id AS user_id,
+          MAX(s.streak, s.longest_streak) AS streak,
+          u.display_name AS display_name,
+          u.avatar_seed AS avatar_seed
+        FROM user_stats s
+        JOIN users u ON u.id = s.user_id
+        ORDER BY streak DESC, s.points DESC
         LIMIT ?
       `).bind(limit).all()
 

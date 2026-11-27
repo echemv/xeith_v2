@@ -101,11 +101,11 @@ export default function Account() {
   }, [api])
 
   useEffect(() => {
+    loadLeaderboard('global')
+    loadLeaderboard('weekly')
+    loadLeaderboard('streak')
     if (authToken) {
       loadCloudProfile()
-      loadLeaderboard('global')
-      loadLeaderboard('weekly')
-      loadLeaderboard('streak')
       loadFriends()
       loadPhotos()
     }
@@ -491,12 +491,30 @@ export default function Account() {
               compact
             />
           </div>
-          {authToken ? (
+          {!authToken && (
+            <section className="card glass" style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h4 style={{ margin: '0 0 4px' }}>☁️ {t('Playing in Local Mode')}</h4>
+                <p className="muted" style={{ margin: 0, fontSize: '0.84rem' }}>
+                  {t('Your local score ({{pts}} pts) is shown below. Link a free cloud account in My XEITH to publish your Player Card to the live global rankings!', { pts: points })}
+                </p>
+              </div>
+              <button className="btn primary" style={{ fontSize: '0.82rem', padding: '8px 14px' }} onClick={() => setTab('profile')}>
+                {t('Link Cloud Account →')}
+              </button>
+            </section>
+          )}
+          {true && (
             <>
               <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
                 <button className={`btn ${leaderboard.global.length > 0 ? '' : 'ghost'}`} onClick={() => loadLeaderboard('global')}>{t('Global')}</button>
                 <button className={`btn ${leaderboard.weekly.length > 0 ? '' : 'ghost'}`} onClick={() => loadLeaderboard('weekly')}>{t('This Week')}</button>
                 <button className={`btn ${leaderboard.streak.length > 0 ? '' : 'ghost'}`} onClick={() => loadLeaderboard('streak')}>{t('Streaks')}</button>
+                {authToken && (
+                  <button className="btn ghost" onClick={handleSync} disabled={loading} style={{ marginLeft: 'auto' }}>
+                    🔄 {t('Sync My Latest Score')}
+                  </button>
+                )}
               </div>
 
               {leaderboard.global.length > 0 && (
@@ -605,20 +623,26 @@ export default function Account() {
               )}
 
               {(leaderboard.global.length === 0 && leaderboard.weekly.length === 0 && leaderboard.streak.length === 0) && (
-                <section className="card glass" style={{ textAlign: 'center', padding: '40px 20px' }}>
-                  <p style={{ fontSize: '3rem', marginBottom: '16px' }}>🏆</p>
-                  <h3>{t('No leaderboard data yet')}</h3>
-                  <p className="muted">{t('Be the first to climb the ranks! Complete challenges and games to earn points.')}</p>
+                <section className="card glass" style={{ padding: '24px 20px' }}>
+                  <h3>{t('Your Current Standing (Local Preview)')}</h3>
+                  <p className="muted" style={{ fontSize: '0.85rem', marginBottom: '14px' }}>
+                    {t('Showing your active stewardship profile. Sync to the cloud to compete with other players across Nigeria!')}
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: '14px', background: 'rgba(214,168,75,0.12)', border: '1px solid rgba(214,168,75,0.35)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ fontWeight: 800, color: 'var(--amber)' }}>🥇 1</span>
+                      <div>
+                        <div style={{ fontWeight: 700 }}>{cloudUser?.displayName || profile?.name || t('XEITH Steward')} ({t('You')})</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--teal)', fontWeight: 700 }}>
+                          {getRankByPoints(points).icon} {t(getRankByPoints(points).title)} · {t(getRankByPoints(points).badge)}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ fontWeight: 800 }}>⭐ {Math.max(points, cloudStats?.points || 0)} {t('pts')}</div>
+                  </div>
                 </section>
               )}
             </>
-          ) : (
-            <section className="card glass" style={{ textAlign: 'center', padding: '40px 20px' }}>
-              <p style={{ fontSize: '3rem', marginBottom: '16px' }}>🏆</p>
-              <h3>{t('Leaderboards require cloud account')}</h3>
-              <p className="muted" style={{ marginBottom: '20px' }}>{t('Link your account to compete globally, weekly, and for longest streaks.')}</p>
-              <button className="btn" onClick={() => setTab('profile')}>{t('Go to Profile to Link')}</button>
-            </section>
           )}
         </>
       )}
@@ -660,6 +684,7 @@ export default function Account() {
             points={Math.max(points, cloudStats?.points || 0)}
             streak={Math.max(streak, cloudStats?.streak || 0)}
             cloudStats={cloudStats}
+            playerName={cloudUser?.displayName || profile?.name || ''}
             filterCategory={achFilter}
           />
         </>

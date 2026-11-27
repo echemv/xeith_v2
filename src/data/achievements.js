@@ -1,10 +1,10 @@
 import { tx } from '../i18n'
-import { LESSONS } from './lessons'
+import { LESSONS, TIERS } from './lessons'
 import { weekNumber } from '../store'
 
 /**
  * Shared progression, Classroom level-gating, Player Rank Card metadata,
- * and Collectible Achievement Cards (works both offline/locally and synced with Cloud/Leaderboards).
+ * Classroom Section Mastery Cards, and Collectible Achievement Cards.
  */
 export const PATHWAY_RANKS = [
   {
@@ -96,36 +96,61 @@ export const ACHIEVEMENT_CARDS = [
     })
   },
   {
-    id: 'level-2-unlock',
-    icon: '🔬',
+    id: 'tier-1-card',
+    tierId: 'beginner',
+    icon: '🌱',
     rarity: tx('RARE'),
+    rarityColor: '#176B65',
+    gradient: 'linear-gradient(135deg, #176B65 0%, #2A8F86 100%)',
+    category: 'learning',
+    name: tx('Section 1 Card: Microbes & AMR Foundations'),
+    description: tx('Complete all modules in Classroom Section 1 (The Basics: Microbes, Germs & What AMR Means). Unlocks Level 2 Scenarios & Outbreak Surge Lab!'),
+    pointsReward: 35,
+    evaluate: ({ done, lessonsDone }) => {
+      const tier = TIERS.find((t) => t.id === 'beginner')
+      const ids = tier ? tier.moduleIds : ['intro-pathogens', 'what-is-amr']
+      const localDone = ids.filter((id) => done?.['lesson-' + id]).length
+      const count = Math.max(localDone, Math.min(ids.length, lessonsDone))
+      return { unlocked: count >= ids.length, progress: count, total: ids.length }
+    }
+  },
+  {
+    id: 'tier-2-card',
+    tierId: 'intermediate',
+    icon: '🔬',
+    rarity: tx('EPIC'),
     rarityColor: '#0284C7',
     gradient: 'linear-gradient(135deg, #0284C7 0%, #4FB3D9 100%)',
     category: 'learning',
-    name: tx('Pathogen Detective'),
-    description: tx('Complete 2 Classroom modules to unlock Level 2 Scenarios and Pathogen Triage.'),
-    pointsReward: 30,
-    evaluate: ({ lessonsDone }) => ({
-      unlocked: lessonsDone >= 2,
-      progress: Math.min(2, lessonsDone),
-      total: 2
-    })
+    name: tx('Section 2 Card: Specialist of the 4 Pathogens'),
+    description: tx('Complete all 4 modules in Classroom Section 2 (Bacteria, Viruses, Fungi & Parasites). Unlocks Level 3 Superbug Crisis Mode!'),
+    pointsReward: 75,
+    evaluate: ({ done, lessonsDone }) => {
+      const tier = TIERS.find((t) => t.id === 'intermediate')
+      const ids = tier ? tier.moduleIds : ['bacteria', 'virus', 'fungi', 'parasites']
+      const localDone = ids.filter((id) => done?.['lesson-' + id]).length
+      const count = Math.max(localDone, Math.max(0, Math.min(ids.length, lessonsDone - 2)))
+      return { unlocked: count >= ids.length, progress: count, total: ids.length }
+    }
   },
   {
-    id: 'level-3-unlock',
+    id: 'tier-3-card',
+    tierId: 'advanced',
     icon: '🌍',
-    rarity: tx('EPIC'),
+    rarity: tx('LEGENDARY'),
     rarityColor: '#7A5CC7',
-    gradient: 'linear-gradient(135deg, #7A5CC7 0%, #4FB3D9 100%)',
+    gradient: 'linear-gradient(135deg, #7A5CC7 0%, #D6A84B 100%)',
     category: 'learning',
-    name: tx('One Health Sentinel'),
-    description: tx('Complete 5 Classroom modules to unlock Level 3 Advanced ICU & One Health Scenarios.'),
-    pointsReward: 75,
-    evaluate: ({ lessonsDone }) => ({
-      unlocked: lessonsDone >= 5,
-      progress: Math.min(5, lessonsDone),
-      total: 5
-    })
+    name: tx('Section 3 Card: One Health & Drug Safety Champion'),
+    description: tx('Complete all 3 modules in Classroom Section 3 (Stopping Spread, One Health Farms & Food, and NAFDAC Safe Medicines).'),
+    pointsReward: 100,
+    evaluate: ({ done, lessonsDone }) => {
+      const tier = TIERS.find((t) => t.id === 'advanced')
+      const ids = tier ? tier.moduleIds : ['human-spread', 'one-health', 'systems-quality']
+      const localDone = ids.filter((id) => done?.['lesson-' + id]).length
+      const count = Math.max(localDone, Math.max(0, Math.min(ids.length, lessonsDone - 6)))
+      return { unlocked: count >= ids.length, progress: count, total: ids.length }
+    }
   },
   {
     id: 'classroom-master',
@@ -135,7 +160,7 @@ export const ACHIEVEMENT_CARDS = [
     gradient: 'linear-gradient(135deg, #7A5CC7 0%, #F2786B 50%, #F4B942 100%)',
     category: 'learning',
     name: tx('Grand Steward of XEITH'),
-    description: tx('Master all 9 modules across Level 1, Level 2, and Level 3 in The AMR Classroom.'),
+    description: tx('Master all 9 modules across Section 1, Section 2, and Section 3 in The AMR Classroom.'),
     pointsReward: 150,
     evaluate: ({ lessonsDone }) => ({
       unlocked: lessonsDone >= LESSONS.length,
