@@ -300,28 +300,21 @@ main{padding-top:24px;padding-bottom:120px}
 }
 
 .header-brand-wrap{display:flex;align-items:center;flex-shrink:0}
-/* logo-full.png is a 1024px square whose artwork spans ~x 9-91%, y 26-74%.
-   The link is a window onto that area so the wordmark gets real layout size. */
 .logo-text{
-  --logo-w:132px;
-  position:relative;
-  display:block;
-  width:var(--logo-w);
-  height:calc(var(--logo-w) * .58);
-  overflow:hidden;
-  border-radius:12px;
+  display:inline-flex;
+  align-items:center;
   text-decoration:none;
-  transition:width .35s cubic-bezier(.2,.8,.2,1),height .35s cubic-bezier(.2,.8,.2,1);
 }
-.top-header.is-scrolled .logo-text{--logo-w:108px}
 .logo-full-img{
-  position:absolute;
-  width:calc(var(--logo-w) * 1.2);
-  height:auto;
-  max-width:none;
-  left:calc(var(--logo-w) * -.105);
-  top:calc(var(--logo-w) * -.312);
+  height:42px;
+  width:auto;
+  max-width:180px;
+  object-fit:contain;
   display:block;
+  transition:height .25s ease;
+}
+.top-header.is-scrolled .logo-full-img{
+  height:34px;
 }
 .rail-logo-img{
   width:34px;
@@ -918,8 +911,8 @@ label{font-weight:600;display:block}
     cursor:pointer;
   }
   .header-theme-btn:active{transform:scale(.94)}
-  .logo-text{--logo-w:112px}
-  .top-header.is-scrolled .logo-text{--logo-w:96px}
+  .logo-full-img{height:32px}
+  .top-header.is-scrolled .logo-full-img{height:28px}
 
   /* Mascot sits above the tab bar; content and footer reserve room for both */
   .mascot{right:12px;bottom:calc(76px + env(safe-area-inset-bottom))}
