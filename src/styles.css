@@ -684,7 +684,7 @@ label{font-weight:600;display:block}
 .mascot .say{position:absolute;right:calc(100% + 10px);bottom:8px;width:max-content;max-width:min(240px,60vw);opacity:0;transform:translateX(6px);pointer-events:none;transition:opacity .2s ease,transform .2s ease;animation:none}
 .mascot:hover .say,.mascot:focus-visible .say{opacity:1;transform:none}
 .say{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:18px 18px 4px 18px;padding:10px 14px;font-size:.92rem;box-shadow:0 6px 16px var(--shadow);backdrop-filter:blur(4px);animation:pop .4s 6s forwards}
-.avatar{display:grid;place-items:center;width:78px;height:78px;border-radius:50%;background:var(--surface-2);border:2px solid var(--mint);box-shadow:0 6px 16px var(--shadow);animation:bob 3s ease-in-out 1s infinite}
+.avatar{display:grid;place-items:center;width:78px;height:78px;border-radius:50%;background:var(--surface-2);border:2px solid var(--mint);box-shadow:0 6px 16px var(--shadow);transform-origin:center center;will-change:transform,opacity;animation:mascotShootAndSettle 2.5s ease-in-out 1 forwards,bob 3.4s ease-in-out 2.55s infinite}
 /* thinking, chat */
 .spin{animation:spin 1.1s linear infinite}
 .thinking{display:inline-flex;padding:6px}
@@ -781,6 +781,16 @@ label{font-weight:600;display:block}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 @keyframes slideDown{from{opacity:0;transform:translateY(-100%)}to{opacity:1;transform:none}}
 @keyframes pop{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:none}}
+/* meyi: mascot shoots up from the corner and settles in place */
+@keyframes mascotShootAndSettle{
+  0%{opacity:0;transform:translate3d(20px,54px,0) scale(.75) rotate(6deg);animation-timing-function:cubic-bezier(.22,.68,.35,1)}
+  28%{opacity:1;transform:translate3d(0,-105px,0) scale(1.04) rotate(0deg);animation-timing-function:ease-in-out}
+  48%{transform:translate3d(-20px,-68px,0) scale(1.02) rotate(-8deg);animation-timing-function:ease-in-out}
+  66%{transform:translate3d(16px,-36px,0) scale(1.01) rotate(7deg);animation-timing-function:ease-in-out}
+  82%{transform:translate3d(-9px,-13px,0) scale(1) rotate(-4deg);animation-timing-function:ease-in-out}
+  93%{transform:translate3d(4px,-3px,0) scale(1) rotate(2deg);animation-timing-function:ease-in-out}
+  100%{opacity:1;transform:translate3d(0,0,0) scale(1) rotate(0deg)}
+}
 @media (max-width:640px){.card{padding:18px}.say{font-size:.85rem}}
 
 /* theme toggle */
@@ -917,7 +927,7 @@ label{font-weight:600;display:block}
   /* Mascot sits above the tab bar; content and footer reserve room for both */
   .mascot{right:12px;bottom:calc(76px + env(safe-area-inset-bottom))}
   .avatar{width:56px;height:56px}
-  .avatar svg{width:46px;height:46px}
+  .avatar svg,.avatar img{width:46px;height:46px}
   .mascot .say{display:none}
   .app-shell.sidebar-floating .content-container,
   .content-container{padding-bottom:calc(152px + env(safe-area-inset-bottom))}
@@ -3381,15 +3391,6 @@ label{font-weight:600;display:block}
   overflow: hidden;
 }
 
-.featured-game-banner::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: var(--g-gold);
-}
 
 .featured-badge-row {
   display: flex;
