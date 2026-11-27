@@ -115,19 +115,34 @@ function inline(text) {
 function Reply({ text }) {
   const blocks = []
   let list = null
+  let listType = null
+  const flushList = (key) => {
+    if (!list) return
+    blocks.push(listType === 'ol' ? <ol key={key}>{list}</ol> : <ul key={key}>{list}</ul>)
+    list = null
+    listType = null
+  }
   text.split('\n').forEach((line, i) => {
     const bullet = line.match(/^\s*[*-]\s+(.+)$/)
+    const ordered = line.match(/^\s*\d+\.\s+(.+)$/)
     const heading = line.match(/^\s*#{1,6}\s+(.+)$/)
-    const body = bullet ? bullet[1] : heading ? heading[1] : line
-    if (bullet) {
+    if (bullet || ordered) {
+      const nextType = ordered ? 'ol' : 'ul'
+      if (list && listType !== nextType) flushList('l' + i)
       list = list || []
-      list.push(<li key={i}>{inline(body, i)}</li>)
+      listType = nextType
+      list.push(<li key={i}>{inline(bullet ? bullet[1] : ordered[1], i)}</li>)
       return
     }
-    if (list) { blocks.push(<ul key={'u' + i}>{list}</ul>); list = null }
-    if (body.trim()) blocks.push(heading ? <p key={i}><strong>{inline(body, i)}</strong></p> : <p key={i}>{inline(body, i)}</p>)
+    flushList('l' + i)
+    const body = heading ? heading[1] : line
+    if (body.trim()) {
+      blocks.push(heading
+        ? <h4 key={i} className="chat-reply-heading">{inline(body, i)}</h4>
+        : <p key={i}>{inline(body, i)}</p>)
+    }
   })
-  if (list) blocks.push(<ul key="u-last">{list}</ul>)
+  flushList('l-last')
   return blocks
 }
 
