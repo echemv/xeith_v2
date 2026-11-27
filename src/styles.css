@@ -658,9 +658,9 @@ label{font-weight:600;display:block}
 .bubble{position:absolute;z-index:1;background:rgba(255,255,255,.16);color:var(--ivory);border:1px solid rgba(255,255,255,.45);backdrop-filter:blur(8px);border-radius:99px;padding:12px 20px;font:inherit;font-weight:700;letter-spacing:.02em;cursor:pointer;animation:floaty 5s ease-in-out infinite}
 .bubble:hover{background:var(--g-gold);color:#3B2F00;border-color:var(--amber);box-shadow:0 6px 16px rgba(246,168,75,.35)}
 /* mascot */
-.mascot{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:40;display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-decoration:none;max-width:min(260px,70vw);animation:roam 6s ease-in-out 1}
-.say{background:rgba(255,255,255,.85);color:var(--ink);border:1px solid var(--line);border-radius:18px 18px 4px 18px;padding:10px 14px;font-size:.92rem;box-shadow:0 6px 16px rgba(16,45,58,.25);backdrop-filter:blur(4px);animation:pop .4s 6s forwards}
-.avatar{display:grid;place-items:center;width:78px;height:78px;border-radius:50%;background:var(--g-soft);border:2px solid var(--mint);box-shadow:0 6px 16px rgba(16,45,58,.2);animation:bob 3s ease-in-out 6s infinite}
+.mascot{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:40;display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-decoration:none;max-width:min(260px,70vw)}
+.say{background:rgba(255,255,255,.92);color:var(--ink);border:1px solid var(--line);border-radius:18px 18px 4px 18px;padding:10px 14px;font-size:.92rem;box-shadow:0 6px 16px rgba(16,45,58,.25);backdrop-filter:blur(6px);opacity:0;transform:translateY(8px) scale(.85);transform-origin:bottom right;animation:sayPop .38s cubic-bezier(.22,1,.36,1) 1.7s forwards}
+.avatar{display:grid;place-items:center;width:78px;height:78px;border-radius:50%;background:var(--g-soft);border:2px solid var(--mint);box-shadow:0 6px 16px rgba(16,45,58,.2);transform-origin:center bottom;animation:mascotShootAndSettle 1.65s cubic-bezier(.22,1,.36,1) 1 forwards,bob 3s ease-in-out 1.7s infinite}
 /* thinking, chat */
 .spin{animation:spin 1.1s linear infinite}
 .thinking{display:inline-flex;padding:6px}
@@ -1444,7 +1444,16 @@ label{font-weight:600;display:block}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 @keyframes slideDown{from{opacity:0;transform:translateY(-100%)}to{opacity:1;transform:none}}
 @keyframes pop{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:none}}
-@keyframes roam{0%{transform:translate(-70vw,-60vh) rotate(-8deg)}25%{transform:translate(-20vw,-70vh) rotate(6deg)}50%{transform:translate(-60vw,-30vh) rotate(-6deg)}75%{transform:translate(-25vw,-50vh) rotate(4deg)}100%{transform:none}}
+@keyframes sayPop{from{opacity:0;transform:translateY(8px) scale(.85)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes mascotShootAndSettle{
+  0%{opacity:0;transform:translate(36px,70px) scale(.35) rotate(14deg)}
+  24%{opacity:1;transform:translate(0,-115px) scale(1.14) rotate(0deg)}
+  44%{transform:translate(-26px,-76px) scale(1.06) rotate(-14deg)}
+  62%{transform:translate(22px,-42px) scale(1.03) rotate(12deg)}
+  78%{transform:translate(-13px,-16px) scale(1.01) rotate(-7deg)}
+  90%{transform:translate(6px,-4px) scale(1) rotate(4deg)}
+  100%{opacity:1;transform:translate(0,0) scale(1) rotate(0deg)}
+}
 @media (max-width:640px){.card{padding:18px}.say{font-size:.85rem}}
 
 /* theme toggle */
