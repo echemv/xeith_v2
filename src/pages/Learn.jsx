@@ -198,7 +198,7 @@ export default function Learn() {
 
                             <div className="milestone-bottom">
                               <span className="milestone-evidence">
-                                📑 {l.references.length} Scraped Sources
+                                📑 {l.references.length} {t('Verified Sources')}
                               </span>
                               <span className="milestone-cta">
                                 {isCompleted ? t('Review →') : t('Start →')}
@@ -273,7 +273,7 @@ export default function Learn() {
 
                     <div className="module-footer-row">
                       <span className="module-evidence-badge">
-                        📑 {l.references.length} Scraped Sources
+                        📑 {l.references.length} {t('Verified Sources')}
                       </span>
                       <span className="module-action-link">
                         {isCompleted ? t('Review Module →') : t('Start Module →')}

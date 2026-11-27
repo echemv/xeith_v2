@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useApp, createProfile, restoreCloudState, signOut, exportData, deleteAll, maskEmail } from '../store'
+import { PlayerHeroCard, AchievementCardsGrid } from '../components/PlayerAchievementCards'
+import { getRankByPoints } from '../data/achievements'
 
 const API_BASE = '/api/account'
 
@@ -25,6 +27,7 @@ export default function Account() {
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
   const [showRecoveryLogin, setShowRecoveryLogin] = useState(false)
+  const [achFilter, setAchFilter] = useState('all')
   const [userRecoveryCode, setUserRecoveryCode] = useState(() => {
     try { return localStorage.getItem('xeith-recovery-code') || '' } catch { return '' }
   })
@@ -280,6 +283,15 @@ export default function Account() {
       {/* PROFILE TAB */}
       {tab === 'profile' && (
         <>
+          <div style={{ marginBottom: '18px' }}>
+            <PlayerHeroCard
+              displayName={cloudUser?.displayName || profile?.name || t('XEITH Steward')}
+              points={Math.max(points, cloudStats?.points || 0)}
+              streak={Math.max(streak, cloudStats?.streak || 0)}
+              done={done}
+              cloudStats={cloudStats}
+            />
+          </div>
           {!profile && !cloudUser ? (
             <div className="account-split-grid">
             <section className="card glass">
@@ -469,6 +481,16 @@ export default function Account() {
       {/* LEADERBOARD TAB */}
       {tab === 'leaderboard' && (
         <>
+          <div style={{ marginBottom: '16px' }}>
+            <PlayerHeroCard
+              displayName={cloudUser?.displayName || profile?.name || t('XEITH Steward')}
+              points={Math.max(points, cloudStats?.points || 0)}
+              streak={Math.max(streak, cloudStats?.streak || 0)}
+              done={done}
+              cloudStats={cloudStats}
+              compact
+            />
+          </div>
           {authToken ? (
             <>
               <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
@@ -485,23 +507,35 @@ export default function Account() {
                       <thead>
                         <tr style={{ borderBottom: '2px solid var(--line)', textAlign: 'left' }}>
                           <th style={{ padding: '12px 8px' }}>#{t('Rank')}</th>
-                          <th style={{ padding: '12px 8px' }}>{t('Player')}</th>
+                          <th style={{ padding: '12px 8px' }}>{t('Player & Pathway Card')}</th>
                           <th style={{ padding: '12px 8px', textAlign: 'right' }}>⭐ {t('Points')}</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {leaderboard.global.slice(0, 50).map((entry, i) => (
-                          <tr key={entry.user_id} style={{ borderBottom: '1px solid var(--line)', background: entry.user_id === cloudUser?.id ? 'rgba(214,168,75,0.1)' : undefined }}>
-                            <td style={{ padding: '12px 8px', fontWeight: 700, color: i < 3 ? 'var(--amber)' : 'var(--navy)' }}>{entry.rank}</td>
-                            <td style={{ padding: '12px 8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg,#7A5CC7,#4FB3D9)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '0.9rem' }}>
-                                {entry.display_name?.[0]?.toUpperCase() || '?'}
-                              </div>
-                              <span style={{ fontWeight: entry.user_id === cloudUser?.id ? 700 : 500 }}>{entry.display_name}{entry.user_id === cloudUser?.id ? ` ${t('(You)')}` : ''}</span>
-                            </td>
-                            <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 600 }}>{entry.points}</td>
-                          </tr>
-                        ))}
+                        {leaderboard.global.slice(0, 50).map((entry, i) => {
+                          const entryRank = getRankByPoints(entry.points || 0)
+                          return (
+                            <tr key={entry.user_id} style={{ borderBottom: '1px solid var(--line)', background: entry.user_id === cloudUser?.id ? 'rgba(214,168,75,0.1)' : undefined }}>
+                              <td style={{ padding: '12px 8px', fontWeight: 700, color: i < 3 ? 'var(--amber)' : 'var(--navy)' }}>
+                                {i === 0 ? '🥇 1' : i === 1 ? '🥈 2' : i === 2 ? '🥉 3' : entry.rank}
+                              </td>
+                              <td style={{ padding: '12px 8px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                                <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: entryRank.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '0.9rem' }}>
+                                  {entry.display_name?.[0]?.toUpperCase() || '?'}
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                  <span style={{ fontWeight: entry.user_id === cloudUser?.id ? 700 : 600 }}>
+                                    {entry.display_name}{entry.user_id === cloudUser?.id ? ` ${t('(You)')}` : ''}
+                                  </span>
+                                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: entryRank.accent }}>
+                                    {entryRank.icon} {t(entryRank.title)} · {t(entryRank.badge)}
+                                  </span>
+                                </div>
+                              </td>
+                              <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 700 }}>{entry.points}</td>
+                            </tr>
+                          )
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -592,43 +626,42 @@ export default function Account() {
       {/* ACHIEVEMENTS TAB */}
       {tab === 'achievements' && (
         <>
-          {authToken ? (
-            achievements.length > 0 ? (
-              <>
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
-                  {['learning', 'streak', 'game', 'photo', 'social'].map(cat => (
-                    <button key={cat} className="btn ghost" style={{ fontSize: '0.8rem', textTransform: 'capitalize' }}>{t(cat)}</button>
-                  ))}
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '12px' }}>
-                  {achievements.map(a => (
-                    <div key={a.id} className={`card glass ${a.unlocked_at ? '' : 'locked'}`} style={{ textAlign: 'center', padding: '20px 12px', opacity: a.unlocked_at ? 1 : 0.5, transition: 'all 0.2s', border: a.unlocked_at ? '2px solid var(--amber)' : '1px solid var(--line)' }}>
-                      <div style={{ fontSize: '3rem', marginBottom: '8px' }}>{a.icon}</div>
-                      <div style={{ fontWeight: 600, marginBottom: '4px', minHeight: '2.5em' }}>{t(a.name)}</div>
-                      <div className="muted" style={{ fontSize: '0.75rem', marginBottom: '8px', minHeight: '2.5em' }}>{t(a.description)}</div>
-                      <div style={{ color: a.unlocked_at ? 'var(--amber)' : 'var(--muted)', fontWeight: 700 }}>
-                        {a.unlocked_at ? `✅ ${t('Unlocked')} ${new Date(a.unlocked_at * 1000).toLocaleDateString()}` : `🔒 ${t('Locked')}`}
-                      </div>
-                      <div style={{ color: 'var(--amber)', fontSize: '0.8rem', marginTop: '4px' }}>+{a.points_reward} {t('pts')}</div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <section className="card glass" style={{ textAlign: 'center', padding: '40px 20px' }}>
-                <p style={{ fontSize: '3rem', marginBottom: '16px' }}>🏅</p>
-                <h3>{t('No achievements yet')}</h3>
-                <p className="muted">{t('Complete lessons, challenges, and games to unlock achievements.')}</p>
-              </section>
-            )
-          ) : (
-            <section className="card glass" style={{ textAlign: 'center', padding: '40px 20px' }}>
-              <p style={{ fontSize: '3rem', marginBottom: '16px' }}>🏅</p>
-              <h3>{t('Achievements require cloud account')}</h3>
-              <p className="muted" style={{ marginBottom: '20px' }}>{t('Link your account to track and unlock achievements across devices.')}</p>
-              <button className="btn" onClick={() => setTab('profile')}>{t('Go to Profile to Link')}</button>
-            </section>
-          )}
+          <div style={{ marginBottom: '18px' }}>
+            <PlayerHeroCard
+              displayName={cloudUser?.displayName || profile?.name || t('XEITH Steward')}
+              points={Math.max(points, cloudStats?.points || 0)}
+              streak={Math.max(streak, cloudStats?.streak || 0)}
+              done={done}
+              cloudStats={cloudStats}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+            {[
+              ['all', '🏅 ' + t('All Cards')],
+              ['challenges', '🔥 ' + t('Challenges')],
+              ['learning', '📚 ' + t('Classroom')],
+              ['game', '🎮 ' + t('AMR Lab')],
+              ['streak', '⚡ ' + t('Streaks')]
+            ].map(([catId, label]) => (
+              <button
+                key={catId}
+                className={`btn ${achFilter === catId ? '' : 'ghost'}`}
+                onClick={() => setAchFilter(catId)}
+                style={{ fontSize: '0.82rem', padding: '7px 14px' }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <AchievementCardsGrid
+            done={done}
+            points={Math.max(points, cloudStats?.points || 0)}
+            streak={Math.max(streak, cloudStats?.streak || 0)}
+            cloudStats={cloudStats}
+            filterCategory={achFilter}
+          />
         </>
       )}
 

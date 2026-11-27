@@ -5,6 +5,7 @@ import { tx } from '../i18n'
 import { award, useApp } from '../store'
 import Bacterium from '../components/Bacterium'
 import StewardshipCommand from '../components/StewardshipCommand'
+import { getCompletedLessonCount } from '../data/achievements'
 
 const PATHOGEN_TO_LESSON = {
   bacteria: 'bacteria',
@@ -12,6 +13,60 @@ const PATHOGEN_TO_LESSON = {
   fungus: 'fungi',
   parasite: 'parasites'
 }
+
+// 3 Classroom-unlocked Difficulty Tiers (inspired by SteWARdS Antibiotic Defence, JMIR Serious Games 2024; e59848 & PMC10131630)
+const DIFFICULTY_LEVELS = [
+  {
+    level: 1,
+    id: 'intern',
+    icon: '🟢',
+    name: tx('Level 1: Standard Training'),
+    badge: tx('1.0x Speed · Starter'),
+    requiredLessons: 0,
+    speedMult: 1.0,
+    spawnMs: 1650,
+    trapRatio: 0.35,
+    scoreMult: 1.0,
+    desc: tx('Unlocked from the start. Balanced target speed to learn which treatments match each germ.')
+  },
+  {
+    level: 2,
+    id: 'outbreak',
+    icon: '🟡',
+    name: tx('Level 2: Outbreak Surge'),
+    badge: tx('1.4x Speed · +25% Pts'),
+    requiredLessons: 2,
+    speedMult: 1.4,
+    spawnMs: 1250,
+    trapRatio: 0.46,
+    scoreMult: 1.25,
+    desc: tx('Requires 2 Classroom modules. Faster microbes, more resistance traps, and +25% bonus points!')
+  },
+  {
+    level: 3,
+    id: 'crisis',
+    icon: '🔴',
+    name: tx('Level 3: Superbug Crisis'),
+    badge: tx('1.8x Speed · +50% Pts · Boss'),
+    requiredLessons: 5,
+    speedMult: 1.8,
+    spawnMs: 980,
+    trapRatio: 0.54,
+    scoreMult: 1.5,
+    desc: tx('Requires 5 Classroom modules. High-speed multi-drug resistant wave, +50% points, and Big B Boss battle!')
+  }
+]
+
+// 7-Step Malaria RDT + 3-Day (6-Dose) ACT Blister Pack Regimen for the Parasite Game
+const MALARIA_REGIMEN_STEPS = [
+  { slot: 'RDT', short: tx('RDT Test'), targetLabel: tx('🩸 1. RDT Blood Test (Confirm Malaria)'), coach: tx('Step 1 complete! RDT confirmed Plasmodium falciparum parasites in the blood. Now start Day 1 of ACT!') },
+  { slot: 'D1-AM', short: tx('Day 1 AM'), targetLabel: tx('💊 2. ACT Dose 1 (Day 1 Morning)'), coach: tx('Dose 1/6 taken! Fast-acting artemisinin begins clearing malaria parasites from red blood cells.') },
+  { slot: 'D1-PM', short: tx('Day 1 PM'), targetLabel: tx('💊 3. ACT Dose 2 (Day 1 Night + Food)'), coach: tx('Dose 2/6 taken with food! Day 1 complete—parasite load is dropping, keep going into Day 2.') },
+  { slot: 'D2-AM', short: tx('Day 2 AM'), targetLabel: tx('💊 4. ACT Dose 3 (Day 2 Morning)'), coach: tx('Dose 3/6 taken! Fever is starting to come down, but hiding parasites remain—do NOT stop on Day 2!') },
+  { slot: 'D2-PM', short: tx('Day 2 PM'), targetLabel: tx('💊 5. ACT Dose 4 (Day 2 Night)'), coach: tx('Dose 4/6 complete! Day 2 finished—only 2 final doses on Day 3 left to prevent resistance.') },
+  { slot: 'D3-AM', short: tx('Day 3 AM'), targetLabel: tx('💊 6. ACT Dose 5 (Day 3 Morning)'), coach: tx('Dose 5/6 taken! The partner drug is wiping out the toughest surviving parasites.') },
+  { slot: 'D3-PM', short: tx('Day 3 PM'), targetLabel: tx('💊 7. ACT Dose 6 (Finish Full 3-Day Course!)'), coach: tx('🎉 All 6 ACT doses completed across 3 days! 100% of malaria parasites cleared with zero resistance!') }
+]
 
 // Pathogen types with unique mechanics and dynamic rotating fact pools
 const PATHOGENS = [
@@ -110,9 +165,11 @@ const BIG_B_HEALTH = 5
 export default function Play() {
   const { t } = useTranslation()
   const { points, done } = useApp()
+  const lessonsDone = getCompletedLessonCount(done)
   const [searchParams, setSearchParams] = useSearchParams()
   const [gameState, setGameState] = useState(GAME_STATES.MENU)
   const [selectedPathogen, setSelectedPathogen] = useState(null)
+  const [difficultyLevel, setDifficultyLevel] = useState(1)
   const [round, setRound] = useState(1)
   const [score, setScore] = useState(0)
   const [combo, setCombo] = useState(0)
@@ -125,6 +182,16 @@ export default function Play() {
   const [particles, setParticles] = useState([])
   const [factIndex, setFactIndex] = useState(0)
   const [pausedFrom, setPausedFrom] = useState(null)
+  // Visual progress trackers for Parasite (7-step RDT + 6-dose ACT blister pack) & Coach XEITH feedback
+  const [malariaStepIdx, setMalariaStepIdx] = useState(0)
+  const [parasiteLoad, setParasiteLoad] = useState(100)
+  const [coachMsg, setCoachMsg] = useState('')
+
+  const activeDiff = DIFFICULTY_LEVELS.find((d) => d.level === difficultyLevel) || DIFFICULTY_LEVELS[0]
+  const isDiffUnlocked = (diff) => lessonsDone >= diff.requiredLessons
+  // Progressive speed scaling by both Difficulty Level AND Round (Round 1 -> Round 2 -> Round 3)
+  const currentSpeedMult = activeDiff.speedMult * (1 + (round - 1) * 0.25)
+  const currentTrapRatio = Math.min(0.68, activeDiff.trapRatio + (round - 1) * 0.06)
 
   // Deep-link support: /play?pathogen=bacteria|virus|fungus|parasite OR /play?mode=stewardship
   useEffect(() => {
@@ -155,54 +222,101 @@ export default function Play() {
     return () => clearInterval(interval)
   }, [gameState])
 
-  // Spawn targets periodically
+  // Spawn targets periodically (scaled by Difficulty Level and Round)
   useEffect(() => {
     if (gameState !== GAME_STATES.PLAYING) return
+    const spawnInterval = Math.max(720, Math.round(activeDiff.spawnMs / (1 + (round - 1) * 0.18)))
     const interval = setInterval(() => {
       setSpawnedTargets(prev => {
-        if (prev.length >= 7) return prev
+        if (prev.length >= (activeDiff.level === 3 ? 9 : 7)) return prev
         return [...prev, createTarget()]
       })
-    }, selectedPathogen?.mechanic === 'avoid-antibiotics' ? 1400 : 1800)
+    }, spawnInterval)
     return () => clearInterval(interval)
-  }, [gameState, selectedPathogen])
+  }, [gameState, selectedPathogen, round, activeDiff.level, malariaStepIdx])
 
   const createTarget = () => {
-    const isBad = Math.random() < 0.35
+    const isBad = Math.random() < currentTrapRatio
     let correctAction, wrongAction, label
+    const baseV = 0.42 * currentSpeedMult
 
     switch (selectedPathogen?.mechanic) {
       case 'antibiotic-targeting': {
-        const antibiotics = ['Penicillin', 'Amoxicillin', 'Azithromycin', 'Ciprofloxacin', 'Vancomycin']
-        const resistances = ['MDR Strain', 'XDR Klebsiella', 'MRSA', 'Carbapenem-Resistant']
+        const antibiotics = [
+          tx('🟢 Amoxicillin (Access)'),
+          tx('🟢 Ampicillin (Access)'),
+          tx('🟢 Co-trimoxazole (Access)'),
+          tx('🟢 Nitrofurantoin (Access)'),
+          tx('🟡 Targeted Azithromycin')
+        ]
+        const resistances = [
+          tx('🚫 Loose Chemist Capsules'),
+          tx('🚫 MDR Superbug Strain'),
+          tx('🚫 Unprescribed Reserve Colistin'),
+          tx('🚫 Leftover Shared Pills')
+        ]
         correctAction = antibiotics[Math.floor(Math.random() * antibiotics.length)]
         wrongAction = resistances[Math.floor(Math.random() * resistances.length)]
         label = isBad ? wrongAction : correctAction
-        return { id: Date.now() + Math.random(), type: isBad ? 'resistant' : 'susceptible', label, x: Math.random() * 74 + 13, y: Math.random() * 60 + 20, vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4 }
+        return { id: Date.now() + Math.random(), type: isBad ? 'resistant' : 'susceptible', label, x: Math.random() * 72 + 14, y: Math.random() * 58 + 20, vx: (Math.random() - 0.5) * baseV, vy: (Math.random() - 0.5) * baseV }
       }
       case 'avoid-antibiotics': {
-        const viruses = ['Rhinovirus (Cold)', 'Influenza (Flu)', 'RSV', 'SARS-CoV-2', 'Adenovirus']
-        const antibioticsV = ['Antibiotic (Wrong!)', 'Amoxicillin', 'Cipro', 'Ampicillin']
-        correctAction = viruses[Math.floor(Math.random() * viruses.length)]
+        // Grounded in SteWARdS Antibiotic Defence (JMIR Serious Games 2024; e59848): use symptomatic relief for viruses, never antibiotics
+        const viralCare = [
+          tx('💧 Rest & Hydration (Viral Care)'),
+          tx('🍵 Warm Honey & Steam (Cold Relief)'),
+          tx('🌡️ Paracetamol (Fever Relief)'),
+          tx('🧼 20s Soap Handwashing')
+        ]
+        const antibioticsV = [
+          tx('🚫 Loose Ampiclox for Cold'),
+          tx('🚫 Amoxicillin for Flu'),
+          tx('🚫 Cipro for Yellow Mucus'),
+          tx('🚫 Antibiotics on a Virus')
+        ]
+        correctAction = viralCare[Math.floor(Math.random() * viralCare.length)]
         wrongAction = antibioticsV[Math.floor(Math.random() * antibioticsV.length)]
         label = isBad ? wrongAction : correctAction
-        return { id: Date.now() + Math.random(), type: isBad ? 'antibiotic' : 'virus', label, x: Math.random() * 74 + 13, y: Math.random() * 60 + 20, vx: (Math.random() - 0.5) * 0.6, vy: (Math.random() - 0.5) * 0.6 }
+        return { id: Date.now() + Math.random(), type: isBad ? 'antibiotic' : 'virus', label, x: Math.random() * 72 + 14, y: Math.random() * 58 + 20, vx: (Math.random() - 0.5) * (baseV * 1.25), vy: (Math.random() - 0.5) * (baseV * 1.25) }
       }
       case 'targeted-treatment': {
-        const antifungals = ['Fluconazole', 'Amphotericin B', 'Caspofungin', 'Voriconazole']
-        const fungi = ['Candida albicans', 'Aspergillus', 'Cryptococcus', 'C. auris (Superbug)']
+        const antifungals = [
+          tx('🍄 Targeted Fluconazole'),
+          tx('🍄 Clotrimazole Antifungal'),
+          tx('🍄 Hospital Caspofungin'),
+          tx('🧼 Deep Ward Disinfection')
+        ]
+        const fungi = [
+          tx('🚫 Triple-Action Steroid Cream'),
+          tx('🚫 Amoxicillin on Ringworm'),
+          tx('🚫 Candida auris Biofilm'),
+          tx('🚫 Unchecked Azole Crop Spray')
+        ]
         correctAction = antifungals[Math.floor(Math.random() * antifungals.length)]
         wrongAction = fungi[Math.floor(Math.random() * fungi.length)]
         label = isBad ? wrongAction : correctAction
-        return { id: Date.now() + Math.random(), type: isBad ? 'fungus' : 'antifungal', label, x: Math.random() * 74 + 13, y: Math.random() * 60 + 20, vx: (Math.random() - 0.5) * 0.35, vy: (Math.random() - 0.5) * 0.35 }
+        return { id: Date.now() + Math.random(), type: isBad ? 'fungus' : 'antifungal', label, x: Math.random() * 72 + 14, y: Math.random() * 58 + 20, vx: (Math.random() - 0.5) * baseV, vy: (Math.random() - 0.5) * baseV }
       }
       case 'compliance-course': {
-        const stages = ['Day 1 (Full)', 'Day 2 (On time)', 'Day 3 (Continued)', 'Day 5 (Almost)', 'Day 7 (Completed)']
-        const skips = ['Skip dose', 'Stop early', 'Share with friend', 'Double dose', 'Save for next time']
-        correctAction = stages[Math.floor(Math.random() * stages.length)]
+        // Clear, meaningful Malaria RDT + 3-Day (6-Dose) ACT Blister Pack progression
+        const activeStep = MALARIA_REGIMEN_STEPS[malariaStepIdx % MALARIA_REGIMEN_STEPS.length]
+        const supportActions = [
+          activeStep.targetLabel,
+          activeStep.targetLabel,
+          tx('🥛 Take ACT with Milk/Food'),
+          tx('🛏️ Sleep Under Treated Net')
+        ]
+        const skips = [
+          tx('🚫 Stop ACT on Day 2 (Fever Gone)'),
+          tx('🚫 Chloroquine (Parasite Resistant!)'),
+          tx('🚫 Skip RDT Blood Test'),
+          tx('🚫 Take Antibiotic for Malaria'),
+          tx('🚫 Share Half-Pack of ACT')
+        ]
+        correctAction = supportActions[Math.floor(Math.random() * supportActions.length)]
         wrongAction = skips[Math.floor(Math.random() * skips.length)]
         label = isBad ? wrongAction : correctAction
-        return { id: Date.now() + Math.random(), type: isBad ? 'noncompliance' : 'compliance', label, x: Math.random() * 74 + 13, y: Math.random() * 60 + 20, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3 }
+        return { id: Date.now() + Math.random(), type: isBad ? 'noncompliance' : 'compliance', label, x: Math.random() * 72 + 14, y: Math.random() * 58 + 20, vx: (Math.random() - 0.5) * baseV, vy: (Math.random() - 0.5) * baseV }
       }
       default:
         return { id: Date.now(), type: 'susceptible', label: 'Target', x: 50, y: 50, vx: 0, vy: 0 }
@@ -221,15 +335,30 @@ export default function Play() {
       const newCombo = combo + 1
       setCombo(newCombo)
       setGoodHits(prev => prev + 1)
-      const pointsEarned = 10 * Math.min(newCombo, 5)
+      const pointsEarned = Math.round(10 * Math.min(newCombo, 5) * activeDiff.scoreMult)
       setScore(prev => prev + pointsEarned)
       createParticles(target.x, target.y, 'success')
+
+      if (selectedPathogen.mechanic === 'compliance-course') {
+        const stepObj = MALARIA_REGIMEN_STEPS[malariaStepIdx % MALARIA_REGIMEN_STEPS.length]
+        setCoachMsg(stepObj.coach)
+        setMalariaStepIdx(prev => (prev + 1) % MALARIA_REGIMEN_STEPS.length)
+        setParasiteLoad(prev => Math.max(0, prev - 15))
+      } else {
+        setCoachMsg(tx('Great stewardship choice! Target matched accurately (+{{pts}} pts).', { pts: pointsEarned }))
+      }
     } else {
       setCombo(0)
       setMistakes(prev => prev + 1)
       createParticles(target.x, target.y, 'fail')
-      if (selectedPathogen.mechanic === 'avoid-antibiotics') {
-        setScore(prev => Math.max(0, prev - 15))
+      setScore(prev => Math.max(0, prev - 10))
+      if (selectedPathogen.mechanic === 'compliance-course') {
+        setParasiteLoad(prev => Math.min(100, prev + 18))
+        setCoachMsg(tx('⚠️ Resistance trap! Stopping ACT early, skipping RDT, or using Chloroquine lets malaria parasites rebound!'))
+      } else if (selectedPathogen.mechanic === 'avoid-antibiotics') {
+        setCoachMsg(tx('⚠️ Wasted antibiotic on a virus! That harms friendly gut bacteria and does nothing to the cold virus.'))
+      } else {
+        setCoachMsg(tx('⚠️ Resistance warning! That choice feeds multidrug-resistant superbugs.'))
       }
     }
 
@@ -305,11 +434,20 @@ export default function Play() {
     setSpawnedTargets([])
     setBigBHealth(BIG_B_HEALTH)
     setBigBPhase(0)
+    setMalariaStepIdx(0)
+    setParasiteLoad(100)
+    setCoachMsg(
+      pathogen.id === 'parasite'
+        ? tx('Step 1: Look for "🩸 1. RDT Blood Test" first to confirm malaria, then complete all 6 ACT doses in order while avoiding Chloroquine and Day-2 stops!')
+        : pathogen.id === 'virus'
+          ? tx('Viruses cause colds & flu! Tap Symptomatic Relief (Rest, Hydration, Steam) and AVOID wasting antibiotics!')
+          : tx('Tap the right targeted treatment and avoid multidrug-resistant superbug traps!')
+    )
   }
 
   const endRound = () => {
     if (round >= 3) {
-      if (selectedPathogen.id === 'bacteria') {
+      if (selectedPathogen.id === 'bacteria' || activeDiff.level === 3) {
         setGameState(GAME_STATES.BIG_B_BOSS)
         return
       }
@@ -388,16 +526,16 @@ export default function Play() {
         {/* Header with Lab Stats */}
         <div className="play-header-hero">
           <div>
-            <span className="badge-pill teal">🎮 Interactive Clinical Simulators</span>
+            <span className="badge-pill teal">🎮 {t('Interactive Clinical Simulators')}</span>
             <h1 style={{ marginTop: '8px', marginBottom: '8px' }}>{t('The AMR Lab')}</h1>
             <p className="lead" style={{ margin: 0 }}>
               {t('Master clinical stewardship, test pathogen triage instincts, and stop hospital resistance spread.')}
             </p>
           </div>
           <div className="lab-stat-box glass">
-            <span className="eyebrow" style={{ color: 'var(--teal)' }}>Lab Reputation</span>
-            <span className="lab-points-display">⭐ {points} pts</span>
-            <span className="muted" style={{ fontSize: '.75rem' }}>Earn points to unlock clinical honors</span>
+            <span className="eyebrow" style={{ color: 'var(--teal)' }}>{t('Lab Reputation')}</span>
+            <span className="lab-points-display">⭐ {points} {t('pts')}</span>
+            <span className="muted" style={{ fontSize: '.75rem' }}>{t('Earn points to unlock clinical honors')}</span>
           </div>
         </div>
 
@@ -405,12 +543,12 @@ export default function Play() {
         <div className="featured-game-banner glass animate-fade-in">
           <div className="featured-game-content">
             <div className="featured-badge-row">
-              <span className="badge-tag gold">🌟 FEATURED STRATEGY SIMULATOR</span>
-              <span className="badge-tag live">WHO AWaRe Guidelines</span>
+              <span className="badge-tag gold">🌟 {t('FEATURED STRATEGY SIMULATOR')}</span>
+              <span className="badge-tag live">{t('WHO AWaRe Guidelines')}</span>
             </div>
-            <h2>Stewardship Command: Nigerian Ward Rounds</h2>
+            <h2>{t('Stewardship Command: Nigerian Ward Rounds')}</h2>
             <p className="muted" style={{ maxWidth: '640px', fontSize: '.95rem', margin: '8px 0 20px' }}>
-              Step into the shoes of an Antimicrobial Stewardship Officer at LUTH, UCH, and BUTH. Triage real Nigerian patient scenarios, balance cure rates against resistance pressure, and strictly adhere to Access, Watch, and Reserve protocols.
+              {t('Step into the shoes of an Antimicrobial Stewardship Officer at LUTH, UCH, and BUTH. Triage real Nigerian patient scenarios unlocked by your Classroom level, balance cure rates against resistance pressure, and follow Access, Watch, and Reserve rules.')}
             </p>
             <div className="featured-actions">
               <button 
@@ -418,10 +556,10 @@ export default function Play() {
                 onClick={() => setGameState(GAME_STATES.STEWARDSHIP)}
                 style={{ padding: '12px 24px', fontSize: '1rem', fontWeight: 700 }}
               >
-                🩺 Start Ward Round (5 Cases) →
+                🩺 {t('Choose Scenario Level & Start →')}
               </button>
-              <Link to="/learn?module=bacteria" className="btn ghost" style={{ padding: '12px 20px' }}>
-                📖 Review Guidelines First
+              <Link to="/learn" className="btn ghost" style={{ padding: '12px 20px' }}>
+                📖 {t('Unlock Levels in Classroom')}
               </Link>
             </div>
           </div>
@@ -433,18 +571,69 @@ export default function Play() {
         </div>
 
         {/* Pathogen Rapid Response Arena */}
-        <div style={{ marginTop: '36px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ marginTop: '36px', marginBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '8px' }}>
           <div>
-            <span className="eyebrow">Target Practice &amp; Reflexes</span>
-            <h2 style={{ margin: '4px 0 0', fontSize: '1.4rem' }}>Pathogen Rapid Triage Arena</h2>
+            <span className="eyebrow">{t('Target Practice & Reflexes')}</span>
+            <h2 style={{ margin: '4px 0 0', fontSize: '1.4rem' }}>{t('Pathogen Rapid Triage Arena')}</h2>
           </div>
-          <span className="muted" style={{ fontSize: '.84rem' }}>30s rapid rounds · Combo multipliers · Boss battle</span>
+          <span className="muted" style={{ fontSize: '.84rem' }}>{t('30s rapid rounds · Combo multipliers · Boss battle')}</span>
+        </div>
+
+        {/* 3 Classroom-Gated Difficulty Levels Selector */}
+        <div className="card glass" style={{ marginBottom: '18px', padding: '14px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+            <span style={{ fontSize: '.82rem', fontWeight: 700, color: 'var(--navy)' }}>
+              🎚️ {t('Select Arena Difficulty Level (Unlocked by Classroom Progress)')}
+            </span>
+            <span className="muted" style={{ fontSize: '.78rem' }}>
+              📚 {lessonsDone} / 9 {t('Classroom Modules Completed')}
+            </span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '10px' }}>
+            {DIFFICULTY_LEVELS.map((diff) => {
+              const unlocked = isDiffUnlocked(diff)
+              const selected = difficultyLevel === diff.level
+              const needed = Math.max(0, diff.requiredLessons - lessonsDone)
+              return (
+                <button
+                  key={diff.id}
+                  type="button"
+                  onClick={() => unlocked && setDifficultyLevel(diff.level)}
+                  disabled={!unlocked}
+                  style={{
+                    textAlign: 'left',
+                    padding: '10px 12px',
+                    borderRadius: '12px',
+                    border: selected && unlocked ? '2px solid var(--teal)' : '1px solid var(--line)',
+                    background: !unlocked ? 'rgba(0,0,0,0.03)' : selected ? 'rgba(23,107,101,0.1)' : 'var(--g-soft)',
+                    opacity: unlocked ? 1 : 0.72,
+                    cursor: unlocked ? 'pointer' : 'not-allowed',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+                    <strong style={{ fontSize: '.85rem', color: 'var(--ink)' }}>
+                      {unlocked ? diff.icon : '🔒'} {t(diff.name)}
+                    </strong>
+                    <span style={{ fontSize: '.7rem', fontWeight: 700, color: unlocked ? 'var(--teal)' : 'var(--coral)' }}>
+                      {unlocked ? t(diff.badge) : `🔒 +${needed} ${t('Lessons')}`}
+                    </span>
+                  </div>
+                  <span className="muted" style={{ fontSize: '.75rem', lineHeight: 1.35 }}>
+                    {t(diff.desc)}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         <div className="pathogen-carousel-grid">
           {PATHOGENS.map(p => {
             const lessonKey = PATHOGEN_TO_LESSON[p.id]
-            const isCompleted = done && done[lessonKey]
+            const isCompleted = done && done['lesson-' + lessonKey]
             return (
               <div 
                 key={p.id} 
@@ -456,7 +645,7 @@ export default function Play() {
                     {p.icon}
                   </div>
                   <span className="pathogen-tag" style={{ color: p.color, background: `${p.color}15` }}>
-                    {p.badge}
+                    {t(p.badge)}
                   </span>
                 </div>
 
@@ -480,14 +669,14 @@ export default function Play() {
                       fontWeight: 700
                     }}
                   >
-                    ⚡ Play 3 Rounds →
+                    ⚡ {t('Play 3 Rounds →')}
                   </button>
                   <Link 
                     to={`/learn?module=${lessonKey}`} 
                     className="pathogen-learn-link"
                     style={{ color: p.color }}
                   >
-                    {isCompleted ? '✓ Module Mastered' : '📖 Study Module in Classroom'}
+                    {isCompleted ? '✓ ' + t('Module Mastered') : '📖 ' + t('Study Module in Classroom')}
                   </Link>
                 </div>
               </div>
@@ -500,19 +689,19 @@ export default function Play() {
           <div className="integration-col">
             <span style={{ fontSize: '1.8rem' }}>🗺️</span>
             <div>
-              <b style={{ color: 'var(--navy)' }}>Track Real-World Resistance</b>
-              <p className="muted" style={{ margin: 0, fontSize: '.82rem' }}>See where resistant strains are spreading across Nigerian geopolitical zones.</p>
+              <b style={{ color: 'var(--navy)' }}>{t('Track Real-World Resistance')}</b>
+              <p className="muted" style={{ margin: 0, fontSize: '.82rem' }}>{t('See where resistant strains are spreading across Nigerian geopolitical zones.')}</p>
             </div>
-            <Link to="/map" className="btn ghost" style={{ padding: '6px 14px', fontSize: '.85rem' }}>View Map →</Link>
+            <Link to="/map" className="btn ghost" style={{ padding: '6px 14px', fontSize: '.85rem' }}>{t('View Map →')}</Link>
           </div>
           <div className="integration-divider" />
           <div className="integration-col">
             <span style={{ fontSize: '1.8rem' }}>🔥</span>
             <div>
-              <b style={{ color: 'var(--navy)' }}>Daily AI Case Missions</b>
-              <p className="muted" style={{ margin: 0, fontSize: '.82rem' }}>Fresh challenges synthesized daily from WHO &amp; NCDC surveillance feeds.</p>
+              <b style={{ color: 'var(--navy)' }}>{t('Daily AI Case Missions')}</b>
+              <p className="muted" style={{ margin: 0, fontSize: '.82rem' }}>{t('Fresh challenges synthesized daily from WHO & NCDC surveillance feeds.')}</p>
             </div>
-            <Link to="/challenges" className="btn ghost" style={{ padding: '6px 14px', fontSize: '.85rem' }}>Daily Tasks →</Link>
+            <Link to="/challenges" className="btn ghost" style={{ padding: '6px 14px', fontSize: '.85rem' }}>{t('Daily Tasks →')}</Link>
           </div>
         </section>
       </div>
@@ -769,10 +958,10 @@ export default function Play() {
     <div className="game-screen-wrapper animate-fade-in">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', gap: '12px' }}>
         <div className="game-instruction-pill">
-          {selectedPathogen.mechanic === 'antibiotic-targeting' && '🎯 Click Susceptible Antibiotics · Avoid MDR/XDR'}
-          {selectedPathogen.mechanic === 'avoid-antibiotics' && '🚫 Click Viruses Only · DO NOT use Antibiotics'}
-          {selectedPathogen.mechanic === 'targeted-treatment' && '🍄 Click Antifungals · Avoid Resistant Fungi'}
-          {selectedPathogen.mechanic === 'compliance-course' && '💊 Complete Full Course · Avoid Skips & Halts'}
+          {selectedPathogen.mechanic === 'antibiotic-targeting' && `🎯 ${t('Tap Green Access Antibiotics · Avoid Loose Capsules & Superbugs')}`}
+          {selectedPathogen.mechanic === 'avoid-antibiotics' && `🚫 ${t('Tap Viral Relief (Rest, Hydration, Steam) · DO NOT Use Antibiotics')}`}
+          {selectedPathogen.mechanic === 'targeted-treatment' && `🍄 ${t('Tap Targeted Antifungals · Avoid Triple-Action Steroid Mixes')}`}
+          {selectedPathogen.mechanic === 'compliance-course' && `🦟 ${t('Complete RDT Blood Test + All 6 ACT Doses · Avoid Chloroquine & Day-2 Stops')}`}
         </div>
         <button className="custom-close-btn framework-close-btn" onClick={requestEarlyExit} aria-label={t('Exit')} title={t('Exit')}>
           <img src="/close-icon.png" alt={t('Exit')} className="custom-close-icon" />
@@ -781,10 +970,10 @@ export default function Play() {
 
       <div className="gamebar-spacious">
         <span className="gamebar-item pathogen-badge" style={{ background: selectedPathogen.gradient, color: '#fff' }}>
-          {selectedPathogen.icon} {t(selectedPathogen.name)}
+          {selectedPathogen.icon} {t(selectedPathogen.name)} · {activeDiff.icon} L{activeDiff.level}
         </span>
         <span className="gamebar-item">⏱ {Math.ceil(timeLeft / 1000)}s</span>
-        <span className="gamebar-item">🎯 {t('Round')} {round}/3</span>
+        <span className="gamebar-item">🎯 {t('Round')} {round}/3 ({Math.round(currentSpeedMult * 100)}% {t('Speed')})</span>
         <span className="gamebar-item score-badge">⭐ {score}</span>
         {combo > 1 && (
           <span className="gamebar-item combo-badge animate-pop">
@@ -792,6 +981,67 @@ export default function Play() {
           </span>
         )}
       </div>
+
+      {/* Special Visual Malaria RDT + 3-Day (6-Dose) ACT Blister Pack Tracker for the Parasite Game */}
+      {selectedPathogen.mechanic === 'compliance-course' && (
+        <div className="card glass" style={{ marginBottom: '12px', padding: '12px 14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+            <span style={{ fontSize: '.8rem', fontWeight: 800, color: 'var(--navy)' }}>
+              🦟 {t('Malaria Cure Protocol: 1) Confirm with RDT → 2) Complete 3-Day (6-Dose) ACT Pack')}
+            </span>
+            <span style={{ fontSize: '.78rem', fontWeight: 700, color: parasiteLoad <= 25 ? '#27AE60' : 'var(--purple, #7A5CC7)' }}>
+              🩸 {t('Blood Parasite Load')}: {parasiteLoad}%
+            </span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(60px, 1fr))', gap: '6px', overflowX: 'auto' }}>
+            {MALARIA_REGIMEN_STEPS.map((st, idx) => {
+              const isDone = idx < (malariaStepIdx % MALARIA_REGIMEN_STEPS.length) || parasiteLoad === 0
+              const isCurrent = idx === (malariaStepIdx % MALARIA_REGIMEN_STEPS.length)
+              return (
+                <div
+                  key={st.slot}
+                  style={{
+                    padding: '6px 4px',
+                    borderRadius: '8px',
+                    textAlign: 'center',
+                    fontSize: '.72rem',
+                    fontWeight: 700,
+                    border: isCurrent ? '2px solid #7A5CC7' : '1px solid var(--line)',
+                    background: isDone ? 'rgba(39,174,96,0.14)' : isCurrent ? 'rgba(122,92,199,0.14)' : 'var(--g-soft)',
+                    color: isDone ? '#27AE60' : isCurrent ? '#7A5CC7' : 'var(--muted)'
+                  }}
+                >
+                  <div>{idx === 0 ? '🩸' : '💊'} {t(st.short)}</div>
+                  <div style={{ fontSize: '.66rem', marginTop: '2px' }}>
+                    {isDone ? '✓ ' + t('Done') : isCurrent ? '🎯 ' + t('Tap Now!') : t('Wait')}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Live Coach XEITH Feedback Strip (inspired by NPC dialogues in SteWARdS Antibiotic Defence) */}
+      {coachMsg && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '8px 14px',
+            marginBottom: '10px',
+            borderRadius: '12px',
+            background: 'var(--g-soft)',
+            border: '1px solid var(--line)',
+            fontSize: '.82rem'
+          }}
+        >
+          <img src="/mascot.png" width={26} height={26} alt="" style={{ objectFit: 'contain', flexShrink: 0 }} />
+          <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{t(coachMsg)}</span>
+        </div>
+      )}
 
       <div 
         className="gamearea-spacious" 
