@@ -239,7 +239,7 @@ export default function WeeklyWordLadder() {
                 </button>
               </div>
 
-              <div className="ladder-form">
+              <div className="ladder-form ladder-hint-actions">
                 {!rungHints.position && (
                   <button className="btn ghost" onClick={() => takeHint('position')}>
                     {t('Position hint (free)')}
