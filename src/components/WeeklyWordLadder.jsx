@@ -108,7 +108,7 @@ export default function WeeklyWordLadder() {
     }
     const diff = word.split('').filter((char, i) => char !== prevWord[i]).length
     if (diff !== 1) {
-      setErrorMsg(t('Change exactly one letter from {{prev}}', { prev: prevWord }))
+      setErrorMsg(`Change exactly one letter from ${prevWord}`)
       return
     }
 

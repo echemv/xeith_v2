@@ -90,9 +90,112 @@ Return JSON:
   return prompts[type] || prompts.QUIZ
 }
 
+const ALLOWED_LANGS = ['en', 'pid', 'ha', 'yo', 'ig']
+
 export async function onRequestPost({ request, env }) {
   try {
-    const { type, topic, lang = 'en', date } = await request.json()
+    // Rate-limiting check if D1 database is bound
+    if (env.DB) {
+      const clientIp = request.headers.get('cf-connecting-ip') || 'unknown'
+      const windowSec = Math.floor(Date.now() / 1000 / 60) // 1-minute window
+      const ipKey = `challenges:${clientIp}:${windowSec}`
+      try {
+        await env.DB.prepare(
+          'CREATE TABLE IF NOT EXISTS rate_limits (key TEXT PRIMARY KEY, count INTEGER, expires_at INTEGER)'
+        ).run()
+        const nowSec = Math.floor(Date.now() / 1000)
+        await env.DB.prepare(
+          'INSERT INTO rate_limits (key, count, expires_at) VALUES (?, 1, ?) ON CONFLICT(key) DO UPDATE SET count = count + 1'
+        ).bind(ipKey, nowSec + 120).run()
+        const record = await env.DB.prepare('SELECT count FROM rate_limits WHERE key = ?').bind(ipKey).first()
+        if (record && record.count > 20) {
+          return json({ error: 'Rate limit exceeded. Please wait a moment.' }, 429)
+        }
+      } catch {
+        // Continue if rate limit check fails
+      }
+    }
+
+    const body = await request.json()
+    const { action, type, topic, lang = 'en', date } = body
+    const cleanLang = ALLOWED_LANGS.includes(lang) ? lang : 'en'
+
+    // Instant AI Vision Photo Challenge Verification
+    if (action === 'VERIFY_PHOTO') {
+      const { imageDataUrl, prompt: challengePrompt = '', category = 'prevention', examples = [] } = body
+      if (
+        typeof imageDataUrl !== 'string' ||
+        !/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(imageDataUrl) ||
+        imageDataUrl.length > 600000
+      ) {
+        return json({ error: 'Invalid or oversized image data' }, 400)
+      }
+
+      if (!env.LLM_API_KEY) {
+        return json({ error: 'AI not configured' }, 503)
+      }
+
+      const baseUrl = env.LLM_BASE_URL || 'https://api.openai.com/v1'
+      const isGroq = baseUrl.includes('groq.com')
+      const visionModel = env.LLM_VISION_MODEL || (isGroq ? 'meta-llama/llama-4-scout-17b-16e-instruct' : (env.LLM_MODEL || 'gpt-4o-mini'))
+
+      const verifyPrompt = `You are XEITH's AI Photo Challenge Checker for an antimicrobial resistance (AMR) stewardship learning app.
+Evaluate whether the user's uploaded photo reasonably relates to the daily photo challenge prompt.
+Challenge Prompt: "${String(challengePrompt).slice(0, 300)}"
+Category: "${String(category).slice(0, 60)}"
+Accepted Examples: ${Array.isArray(examples) ? examples.slice(0, 6).join(', ') : ''}
+Language code for feedback: ${cleanLang}
+
+Be encouraging and fair to students/learners: approve the photo if it shows any plausible item, setting, hygiene practice, food, water, medicine pack, sign, or surface related to the prompt or examples. Reject only if the photo is completely unrelated (e.g. blank screen, pitch black, or clearly off-topic).
+
+Respond ONLY with valid JSON:
+{
+  "approved": true,
+  "detectedItem": "short name of what you see",
+  "feedback": "1-2 short, encouraging educational sentences connecting what is in the photo to AMR prevention or stewardship"
+}`
+
+      const vr = await fetch(baseUrl + '/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + env.LLM_API_KEY },
+        body: JSON.stringify({
+          model: visionModel,
+          max_tokens: 300,
+          temperature: 0.2,
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: verifyPrompt },
+                { type: 'image_url', image_url: { url: imageDataUrl } }
+              ]
+            }
+          ],
+          response_format: { type: 'json_object' }
+        }),
+      })
+
+      if (!vr.ok) {
+        const errText = await vr.text().catch(() => '')
+        console.error('Vision upstream error:', errText)
+        return json({ error: 'Vision model unavailable' }, 502)
+      }
+
+      const vd = await vr.json()
+      const rawContent = vd.choices?.[0]?.message?.content || ''
+      let result
+      try {
+        result = JSON.parse(rawContent)
+      } catch {
+        return json({ error: 'Invalid vision response' }, 502)
+      }
+
+      return json({
+        approved: Boolean(result.approved),
+        detectedItem: typeof result.detectedItem === 'string' ? result.detectedItem.slice(0, 80) : '',
+        feedback: typeof result.feedback === 'string' ? result.feedback.slice(0, 350) : ''
+      })
+    }
 
     // Validate
     if (!CHALLENGE_TYPES.includes(type)) {
@@ -107,7 +210,7 @@ export async function onRequestPost({ request, env }) {
       return json({ error: 'AI not configured' }, 503)
     }
 
-    const prompt = buildPrompt(type, topic, lang, date || new Date().toISOString())
+    const prompt = buildPrompt(type, topic, cleanLang, date || new Date().toISOString())
 
     const r = await fetch((env.LLM_BASE_URL || 'https://api.openai.com/v1') + '/chat/completions', {
       method: 'POST',

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Thinking from '../components/Thinking'
 import Bacterium from '../components/Bacterium'
-import { faqAnswer } from '../data/faq'
+import { FAQ_CATEGORIES, findFaqMatch, faqAnswer } from '../data/faq'
 
 const THREADS_STORAGE_KEY = 'xeith-chat-threads'
 const ACTIVE_THREAD_KEY = 'xeith-active-thread-id'
@@ -69,15 +69,22 @@ function inline(text) {
     const mdLink = p.match(/^\[([^\]]+)\]\(([^)]+)\)$/)
     if (mdLink) {
       const [, label, href] = mdLink
-      return href.startsWith('/') ? (
-        <Link key={k} to={href} className="chat-inline-link">
-          {label}
-        </Link>
-      ) : (
-        <a key={k} href={href} target="_blank" rel="noopener noreferrer" className="chat-inline-link">
-          {label}
-        </a>
-      )
+      const cleanHref = href.trim()
+      if (cleanHref.startsWith('/') && !cleanHref.startsWith('//')) {
+        return (
+          <Link key={k} to={cleanHref} className="chat-inline-link">
+            {label}
+          </Link>
+        )
+      }
+      if (/^https?:\/\//i.test(cleanHref)) {
+        return (
+          <a key={k} href={cleanHref} target="_blank" rel="noopener noreferrer" className="chat-inline-link">
+            {label}
+          </a>
+        )
+      }
+      return <span key={k}>{label}</span>
     }
     if (p.startsWith('**') && p.endsWith('**') && p.length > 4) {
       return <strong key={k}>{p.slice(2, -2)}</strong>
@@ -145,14 +152,34 @@ export default function Chat() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
+  const [isOffline, setIsOffline] = useState(() => (typeof navigator !== 'undefined' ? !navigator.onLine : false))
+  const [activeCatId, setActiveCatId] = useState(null)
+  const [showFaqBrowser, setShowFaqBrowser] = useState(false)
   const end = useRef(null)
+
+  useEffect(() => {
+    const onOnline = () => setIsOffline(false)
+    const onOffline = () => setIsOffline(true)
+    window.addEventListener('online', onOnline)
+    window.addEventListener('offline', onOffline)
+    return () => {
+      window.removeEventListener('online', onOnline)
+      window.removeEventListener('offline', onOffline)
+    }
+  }, [])
 
   const activeThread = threads.find((t) => t.id === activeId) || null
   const messages = activeThread ? activeThread.messages : []
 
+  const prevMsgCount = useRef(messages.length)
+
   useEffect(() => {
-    end.current && end.current.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, busy])
+    // Only scroll when a new message is added or the assistant starts thinking—never on empty or initial load
+    if ((messages.length > 0 && messages.length > prevMsgCount.current) || busy) {
+      end.current && end.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }
+    prevMsgCount.current = messages.length
+  }, [messages.length, busy])
 
   const selectThread = (id) => {
     setActiveId(id)
@@ -232,41 +259,141 @@ export default function Chat() {
 
     const targetThreadId = currentThread.id
     const contextMessages = currentThread.messages.slice(-10)
+    const minSpinDelay = new Promise((resolve) => setTimeout(resolve, 600))
 
     try {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        throw new Error('offline')
+      }
       const ctrl = new AbortController()
       const to = setTimeout(() => ctrl.abort(), 20000)
-      const r = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: ctrl.signal,
-        body: JSON.stringify({ messages: contextMessages, lang: i18n.resolvedLanguage }),
-      })
+      const [r] = await Promise.all([
+        fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: ctrl.signal,
+          body: JSON.stringify({ messages: contextMessages, lang: i18n.resolvedLanguage }),
+        }),
+        minSpinDelay,
+      ])
       clearTimeout(to)
       if (!r.ok) throw new Error('bad response')
       const d = await r.json()
       appendAssistantReply(targetThreadId, d.reply, false)
     } catch {
-      appendAssistantReply(targetThreadId, faqAnswer(text), true)
+      await minSpinDelay
+      const match = findFaqMatch(text)
+      if (match) {
+        appendAssistantReply(targetThreadId, match.item.a, true, {
+          categoryId: match.category?.id,
+          categoryTitle: match.category?.title,
+          related: match.related?.map((item) => item.q) || [],
+        })
+      } else {
+        appendAssistantReply(targetThreadId, faqAnswer(text), true, {
+          showCategories: true,
+        })
+      }
     } finally {
       setBusy(false)
+      setShowFaqBrowser(false)
     }
   }
 
-  const appendAssistantReply = (threadId, content, offline = false) => {
+  const appendAssistantReply = (threadId, content, offline = false, meta = {}) => {
     setThreads((prev) => {
       const target = prev.find((th) => th.id === threadId)
       if (!target) return prev
       const updated = {
         ...target,
         updatedAt: Date.now(),
-        messages: [...target.messages, { role: 'assistant', content, offline }],
+        messages: [...target.messages, { role: 'assistant', content, offline, ...meta }],
       }
       const nextList = [updated, ...prev.filter((th) => th.id !== threadId)]
       saveThreadsToStorage(nextList)
       return nextList
     })
   }
+
+  const activeCategory = FAQ_CATEGORIES.find((c) => c.id === activeCatId) || null
+
+  const renderFaqExplorer = (compact = false) => (
+    <div className={`chat-faq-explorer ${compact ? 'is-compact' : ''}`}>
+      <div className="chat-suggestions-header">
+        <div className="chat-faq-header-left">
+          <span>{isOffline ? '📴' : '📚'}</span>
+          <span>
+            {activeCategory
+              ? `${activeCategory.icon} ${t(activeCategory.title)}`
+              : isOffline
+                ? t('Offline FAQ Library — Tap a topic to explore answers')
+                : t('Browse Compartmentalized FAQ Topics')}
+          </span>
+        </div>
+        <div className="chat-faq-header-actions">
+          {activeCategory && (
+            <button
+              type="button"
+              className="chat-faq-back-btn"
+              onClick={() => setActiveCatId(null)}
+            >
+              ← {t('All Topics')}
+            </button>
+          )}
+          {compact && (
+            <button
+              type="button"
+              className="chat-faq-close-btn"
+              onClick={() => setShowFaqBrowser(false)}
+              aria-label={t('Close')}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+
+      {!activeCategory ? (
+        <div className="chat-faq-compartments-grid">
+          {FAQ_CATEGORIES.map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              className="chat-faq-compartment-card"
+              onClick={() => setActiveCatId(cat.id)}
+            >
+              <div className="compartment-card-top">
+                <span className="compartment-icon" aria-hidden="true">{cat.icon}</span>
+                <span className="compartment-count">
+                  {cat.items.length} {t('FAQs')}
+                </span>
+              </div>
+              <strong className="compartment-title">{t(cat.title)}</strong>
+              <span className="compartment-desc">{t(cat.desc)}</span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="chat-faq-questions-list">
+          <p className="chat-faq-cat-subtitle">{t(activeCategory.desc)}</p>
+          <div className="chat-starter-pills">
+            {activeCategory.items.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className="chat-starter-pill"
+                onClick={() => send(t(item.q))}
+                disabled={busy}
+              >
+                <span>❓ {t(item.q)}</span>
+                <span className="pill-arrow">→</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 
   return (
     <div className="chat-container">
@@ -381,6 +508,21 @@ export default function Chat() {
           </div>
 
           <div className="chat-topbar-actions">
+            {isOffline && (
+              <span className="chat-offline-pill" title={t('Working offline with built-in FAQ library')}>
+                📴 {t('Offline FAQ Mode')}
+              </span>
+            )}
+            {isOffline && messages.length > 0 && (
+              <button
+                type="button"
+                className={`chat-faq-toggle-btn ${showFaqBrowser ? 'active' : ''}`}
+                onClick={() => setShowFaqBrowser((v) => !v)}
+                title={t('Browse FAQ Topics')}
+              >
+                📚 <span>{t('FAQ Topics')}</span>
+              </button>
+            )}
             <button className="chat-new-header-btn" onClick={startNewChat} title={t('New Chat')}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"/>
@@ -397,9 +539,22 @@ export default function Chat() {
               <p className="muted">
                 {t('Ask anything about antimicrobial resistance. I teach and explain. I can’t diagnose or prescribe.')}
               </p>
-              <div className="chat-suggestions-box">
+
+              {/* When offline, show the full FAQ Explorer upfront */}
+              {isOffline && renderFaqExplorer(false)}
+
+              <div className="chat-suggestions-box" style={{ marginTop: '14px' }}>
                 <div className="chat-suggestions-header">
-                  <span>💡 {t('Suggested questions')}</span>
+                  <span>💡 {t('Quick starter questions')}</span>
+                  {!isOffline && (
+                    <button
+                      type="button"
+                      className="chat-faq-corner-link"
+                      onClick={() => setShowFaqBrowser((v) => !v)}
+                    >
+                      {showFaqBrowser ? t('Hide FAQs') : t('Browse FAQs →')}
+                    </button>
+                  )}
                 </div>
                 <div className="chat-starter-pills">
                   {STARTER_QUESTIONS.map((q, idx) => (
@@ -409,24 +564,89 @@ export default function Chat() {
                       onClick={() => send(t(q))}
                       disabled={busy}
                     >
-                      {t(q)}
+                      <span>{t(q)}</span>
+                      <span className="pill-arrow">→</span>
                     </button>
                   ))}
                 </div>
               </div>
+
+              {/* When online and "Browse FAQs" is clicked, open right below Quick starter questions */}
+              {!isOffline && showFaqBrowser && renderFaqExplorer(true)}
             </div>
           )}
 
           {messages.map((m, i) => (
             <div key={i} className={'msg ' + m.role}>
               {m.role === 'assistant' ? <Reply text={m.content} /> : m.content}
-              {m.offline && <small> · {t('offline answer')}</small>}
+              {m.offline && <small className="chat-offline-tag"> · 📴 {t('offline answer')}</small>}
+
+              {/* Related follow-up questions from the same FAQ compartment */}
+              {m.role === 'assistant' && Array.isArray(m.related) && m.related.length > 0 && (
+                <div className="chat-related-faqs">
+                  <span className="chat-related-label">
+                    {t('More in {{cat}}:', { cat: t(m.categoryTitle || 'this topic') })}
+                  </span>
+                  <div className="chat-related-pills">
+                    {m.related.map((rq, rIdx) => (
+                      <button
+                        key={rIdx}
+                        type="button"
+                        className="chat-related-pill"
+                        onClick={() => send(t(rq))}
+                        disabled={busy}
+                      >
+                        {t(rq)} →
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      className="chat-related-pill is-topic-btn"
+                      onClick={() => {
+                        setActiveCatId(null)
+                        setShowFaqBrowser(true)
+                      }}
+                    >
+                      📚 {t('All 6 FAQ Topics')}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* When an offline question had no exact match, show quick compartment buttons inline */}
+              {m.role === 'assistant' && m.showCategories && (
+                <div className="chat-related-faqs">
+                  <span className="chat-related-label">{t('Pick a compartment to see available offline answers:')}</span>
+                  <div className="chat-related-pills">
+                    {FAQ_CATEGORIES.map((cat) => (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        className="chat-related-pill is-topic-btn"
+                        onClick={() => {
+                          setActiveCatId(cat.id)
+                          setShowFaqBrowser(true)
+                        }}
+                      >
+                        {cat.icon} {t(cat.title)} ({cat.items.length})
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
 
           {busy && <Thinking />}
           <div ref={end} />
         </div>
+
+        {/* Collapsible mid-chat FAQ compartment browser above composer */}
+        {messages.length > 0 && showFaqBrowser && (
+          <div className="chat-mid-faq-drawer">
+            {renderFaqExplorer(true)}
+          </div>
+        )}
 
         <div className="composer">
           <textarea
