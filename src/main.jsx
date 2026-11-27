@@ -6,6 +6,7 @@ import '@fontsource/inter/600.css'
 import '@fontsource/fraunces/600.css'
 import './i18n'
 import './styles.css'
+import './styles/meyi-features.css'
 import App from './App'
 
 createRoot(document.getElementById('root')).render(<BrowserRouter><App /></BrowserRouter>)

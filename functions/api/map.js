@@ -14,6 +14,21 @@ Rules:
 - Language: reply in the requested language`
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { 'Content-Type': 'application/json' } })
+const ALLOWED_LANGS = ['en', 'pid', 'ha', 'yo', 'ig']
+
+function timingSafeEqualStr(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false
+  const enc = new TextEncoder()
+  const bufA = enc.encode(a)
+  const bufB = enc.encode(b)
+  if (bufA.byteLength !== bufB.byteLength) return false
+  if (crypto?.subtle?.timingSafeEqual) {
+    return crypto.subtle.timingSafeEqual(bufA, bufB)
+  }
+  let diff = 0
+  for (let i = 0; i < bufA.length; i++) diff |= bufA[i] ^ bufB[i]
+  return diff === 0
+}
 
 const REGIONS = [
   { name: 'Lagos', lat: 6.5244, lng: 3.3792 },
@@ -50,9 +65,18 @@ Return JSON array:
 
 export async function onRequestPost({ request, env }) {
   try {
-    const { region, lang = 'en', count = 3 } = await request.json()
+    // Pipeline protection: require review/admin secret to trigger bulk AI map data generation
+    const authHeader = request.headers.get('Authorization') || ''
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
+    if (!env.ADMIN_KEY || !timingSafeEqualStr(token, env.ADMIN_KEY)) {
+      return json({ error: 'Unauthorized: Map data generation is restricted to the internal review pipeline' }, 401)
+    }
 
-    const regionData = REGIONS.find(r => r.name.toLowerCase() === (region || '').toLowerCase())
+    const { region, lang = 'en', count = 3 } = await request.json()
+    const cleanLang = ALLOWED_LANGS.includes(lang) ? lang : 'en'
+    const safeCount = Math.min(Math.max(1, Math.floor(Number(count) || 3)), 10)
+
+    const regionData = REGIONS.find(r => r.name.toLowerCase() === (typeof region === 'string' ? region : '').toLowerCase())
     if (!regionData) {
       return json({ error: 'Invalid region' }, 400)
     }
@@ -61,7 +85,7 @@ export async function onRequestPost({ request, env }) {
       return json({ error: 'AI not configured' }, 503)
     }
 
-    const prompt = buildPrompt(regionData, lang, count)
+    const prompt = buildPrompt(regionData, cleanLang, safeCount)
 
     const r = await fetch((env.LLM_BASE_URL || 'https://api.openai.com/v1') + '/chat/completions', {
       method: 'POST',
