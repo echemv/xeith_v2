@@ -228,6 +228,8 @@ export default function Challenges() {
           <li>{t('Photo Challenge: Take a real-world photo matching the prompt')}</li>
           <li>{t('Fact Check: Sort facts from myths about antimicrobial resistance')}</li>
           <li>{t('Weekly: 3 questions, 5 points each. Build your streak for bonus points!')}</li>
+          <li>{t('Four Worlds: Group 16 AMR terms into 4 hidden categories before 4 mistakes')}</li>
+          <li>{t('Case Files: Make 3 stewardship decisions in real-world scenarios')}</li>
         </ul>
       </section>
 

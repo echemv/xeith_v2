@@ -108,7 +108,7 @@ export default function FourWorlds() {
           <h2 id="fw-title" className="cg-title">{t('Four Worlds')}</h2>
           <p className="cg-sub">{t('Find four groups of four. You can make 4 mistakes.')}</p>
         </div>
-        <span className="cg-draft">{t('Draft content')}</span>
+        <span className="cg-draft">{t('Xeith AI')}</span>
       </header>
 
       <div className="cg-chips" role="tablist" aria-label={t('Choose a puzzle')}>

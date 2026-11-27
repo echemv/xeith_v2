@@ -141,7 +141,7 @@ export default function CaseFiles() {
           <h2 id="cf-title" className="cg-title">{t('Stewardship scenarios')}</h2>
           <p className="cg-sub">{t('Three decisions per case. Pick the action a good steward would take.')}</p>
         </div>
-        <span className="cg-draft">{t('Draft content')}</span>
+        <span className="cg-draft">{t('Xeith AI')}</span>
       </header>
 
       {file ? (
