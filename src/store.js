@@ -73,7 +73,7 @@ export function restoreCloudState({ displayName, points = 0, streak = 0 }) {
 export const signOut = () => commit({ ...state, profile: null })
 export const exportData = () => JSON.stringify({ exportedAt: new Date().toISOString(), ...state }, null, 2)
 export function deleteAll() {
-  try { ['xeith-state', 'xeith-lang', 'xeith-seen'].forEach((k) => localStorage.removeItem(k)) } catch { /* storage unavailable */ }
+  try { ['xeith-state', 'xeith-lang', 'xeith-seen', 'xeith-chat-threads', 'xeith-active-thread-id', 'xeith-chat-history'].forEach((k) => localStorage.removeItem(k)) } catch { /* storage unavailable */ }
   commit(INIT)
 }
 export function maskEmail(e) {

@@ -1,126 +1,299 @@
 import { tx } from '../i18n'
 
 /**
- * Detailed AMR Curriculum with verified biological mechanisms, 
- * Nigerian clinical and community epidemiology, stewardship protocols,
- * and authoritative references scraped from global health registries (Lancet GRAM, NCDC, WHO AWaRe, CDC).
+ * Layperson-friendly, progressive AMR curriculum.
+ * Starts from foundational concepts (what microbes and pathogens are, what AMR means in everyday life),
+ * then introduces the 4 main pathogen families (Bacteria, Viruses, Fungi, Parasites),
+ * and gradually builds up to infection prevention, One Health (farms/food/water), and drug quality/disposal.
  */
 export const TIERS = [
   {
     id: 'beginner',
     level: 1,
-    title: tx('Foundations of Antimicrobial Resistance'),
-    subtitle: tx('Core biological mechanisms, bacterial vs viral structures, and infection transmission chains.'),
-    badge: tx('Novice Steward'),
+    title: tx('The Basics: Microbes, Germs & What AMR Means'),
+    subtitle: tx('Start here! Learn what microbes and pathogens are, how germ-fighting medicines work, and what happens when germs become resistant.'),
+    badge: tx('Beginner Explorer'),
     icon: '🌱',
     color: '#176B65',
-    moduleIds: ['bacteria', 'virus', 'human-spread']
+    moduleIds: ['intro-pathogens', 'what-is-amr']
   },
   {
     id: 'intermediate',
     level: 2,
-    title: tx('Clinical Stewardship & Diagnostic Precision'),
-    subtitle: tx('WHO AWaRe clinical rules, malaria RDT protocols, and hospital fungal superbugs.'),
-    badge: tx('Clinical Advocate'),
-    icon: '🩺',
+    title: tx('Meet the 4 Germs: Bacteria, Viruses, Fungi & Parasites'),
+    subtitle: tx('Understand each type of germ one by one, which medicine treats which infection, and common everyday myths to avoid.'),
+    badge: tx('Pathogen Detective'),
+    icon: '🔬',
     color: '#0284C7',
-    moduleIds: ['parasites', 'fungi']
+    moduleIds: ['bacteria', 'virus', 'fungi', 'parasites']
   },
   {
     id: 'advanced',
     level: 3,
-    title: tx('One Health Systems, Drug Quality & Global Policy'),
-    subtitle: tx('Livestock colistin abuse, mcr-1 genetics, substandard drugs (NAFDAC MAS), the empty R&D pipeline, and safe disposal.'),
-    badge: tx('One Health Sentinel'),
+    title: tx('Stepping Up: Stopping Spread, Farms & Safe Medicines'),
+    subtitle: tx('See the bigger picture: how clean hands and vaccines stop superbugs, how farm antibiotics reach our food, and how to spot fake drugs.'),
+    badge: tx('AMR Champion'),
     icon: '🌍',
     color: '#7C3AED',
-    moduleIds: ['one-health', 'systems-quality']
+    moduleIds: ['human-spread', 'one-health', 'systems-quality']
   }
 ]
 
 export const LESSONS = [
   {
-    id: 'bacteria',
+    id: 'intro-pathogens',
     tier: 'beginner',
-    tierLevel: tx('Level 1: Foundations'),
+    tierLevel: tx('Level 1: The Basics'),
     tierIcon: '🌱',
     order: 1,
-    category: tx('BACTERIAL PHARMACOLOGY'),
-    badge: 'WHO AWaRe & GRAM Data',
-    readTime: '4 min read',
-    title: tx('Bacterial Resistance & Antibiotic Stewardship'),
-    subtitle: tx('Molecular mechanisms, the 1.27M death toll, and the WHO Access, Watch, Reserve framework'),
-    summary: tx('How bacteria evolve defenses against antimicrobial molecules, the disproportionate death toll in West Africa, and the clinical framework designed to preserve our antibiotics.'),
+    category: tx('START HERE · MICROBES 101'),
+    badge: 'Foundational Guide',
+    readTime: '3 min read',
+    title: tx('Introduction to Microbes & Pathogens'),
+    subtitle: tx('What microbes are, friendly germs vs. disease-causing pathogens, and the 4 main types of germs'),
+    summary: tx('Before learning about drug resistance, let’s start at the beginning: what are the tiny living things around us, which ones actually make us sick, and why does each type need a different medicine?'),
     steps: [
       {
         stepNum: 1,
-        heading: tx('Biological Mechanisms: How Bacteria Neutralize Drugs'),
-        content: tx('Antibiotics exert evolutionary selection pressure on bacterial colonies. Under this pressure, bacteria deploy four primary biochemical countermeasures: 1) Enzymatic degradation (such as beta-lactamase and carbapenemase enzymes cleaving the beta-lactam ring of penicillins and cephalosporins); 2) Target site alteration (mutations in penicillin-binding proteins or DNA gyrase preventing drug attachment); 3) Porin channel loss (reducing outer membrane permeability in Gram-negative bacteria); and 4) Multidrug efflux pumps that actively transport toxic antimicrobial agents out of the cell.\n\nCrucially, resistance is rarely confined to a single bacterium. Through Horizontal Gene Transfer (HGT)—via conjugative plasmids, bacteriophage transduction, and transformation of ambient DNA—a harmless commensal gut bacterium can donate multi-drug resistance cassettes directly to deadly virulent pathogens.'),
-        caseStudy: tx('In Nigerian tertiary hospitals, Gram-negative bloodstream infections (Klebsiella pneumoniae, Escherichia coli, Acinetobacter) exhibit resistance rates exceeding 65% to third-generation cephalosporins (ceftriaxone), forcing clinicians to rely on toxic or scarce backup therapies.'),
-        takeaway: tx('It is the bacteria that become drug-resistant, not the human body. Once resistant plasmids spread, antibiotics lose their killing efficacy permanently for everyone.')
+        heading: tx('What Are Microbes? (Not All Tiny Organisms Are Bad!)'),
+        content: tx('All around us—in the air, soil, water, and even inside our own bodies—live trillions of tiny living things called microbes (or microorganisms). They are so small that you cannot see them with your eyes; you need a microscope.\n\nHere is a surprising fact: most microbes are actually our friends! Your body is home to trillions of helpful microbes (often called your "microbiome") that live peacefully in your stomach and on your skin. They help you digest food, make vitamins, and crowd out harmful germs.\n\nOnly a small fraction of microbes cause sickness. When a microbe is capable of making a person, animal, or plant sick, scientists call it a pathogen—or in everyday words, a harmful germ.'),
+        caseStudy: tx('Think of your stomach like a busy market square: friendly microbes are the regular shopkeepers keeping order. When you take strong medicines you do not need, you sweep away those friendly shopkeepers and leave space for troublemakers to move in.'),
+        takeaway: tx('Microbes are tiny microscopic organisms. Most are helpful to our bodies; only the disease-causing ones are called pathogens (germs).')
       },
       {
         stepNum: 2,
-        heading: tx('The Epidemic Scale: Sub-Saharan Africa Ground Zero'),
-        content: tx('The milestone Global Research on Antimicrobial Resistance (GRAM) study published in The Lancet demonstrated that bacterial AMR is one of the leading global causes of mortality. In 2019 alone, 1.27 million deaths worldwide were directly attributable to drug-resistant bacterial infections, while 4.95 million deaths were associated with resistant pathogens—surpassing HIV/AIDS and malaria combined.\n\nSub-Saharan Africa bears the heaviest burden on earth. Western sub-Saharan Africa suffers the highest all-age mortality rate directly attributable to bacterial AMR globally, at 27.3 deaths per 100,000 population. The crisis is driven primarily by lower respiratory infections (drug-resistant pneumonia), bloodstream infections (septicemia), and intra-abdominal infections where first-line antibiotics fail in under-resourced hospitals.'),
-        caseStudy: tx('In Nigeria, newborn sepsis in neonatal intensive care units is increasingly caused by multidrug-resistant Klebsiella and Acinetobacter, resulting in devastating fatality rates because standard empiric antibiotics cannot clear the infection.'),
-        takeaway: tx('AMR is not a future threat; it is an active humanitarian crisis claiming over a million lives annually, with West Africa at the epicenter.')
+        heading: tx('Meet the 4 Main Types of Pathogens'),
+        content: tx('When people fall sick with an infection, the culprit usually belongs to one of four main families of pathogens:\n\n• 1. Bacteria: Tiny single-celled living creatures that can multiply on their own. Some cause illnesses like typhoid fever, strep throat, or urinary tract infections (UTIs).\n\n• 2. Viruses: Even smaller than bacteria! Viruses are not even full cells—they are tiny packets of genetic code that must invade our body cells to make copies of themselves. They cause the common cold (catarrh), flu, measles, and COVID-19.\n\n• 3. Fungi: This group includes yeasts and molds. While some fungi give us bread and mushrooms, pathogenic fungi can cause itchy skin infections like ringworm, athlete’s foot, or yeast infections (thrush).\n\n• 4. Parasites: Organisms that live in or on a host and feed at its expense. The most famous example in Nigeria is the malaria parasite (Plasmodium), which enters the blood through a mosquito bite.'),
+        caseStudy: tx('In Nigeria, many people call every fever "malaria" or every cough "bacterial infection," even though four completely different types of germs can cause similar feelings of tiredness or fever.'),
+        takeaway: tx('Bacteria, viruses, fungi, and parasites are four completely different kinds of germs—just as different from one another as a fish, a bird, and a tree.')
       },
       {
         stepNum: 3,
-        heading: tx('The WHO AWaRe Classification: Prescribing by Rule'),
-        content: tx('To curb unchecked antibiotic consumption and guide frontline clinicians, the World Health Organization formulated the AWaRe categorization:\n\n• Access Group: First- and second-choice therapies for 29 common clinical infections. They possess a narrow spectrum of activity, excellent safety profiles, and lower resistance potential (e.g., Amoxicillin, Ampicillin, Cephalexin, Co-trimoxazole). The WHO mandates that Access antibiotics should comprise at least 60% of total national antibiotic consumption.\n\n• Watch Group: Broader-spectrum agents carrying a markedly higher risk of bacterial resistance selection (e.g., Ciprofloxacin, Azithromycin, Ceftriaxone, Augmentin). These must be restricted to specific high-severity clinical indications with rigorous oversight.\n\n• Reserve Group: "Last-resort" antimicrobials (e.g., Colistin, Linezolid, IV Fosfomycin, Ceftazidime-avibactam). These must be strictly protected and reserved for confirmed or suspected life-threatening infections caused by multidrug-resistant pathogens when all alternatives have failed.'),
-        caseStudy: tx('Point prevalence surveys in Nigeria indicate that Watch-group antibiotics (especially ceftriaxone and ciprofloxacin) are frequently prescribed over-the-counter for simple complaints, violating the 60% Access threshold and driving community-wide resistance.'),
-        takeaway: tx('Always prioritize Access-group antibiotics when indicated. Reserve-group drugs must remain guarded as our last therapeutic shields.')
-      },
-      {
-        stepNum: 4,
-        heading: tx('The Nigerian Community Reality: PPMVs & Self-Medication'),
-        content: tx('Across Nigerian university campuses, studies reveal that self-medication with antibiotics ranges between 47% and over 89% among undergraduate students. The primary driver is informal access through Patent and Proprietary Medicine Vendors (PPMVs / local "chemists").\n\nAlthough Nigerian regulations classify antibiotics as prescription-only medications, weak enforcement allows students and community members to purchase loose capsules of amoxicillin, ciprofloxacin, or ampicillin-cloxacillin without a doctor\'s prescription or diagnostic confirmation. Students frequently purchase just 2 or 3 days worth of medication due to budget limits, discontinuing therapy the moment acute symptoms subside. This sublethal exposure eradicates susceptible bacteria while granting resistant mutants the time and space to multiply unchecked.'),
-        caseStudy: tx('At university health centers, clinicians frequently encounter students whose routine urinary tract infections (UTIs) fail to respond to ciprofloxacin because they have taken fragmented 2-day courses bought from off-campus vendors multiple times in the preceding year.'),
-        takeaway: tx('Never purchase loose antibiotic capsules without a verified prescription. Never discontinue therapy midway just because you feel improved.')
+        heading: tx('One Key, One Lock: Matching the Right Medicine to the Right Germ'),
+        content: tx('Because the four types of germs are built so differently, one single type of medicine cannot kill them all. Doctors call the whole family of germ-fighting medicines antimicrobials, and each branch targets a specific germ:\n\n• Antibiotics fight Bacteria only.\n• Antivirals fight Viruses.\n• Antifungals fight Fungi.\n• Antiparasitics (like antimalarials) fight Parasites.\n\nThink of these medicines like keys and locks. An antibiotic is a key made specifically for a bacterial lock. If you take an antibiotic for a viral cold or for malaria, the key will not fit the lock—it will not cure your illness at all!'),
+        caseStudy: tx('When someone takes an antibiotic capsule for a simple cold or takes malaria tablets without testing, they are using the wrong key on the wrong lock—wasting money while exposing their body to unnecessary side effects.'),
+        takeaway: tx('Antimicrobials are not all-purpose painkillers. Antibiotics only treat bacteria—never viruses, fungi, or malaria parasites.')
       }
     ],
     checks: [
       {
-        q: tx('A student with burning urination purchases 3 tablets of ciprofloxacin from a local chemist vendor "to knock it out fast." Why is this dangerous?'),
+        q: tx('What do we call the tiny fraction of microbes that actually cause disease in humans or animals?'),
         options: [
-          tx('Sub-therapeutic underdosing kills off weaker bacteria and selects for resistant mutants that can no longer be cured with fluoroquinolones'),
-          tx('Taking 3 tablets causes acute kidney failure within 24 hours'),
-          tx('Ciprofloxacin only works if taken with hot tea')
+          tx('Pathogens (harmful germs)'),
+          tx('Vitamins'),
+          tx('White blood cells')
         ],
         answer: 0,
-        why: tx('Taking incomplete courses exposes bacteria to sublethal drug concentrations, actively breeding resistant strains without eradicating the infection.')
+        why: tx('Most microbes are harmless or helpful; the specific microbes that cause infections and illness are called pathogens.')
       },
       {
-        q: tx('Under the WHO AWaRe antibiotic framework, what minimum percentage of a country’s total antibiotic consumption should come from the "Access" group?'),
+        q: tx('Which four main groups make up the pathogens that cause human infections?'),
         options: [
-          tx('At least 60% of total consumption'),
-          tx('At least 25% of total consumption'),
-          tx('Exactly 100% (no other groups allowed)')
+          tx('Bacteria, Viruses, Fungi, and Parasites'),
+          tx('Antibiotics, Painkillers, Syrups, and Vaccines'),
+          tx('Dust, Cold Air, Mosquitoes, and Water')
         ],
         answer: 0,
-        why: tx('The WHO stewardship target requires at least 60% of antibiotic use to be Access-group drugs to prevent over-reliance on broad-spectrum Watch and Reserve agents.')
+        why: tx('The four major families of disease-causing germs are bacteria, viruses, fungi, and parasites.')
       },
       {
-        q: tx('Which molecular mechanism allows a harmless gut bacterium to transfer antibiotic resistance genes directly to a deadly Salmonella strain?'),
+        q: tx('If a person has an infection caused by a virus (such as the common cold or flu), will an antibiotic cure it?'),
         options: [
-          tx('Horizontal Gene Transfer (HGT) via conjugative plasmid exchange'),
-          tx('Cellular respiration through the mitochondria'),
-          tx('Binary fission during rapid freezing')
+          tx('No—antibiotics only work on bacteria, not on viruses'),
+          tx('Yes—antibiotics kill all four types of germs equally'),
+          tx('Yes—if you take two capsules at once')
         ],
         answer: 0,
-        why: tx('Horizontal gene transfer enables bacteria of different species to share plasmids carrying multi-drug resistance genes.')
+        why: tx('Antibiotics are designed specifically to target bacteria. They cannot unlock or stop viral infections.')
       }
     ],
     references: [
+      {
+        author: 'World Health Organization (WHO)',
+        year: '2023',
+        title: 'Antimicrobial Resistance: Key Facts for the Public',
+        journal: 'WHO Fact Sheets, Geneva',
+        url: 'https://www.who.int/news-room/fact-sheets/detail/antimicrobial-resistance',
+        stat: 'Explains the difference between bacteria, viruses, fungi, and parasites and the medicines that treat them'
+      },
+      {
+        author: 'Centers for Disease Control and Prevention (CDC)',
+        year: '2024',
+        title: 'About Antimicrobial Resistance & How Germs Work',
+        journal: 'CDC National Center for Emerging and Zoonotic Infectious Diseases',
+        url: 'https://www.cdc.gov/antimicrobial-resistance/about/index.html',
+        stat: 'Clear public guide on microbes, helpful microbiome bacteria, and pathogens'
+      }
+    ]
+  },
+  {
+    id: 'what-is-amr',
+    tier: 'beginner',
+    tierLevel: tx('Level 1: The Basics'),
+    tierIcon: '🌱',
+    order: 2,
+    category: tx('START HERE · AMR BASICS'),
+    badge: 'Core Concept',
+    readTime: '3 min read',
+    title: tx('What Is Antimicrobial Resistance (AMR)?'),
+    subtitle: tx('How germs learn to defeat our medicines, why it is the germ that becomes resistant (not you), and how superbugs are born'),
+    summary: tx('A clear, plain-language guide to what happens when germs stop responding to medicine, how everyday habits create "superbugs," and why AMR affects every household.'),
+    steps: [
+      {
+        stepNum: 1,
+        heading: tx('AMR in Plain Words: When Germs Outsmart Our Medicines'),
+        content: tx('Antimicrobial Resistance (shortened to AMR) happens when germs—bacteria, viruses, fungi, or parasites—change over time and learn how to defend themselves against the medicines meant to kill them.\n\nWhen this happens, standard medicines stop working. An infection that used to clear up easily with a simple course of tablets becomes much harder, more expensive, or sometimes impossible to treat.\n\nOne of the most important things to remember is this: IT IS THE GERM THAT BECOMES RESISTANT, NOT YOUR BODY. Even if you rarely take antibiotics yourself, you can still catch a drug-resistant germ from someone else or from contaminated water or food.'),
+        caseStudy: tx('Many people say, "My body is used to that antibiotic, so it doesn’t work on me anymore." In reality, your body didn’t change—the bacteria causing the infection learned how to block that antibiotic!'),
+        takeaway: tx('AMR means the germ has changed so the medicine can no longer kill it. Germs become resistant—not people.')
+      },
+      {
+        stepNum: 2,
+        heading: tx('How "Superbugs" Are Born: The Unfinished Dose Problem'),
+        content: tx('How does a normal germ turn into a drug-resistant "superbug"? Imagine a crowd of 1,000 harmful bacteria causing an infection in your body. Just like people in a crowd, not every single bacterium is identical—most are weak, a few are tougher, and one or two happen to have a natural shield against a drug.\n\nWhen a doctor prescribes a full 5-day or 7-day course of antibiotics, the medicine stays strong long enough to wipe out the weak bacteria AND overwhelm the tougher ones so your immune system can finish the job.\n\nBut if you buy just 2 or 3 loose capsules and stop as soon as you feel slightly better on Day 2, you only kill the weakest bacteria! The toughest survivors—the ones with shields—are left alive with plenty of room to multiply. Soon, the entire new army of bacteria has that shield. Next time you take that same medicine, it will not work at all.'),
+        caseStudy: tx('Across Nigerian communities and campuses, stopping medicine halfway ("I already feel fine, let me keep the rest for next time") is one of the fastest ways ordinary germs are trained into resistant superbugs.'),
+        takeaway: tx('Stopping antimicrobial medicine early kills only the weakest germs and trains the strongest survivors to become drug-resistant superbugs.')
+      },
+      {
+        stepNum: 3,
+        heading: tx('Why AMR Matters to You, Your Family & Your Community'),
+        content: tx('Why should we care if germs become resistant? Because resistant germs do not stay locked inside one person. They travel on unwashed hands, shared surfaces, food, and water.\n\nWorldwide, drug-resistant bacterial infections directly claim over 1.27 million lives every year—and West Africa faces the highest burden of any region in the world.\n\nWhen our everyday antibiotics stop working:\n• Simple illnesses like urinary infections, skin wounds, or pneumonia take weeks instead of days to heal.\n• Families spend far more money on expensive hospital stays and stronger backup injections.\n• Everyday hospital care—like childbirth, C-sections, and treating newborn babies—becomes much riskier.'),
+        caseStudy: tx('In Nigerian hospitals, doctors frequently see patients arrive with infections that already resist three or four common affordable antibiotics, forcing families to pay for costly last-resort hospital injections.'),
+        takeaway: tx('Protecting our medicines is a team effort. Every time we use antibiotics wisely, we keep them working for our families and neighbors.')
+      }
+    ],
+    checks: [
+      {
+        q: tx('When antimicrobial resistance (AMR) happens, what has actually become resistant to the medicine?'),
+        options: [
+          tx('The microbe/germ (such as the bacteria or parasite), NOT the person taking the medicine'),
+          tx('The human patient’s blood and muscles'),
+          tx('The plastic bottle holding the tablets')
+        ],
+        answer: 0,
+        why: tx('It is the germ itself that adapts and becomes resistant to the drug, not the human body.')
+      },
+      {
+        q: tx('What happens inside the body when someone takes only 2 days of an antibiotic prescription and stops early because they feel better?'),
+        options: [
+          tx('Only the weakest bacteria die, leaving the toughest survivors alive to multiply into drug-resistant superbugs'),
+          tx('The remaining bacteria peacefully turn into vitamins'),
+          tx('The body stores the leftover medicine for next year')
+        ],
+        answer: 0,
+        why: tx('Stopping early removes the weakest germs first and gives partially resistant survivors the chance to multiply and take over.')
+      },
+      {
+        q: tx('Can a person who never misuses antibiotics still catch an antibiotic-resistant infection?'),
+        options: [
+          tx('Yes—because resistant germs themselves can spread from person to person, or through food and water'),
+          tx('No—only people who swallow too many pills can ever get a resistant germ'),
+          tx('No—resistant germs cannot leave the hospital')
+        ],
+        answer: 0,
+        why: tx('Because resistance lives inside the germ (not the person), a resistant superbug can spread to anyone just like a normal germ.')
+      }
+    ],
+    references: [
+      {
+        author: 'World Health Organization (WHO)',
+        year: '2023',
+        title: 'Antimicrobial Resistance Fact Sheet',
+        journal: 'World Health Organization, Geneva',
+        url: 'https://www.who.int/news-room/fact-sheets/detail/antimicrobial-resistance',
+        stat: 'AMR occurs when bacteria, viruses, fungi and parasites no longer respond to antimicrobial medicines'
+      },
       {
         author: 'Murray CJL, Ikuta KS, Sharara F, et al. (GRAM Project)',
         year: '2022',
         title: 'Global burden of bacterial antimicrobial resistance in 2019: a systematic analysis',
         journal: 'The Lancet, 399(10325): 629-655',
         url: 'https://doi.org/10.1016/S0140-6736(21)02724-0',
-        stat: '1.27M direct deaths worldwide; 27.3 attributable deaths/100k in West Africa'
+        stat: '1.27M direct deaths worldwide; West Africa experiences the highest regional burden'
+      }
+    ]
+  },
+  {
+    id: 'bacteria',
+    tier: 'intermediate',
+    tierLevel: tx('Level 2: Meet the 4 Germs'),
+    tierIcon: '🔬',
+    order: 3,
+    category: tx('GERM #1 · BACTERIA & ANTIBIOTICS'),
+    badge: 'WHO AWaRe Guide',
+    readTime: '3.5 min read',
+    title: tx('What Are Bacteria & How Do Antibiotics Work?'),
+    subtitle: tx('Understanding bacterial infections, how bacteria share resistance tricks, and the WHO Traffic-Light rule for antibiotics'),
+    summary: tx('Now that you know the basics of AMR, let’s look closely at Germ #1: Bacteria. Learn how antibiotics clear bacterial infections, how bacteria pass resistance to each other, and why buying loose chemist capsules is risky.'),
+    steps: [
+      {
+        stepNum: 1,
+        heading: tx('What Are Bacteria & How Do Antibiotics Defeat Them?'),
+        content: tx('Bacteria are single-celled living organisms. Unlike viruses, a bacterium is a complete little cell with an outer protective wall and its own machinery for eating, growing, and dividing into two.\n\nWhile most bacteria in our gut and on our skin are helpful, harmful bacteria can enter the body through contaminated food, water, or wounds—causing illnesses like typhoid fever, bacterial pneumonia, skin boils, or urinary tract infections (UTIs).\n\nAntibiotics are medicines designed specifically to attack bacterial cells. Some antibiotics (like Amoxicillin) break down the bacterium’s outer wall so it bursts; others stop the bacterium from building proteins or copying its DNA. Because human cells do not have bacterial walls, antibiotics can kill bacteria without harming our own body cells.'),
+        caseStudy: tx('When a doctor confirms you have a true bacterial infection like typhoid or a bacterial UTI, the right antibiotic taken in full acts like a targeted wrecking ball against the bacterial cells.'),
+        takeaway: tx('Bacteria are complete single-celled organisms. Antibiotics work by breaking bacterial cell walls or stopping bacteria from multiplying.')
+      },
+      {
+        stepNum: 2,
+        heading: tx('How Bacteria Fight Back & Share "Cheat Codes"'),
+        content: tx('Bacteria are masters of survival. When exposed to antibiotics—especially weak or incomplete doses—surviving bacteria use clever defenses:\n• Shielding their walls so the antibiotic cannot get inside.\n• Building tiny pumps ("efflux pumps") that spit the antibiotic back out before it can work.\n• Producing special enzymes that chop the antibiotic molecule apart.\n\nEven more importantly, bacteria can share these defenses with each other! Through a process called Horizontal Gene Transfer, one resistant bacterium can pass a tiny loop of DNA (a "cheat code" called a plasmid) directly to a neighboring bacterium—even one of a completely different species. That means a harmless gut bacterium can hand over drug-resistance skills to a dangerous typhoid or E. coli germ!'),
+        caseStudy: tx('In Nigerian teaching hospitals, over 65% of certain severe bloodstream bacteria now carry enzymes that destroy common antibiotics, because resistance genes have been passed around like shared notes in a classroom.'),
+        takeaway: tx('Bacteria don’t just keep resistance to themselves—they can pass resistance genes directly to other bacteria nearby.')
+      },
+      {
+        stepNum: 3,
+        heading: tx('The Traffic-Light Guide to Antibiotics: WHO Access, Watch & Reserve'),
+        content: tx('To help doctors and communities protect our antibiotics, the World Health Organization (WHO) groups all antibiotics into three traffic-light categories called AWaRe:\n\n• 🟢 Access (Green — Everyday First Choice): Safe, targeted antibiotics (like Amoxicillin) used for common bacterial infections. At least 60% of all antibiotics used in a country should come from this group.\n\n• 🟡 Watch (Yellow — Use with Caution): Stronger, broader antibiotics (like Ciprofloxacin, Azithromycin, or Ceftriaxone) that trigger resistance much faster. These should only be prescribed for specific, more serious infections.\n\n• 🔴 Reserve (Red — Emergency Last Resort): Powerful backup drugs (like Colistin or Linezolid) kept strictly locked in hospitals for life-threatening superbug infections when nothing else works.'),
+        caseStudy: tx('In many Nigerian neighbourhoods, people buy "Watch" antibiotics like Ciprofloxacin ("Cipro") over the counter for minor stomach aches—using a Yellow-light hospital drug where it isn’t needed and speeding up resistance.'),
+        takeaway: tx('Think of antibiotics like a traffic light: Green (Access) first when needed, Yellow (Watch) with caution, and Red (Reserve) saved strictly for life-or-death emergencies.')
+      },
+      {
+        stepNum: 4,
+        heading: tx('Everyday Reality: Saying No to Loose "Cut-and-Join" Capsules'),
+        content: tx('Across Nigerian communities and university campuses, studies show that more than half of antibiotic use happens without a prescription—often bought from local Patent and Proprietary Medicine Vendors (PPMVs or "chemists").\n\nPeople often ask for "two red-and-yellow capsules" or buy a mixed sachet of loose tablets for 2 days because of tight budgets, stopping as soon as pain or fever drops.\n\nWhy is this so dangerous? Because 2 days of loose capsules is almost never enough to clear a real bacterial infection. Instead, it acts like a training gym for the bacteria in your body—wiping out the weak ones and leaving you carrying a stronger, drug-resistant strain that can come back worse than before.'),
+        caseStudy: tx('At university health clinics, doctors regularly treat young adults whose urinary tract infections no longer respond to Ciprofloxacin because they took 2-day loose doses from off-campus shops earlier in the year.'),
+        takeaway: tx('Never buy loose, unlabelled antibiotic capsules or take a 2-day shortcut. Only take antibiotics prescribed by a qualified healthcare worker, and finish the full course.')
+      }
+    ],
+    checks: [
+      {
+        q: tx('A student with burning urination buys 3 loose tablets of Ciprofloxacin from a local chemist "just to calm it down." Why is this dangerous?'),
+        options: [
+          tx('A short 3-tablet dose kills only the weakest bacteria and trains the surviving bacteria to become resistant to that antibiotic'),
+          tx('Ciprofloxacin only works if mixed with hot tea'),
+          tx('Three tablets will turn a bacterium into a virus')
+        ],
+        answer: 0,
+        why: tx('Taking incomplete doses exposes bacteria to weak drug levels, killing sensitive germs while leaving resistant survivors to multiply.')
+      },
+      {
+        q: tx('In the WHO AWaRe "traffic-light" classification of antibiotics, what is the "Reserve" (Red) group meant for?'),
+        options: [
+          tx('Last-resort emergency antibiotics saved strictly for life-threatening multidrug-resistant superbugs'),
+          tx('Everyday coughs, colds, and mild headaches'),
+          tx('Mixing into animal feed on poultry farms')
+        ],
+        answer: 0,
+        why: tx('Reserve antibiotics are our final emergency safety net and must be protected for severe infections when standard drugs fail.')
+      },
+      {
+        q: tx('How can a harmless bacterium in your stomach make a dangerous Salmonella bacterium drug-resistant?'),
+        options: [
+          tx('By passing a small loop of resistance DNA ("cheat code") directly to its neighbor through Horizontal Gene Transfer'),
+          tx('By sneezing on the Salmonella cell'),
+          tx('Bacteria can never share resistance with each other')
+        ],
+        answer: 0,
+        why: tx('Bacteria can transfer resistance genes directly to neighboring bacteria through plasmid DNA exchange (Horizontal Gene Transfer).')
+      }
+    ],
+    references: [
+      {
+        author: 'World Health Organization (WHO)',
+        year: '2023',
+        title: 'The WHO AWaRe Antibiotic Book and 2023 AWaRe Classification',
+        journal: 'WHO Guidelines Approved by the Guidelines Review Committee, Geneva',
+        url: 'https://www.who.int/publications/i/item/9789240062382',
+        stat: 'Global target: at least 60% of national antibiotic use should be from the Access group'
       },
       {
         author: 'Nigeria Centre for Disease Control (NCDC)',
@@ -128,15 +301,7 @@ export const LESSONS = [
         title: "Nigeria's Second National Action Plan on Antimicrobial Resistance (AMR NAP 2.0: 2024–2028)",
         journal: 'Federal Ministry of Health & Social Welfare, Abuja, Nigeria',
         url: 'https://ncdc.gov.ng',
-        stat: 'Strategic blueprint uniting human, animal, and environmental AMR governance'
-      },
-      {
-        author: 'World Health Organization (WHO)',
-        year: '2023',
-        title: 'The WHO AWaRe Antibiotic Book and 2023 AWaRe Classification',
-        journal: 'WHO Guidelines Approved by the Guidelines Review Committee, Geneva',
-        url: 'https://www.who.int/publications/i/item/9789240062382',
-        stat: 'Global benchmark: ≥60% Access group consumption'
+        stat: 'National roadmap addressing over-the-counter antibiotic sales and clinical stewardship'
       },
       {
         author: 'Auta A, Hadi MA, Oga E, et al.',
@@ -144,149 +309,151 @@ export const LESSONS = [
         title: 'Global access to antibiotics without prescription in community pharmacies and patent medicine stores',
         journal: 'The Lancet Infectious Diseases, 19(4): 391-402',
         url: 'https://doi.org/10.1016/S1473-3099(18)30610-8',
-        stat: 'Informal OTC sales drive over 60% of unprescribed antimicrobials in LMICs'
+        stat: 'Unprescribed over-the-counter dispensing drives over 60% of community antibiotic consumption'
       }
     ]
   },
   {
     id: 'virus',
-    tier: 'beginner',
-    tierLevel: tx('Level 1: Foundations'),
-    tierIcon: '🌱',
-    order: 2,
-    category: tx('VIRAL PATHOLOGY & DIAGNOSTIC STEWARDSHIP'),
-    badge: 'Prokaryote vs Acellular',
-    readTime: '3.5 min read',
-    title: tx('Viruses & Antibiotic Futility'),
-    subtitle: tx('Why antibacterial molecules cannot kill viruses and how misuse disrupts the human microbiome'),
-    summary: tx('The molecular mismatch between antibiotics and viral particles, why green nasal mucus is not a sign of bacterial disease, and the long-term harms of antibiotic overuse for colds.'),
+    tier: 'intermediate',
+    tierLevel: tx('Level 2: Meet the 4 Germs'),
+    tierIcon: '🔬',
+    order: 4,
+    category: tx('GERM #2 · VIRUSES & COLDS'),
+    badge: 'Cold & Flu Myths',
+    readTime: '3 min read',
+    title: tx('What Are Viruses & Why Antibiotics Don’t Cure Colds'),
+    subtitle: tx('How viruses differ from bacteria, why taking antibiotics for catarrh or flu backfires, and the truth about yellow mucus'),
+    summary: tx('Explore Germ #2: Viruses. See why antibiotics have zero power against colds, flu, and most sore throats—and why thick yellow mucus is actually a sign of your immune system working.'),
     steps: [
       {
         stepNum: 1,
-        heading: tx('The Cellular Mismatch: Prokaryote vs Acellular Particle'),
-        content: tx('Antibacterial antibiotics function by selectively disrupting metabolic processes and structures unique to prokaryotic bacterial cells. For example, beta-lactams and glycopeptides target cross-linking in the peptidoglycan cell wall; macrolides, aminoglycosides, and tetracyclines bind bacterial 70S ribosomes to halt translation; and fluoroquinolones inhibit bacterial DNA topoisomerase and gyrase.\n\nViruses share none of these targets. A virus is an acellular particle composed strictly of genetic code (RNA or DNA) enclosed within a protein shell (capsid), and occasionally a lipid envelope. Viruses possess no cell walls, no independent ribosomes, and no autonomous metabolic machinery. They replicate exclusively by penetrating host human cells and hijacking our own eukaryotic transcription and translation enzymes. Because an antibiotic has zero biochemical binding affinity for viral proteins or human enzymes, it has absolute zero therapeutic activity against viral infections.'),
-        caseStudy: tx('Every year across Nigerian schools, millions of tablets of ampicillin-cloxacillin (Ampiclox) are consumed for viral common colds, influenza, and pharyngitis—providing zero clinical benefit while exposing the user to allergic reactions and drug resistance.'),
-        takeaway: tx('Antibiotics target bacterial cell walls, ribosomes, and DNA enzymes. Viruses have none of these; antibiotics can never cure or shorten a viral illness.')
+        heading: tx('What Is a Virus? (The Tiny Cell Hijacker)'),
+        content: tx('If a bacterium is a full living house with walls and doors, a virus is just a tiny envelope with an instruction note inside. Viruses are 10 to 100 times smaller than bacteria and are not even complete cells.\n\nA virus has no cell wall and cannot eat or multiply on its own. Instead, it sneaks inside your own human cells (like the cells lining your nose or throat) and tricks them into making thousands of new virus copies.\n\nCommon illnesses caused by viruses include:\n• The common cold (catarrh / runny nose)\n• Influenza (the flu) and COVID-19\n• Most coughs, acute bronchitis, and sore throats\n• Measles and chickenpox'),
+        caseStudy: tx('Every rainy and harmattan season in Nigeria, millions of capsules of Ampiclox (ampicillin-cloxacillin) and Amoxicillin are swallowed for runny noses and viral coughs—even though viruses caused the illness.'),
+        takeaway: tx('Viruses have no bacterial cell walls or machinery. Because antibiotics only attack bacterial parts, they have zero effect on viruses.')
       },
       {
         stepNum: 2,
-        heading: tx('Collateral Damage: Decimating the Commensal Microbiome'),
-        content: tx('When a patient ingests an antibiotic for a viral illness like the flu or COVID-19, the drug circulates systemically. While completely ineffective against the virus, it causes profound destruction to the trillions of beneficial commensal bacteria inhabiting the gut, respiratory tract, and skin.\n\nThis loss of "colonization resistance" creates an ecological void in the gastrointestinal tract. Opportunistic and toxin-producing pathogens (such as Clostridioides difficile) can proliferate, causing severe pseudomembranous colitis. Furthermore, studies published in Nature and mBio show that even a single 5-day course of broad-spectrum antibiotics (like ciprofloxacin or azithromycin) alters the gut microbial diversity for up to 12 months, fostering an internal reservoir of antibiotic-resistant genes (the "resistome").'),
-        caseStudy: tx('University clinic data shows frequent presentations of secondary diarrhea and post-antibiotic fungal candidiasis (thrush) in students who took self-prescribed antibiotics for a 3-day viral cold.'),
-        takeaway: tx('Taking an antibiotic for a virus will not cure your cold, but it will decimate your protective gut flora and cultivate resistant bacteria.')
+        heading: tx('Why Taking Antibiotics for a Cold Actually Hurts You'),
+        content: tx('Some people think, "Even if my cold is a virus, what is the harm in taking an antibiotic just in case?"\n\nIn truth, taking an antibiotic when you have a virus causes real harm inside your body:\n1. It does not shorten your cold by even one hour.\n2. While the virus ignores the antibiotic, the antibiotic travels to your stomach and kills off billions of friendly, helpful gut bacteria that protect your digestion and immunity.\n3. With your friendly bacteria wiped out, troublemaking germs can take over—causing stomach upset, diarrhea, or yeast infections (thrush), while training any surviving bacteria in your body to become antibiotic-resistant.'),
+        caseStudy: tx('Studies show that even a single 5-day course of unnecessary broad antibiotics can disturb the balance of friendly bacteria in your gut for months afterward.'),
+        takeaway: tx('Taking an antibiotic for a virus gives you zero benefit while wiping out your helpful gut bacteria and breeding superbugs.')
       },
       {
         stepNum: 3,
-        heading: tx('The Common Cold Fallacy: Phlegm Color & Fever Myths'),
-        content: tx('A widespread misconception in both clinical practice and community folklore is that thick green or yellow nasal discharge indicates a "bacterial infection that requires antibiotics."\n\nIn reality, color change in respiratory mucus is caused by myeloperoxidase, a dark green iron-containing enzyme released by the human immune system’s neutrophils as they engulf viral particles and cellular debris. The appearance of colored phlegm is evidence of an active, healthy host immune response fighting a virus—not bacterial proliferation.\n\nOver 90% of acute bronchitis, colds, and sore throats in previously healthy youths are purely viral and self-limiting. Clinical trials demonstrate that antibiotics do not shorten symptoms by even a single day, while needlessly exposing patients to adverse drug reactions.'),
-        caseStudy: tx('Patients demanding antibiotics from community pharmacists in Ogun State often cite "my catarrh turned yellow." Evidence-based education by healthcare workers is essential to de-escalate these inappropriate requests.'),
-        takeaway: tx('Colored phlegm is evidence of your immune system working, not a sign of bacterial disease. Rest, hydration, and fever relief are the proven remedies.')
+        heading: tx('Busting the Myth: "My Mucus Turned Yellow or Green!"'),
+        content: tx('One of the biggest myths in everyday life is that if your nasal mucus (catarrh) or phlegm turns thick yellow or green, "the cold has turned into a bacterial infection and now needs an antibiotic."\n\nHere is what actually happens: when you catch a cold virus, your immune system sends millions of white blood cells (called neutrophils) to your nose to fight the virus. Those white blood cells contain a natural greenish-iron enzyme. As they clear out the virus, they turn your mucus yellow or green!\n\nSo yellow or green mucus during a cold is actually proof that your immune system is fighting hard and doing its job—not proof that you need an antibiotic. Rest, plenty of fluids, warm steam, and simple fever/pain relief are what help your body finish clearing a viral cold. (Of course, if you have a high fever that refuses to come down after several days or trouble breathing, always see a doctor.)'),
+        caseStudy: tx('When community pharmacists explain that yellow catarrh is just white blood cells clearing a cold virus, most patients are relieved to save their money and skip unnecessary antibiotics.'),
+        takeaway: tx('Yellow or green mucus during a cold is a normal sign of your white blood cells fighting a virus—not a reason to take antibiotics.')
       }
     ],
     checks: [
       {
-        q: tx('A student wakes up with nasal congestion, a mild fever, fatigue, and dark yellow mucus. Why should they NOT take an antibiotic?'),
+        q: tx('A friend wakes up with a runny nose, sneezing, mild cough, and thick yellow mucus. Why should they NOT rush to buy an antibiotic?'),
         options: [
-          tx('Yellow mucus is caused by host immune neutrophils fighting a viral cold; antibiotics have zero effect on viruses and will harm healthy gut flora'),
-          tx('Antibiotics only work when mucus is completely clear and watery'),
-          tx('Antibiotics can only be taken if fever lasts for more than 45 days')
+          tx('Yellow mucus is a normal sign of white blood cells fighting a cold virus; antibiotics do nothing against viruses and harm friendly gut bacteria'),
+          tx('Antibiotics only work when mucus turns bright blue'),
+          tx('They should take three different antibiotics at the same time instead')
         ],
         answer: 0,
-        why: tx('Color in nasal mucus reflects neutrophil myeloperoxidase enzymes clearing a viral infection, which antibiotics cannot treat.')
+        why: tx('Colored mucus during a cold comes from immune white blood cells clearing a viral infection, which antibiotics cannot treat.')
       },
       {
-        q: tx('Which bacterial structure is targeted by beta-lactam antibiotics that viruses completely lack?'),
+        q: tx('Why are antibiotics physically unable to kill viruses?'),
         options: [
-          tx('Peptidoglycan cell wall'),
-          tx('Capsid protein spikes'),
-          tx('Single-stranded viral RNA')
+          tx('Antibiotics target bacterial cell walls and machinery, which viruses completely lack'),
+          tx('Viruses are too large for antibiotics to reach'),
+          tx('Viruses eat antibiotics as food')
         ],
         answer: 0,
-        why: tx('Beta-lactams inhibit peptidoglycan cell wall synthesis in bacteria. Viruses have protein capsids and no peptidoglycan.')
+        why: tx('Viruses are not cells and have no bacterial cell walls or bacterial ribosomes for an antibiotic to attack.')
       }
     ],
     references: [
       {
         author: 'Centers for Disease Control and Prevention (CDC)',
         year: '2023',
-        title: 'Antibiotic Prescribing and Use in Doctor’s Offices: Common Cold and Runny Nose',
-        journal: 'CDC National Center for Emerging and Zoonotic Infectious Diseases',
+        title: 'Common Cold and Runny Nose: When Antibiotics Work (And When They Don’t)',
+        journal: 'CDC Antibiotic Prescribing and Use Guidelines',
         url: 'https://www.cdc.gov/antibiotic-use/colds.html',
-        stat: 'Antibiotics do not relieve symptoms or accelerate recovery from viral respiratory infections'
+        stat: 'Antibiotics do not relieve symptoms or speed up recovery from viral colds, flu, or most sore throats'
       },
       {
         author: 'Zaura E, Brandt BW, Teixeira de Mattos MJ, et al.',
         year: '2015',
-        title: 'Same Exposure but Two Radically Different Responses to Antibiotics: Long-term Gut Microbiome Disruption',
+        title: 'Long-term Gut Microbiome Disruption Following a Single Course of Antibiotics',
         journal: 'mBio, 6(6): e01693-15',
         url: 'https://doi.org/10.1128/mBio.01693-15',
-        stat: 'A single course of antibiotics disrupts gut microbiome biodiversity for up to 1 year'
-      },
-      {
-        author: 'World Health Organization (WHO)',
-        year: '2022',
-        title: 'Diagnostic Stewardship: A guide to implementation in antimicrobial stewardship programs',
-        journal: 'WHO Document Production Services, Geneva',
-        url: 'https://www.who.int/publications/i/item/9789240058897',
-        stat: 'Clinical diagnostic criteria prevent unnecessary empiric antibiotic use in viral syndromes'
+        stat: 'Even one unnecessary course of antibiotics can disrupt protective gut bacteria for months'
       }
     ]
   },
   {
     id: 'fungi',
     tier: 'intermediate',
-    tierLevel: tx('Level 2: Clinical Practice'),
-    tierIcon: '🩺',
+    tierLevel: tx('Level 2: Meet the 4 Germs'),
+    tierIcon: '🔬',
     order: 5,
-    category: tx('CLINICAL MYCOLOGY & EMERGING THREATS'),
-    badge: 'WHO Critical Priority (FPPL)',
-    readTime: '4 min read',
-    title: tx('Fungal Pathogens: The Silent Superbug Wave'),
-    subtitle: tx('Candida auris, agricultural azole cross-resistance, and the 2022 WHO Fungal Priority Pathogens List'),
-    summary: tx('The rising crisis of multidrug-resistant fungal species, hospital persistence, the threat to immunocompromised patients, and how crop fungicides accelerate clinical resistance.'),
+    category: tx('GERM #3 · FUNGI & ANTIFUNGALS'),
+    badge: 'WHO Fungal Priority',
+    readTime: '3.5 min read',
+    title: tx('What Are Fungi & Antifungal Resistance?'),
+    subtitle: tx('Understanding fungal infections like ringworm and thrush, why antifungal medicines are rare, and the rise of Candida auris'),
+    summary: tx('Meet Germ #3: Fungi. Learn the difference between everyday fungal skin infections and dangerous hospital super-fungi, why we have very few antifungal drugs, and how farm sprays affect human medicine.'),
     steps: [
       {
         stepNum: 1,
-        heading: tx('The Eukaryotic Dilemma: Why Antifungals Are Scarce'),
-        content: tx('Fungal organisms are eukaryotes, sharing deep evolutionary homology with human cells. Their cellular machinery—including eukaryotic ribosomes, double-membrane nuclei, mitochondria, and cytoskeletal structures—mirrors our own biology.\n\nBecause fungal cells resemble human host cells so closely, discovering pharmacological compounds that kill the fungus without triggering severe toxicity in the human host is exceptionally difficult. Today, modern clinical medicine depends on only four major systemic antifungal classes: 1) Polyenes (e.g., Amphotericin B, which binds fungal ergosterol but carries high nephrotoxicity); 2) Azoles (e.g., Fluconazole, Voriconazole, which inhibit 14-alpha-demethylase); 3) Echinocandins (e.g., Caspofungin, which inhibit 1,3-beta-glucan cell wall synthesis); and 4) Pyrimidine analogs (Flucytosine). When a fungal pathogen acquires cross-resistance to azoles and echinocandins, clinicians are left with virtually no safe therapeutic options.'),
-        caseStudy: tx('In immunocompromised hospital patients (such as oncology, ICU, and surgical wards in Nigeria), invasive candidiasis and cryptococcal meningitis carry mortality rates exceeding 40% when first-line azoles fail to clear the bloodstream.'),
-        takeaway: tx('Because fungi share eukaryotic biology with humans, we have only four systemic antifungal drug classes. We cannot afford to lose them to resistance.')
+        heading: tx('What Are Fungi & Why Do We Have So Few Antifungal Medicines?'),
+        content: tx('Fungi are their own kingdom of life, separate from plants, animals, and bacteria. They include familiar things like mushrooms, the yeast used to bake bread, and the fuzzy mold that grows on old bread.\n\nIn people, microscopic fungi most often cause surface infections like ringworm (despite the name, it is a fungus, not a worm!), athlete’s foot, fungal nail infections, or yeast infections (thrush). However, in hospital patients with very weak immune systems, fungi can enter the blood and cause life-threatening illness.\n\nTo treat fungal infections, we use antifungals (like Fluconazole or Clotrimazole)—never antibiotics! And because fungal cells are biologically much more similar to human cells than bacteria are, it is very hard for scientists to make drugs that kill a fungus without harming human organs. As a result, modern medicine relies on only four main classes of antifungal drugs for serious infections.'),
+        caseStudy: tx('In Nigeria, many people buy "triple-action" skin creams that mix a strong steroid, an antibiotic, and an antifungal together for any skin rash—often making fungal ringworm spread wider and become harder to cure!'),
+        takeaway: tx('Fungal infections need proper antifungal medicines, not antibiotics or mixed steroid creams. We only have four main classes of systemic antifungals, so we must protect them.')
       },
       {
         stepNum: 2,
-        heading: tx('Candida auris: The Critical Priority Superbug'),
-        content: tx('In October 2022, the World Health Organization published its landmark Fungal Priority Pathogens List (FPPL), classifying Candida auris in its highest tier: the "Critical Priority Group" alongside Cryptococcus neoformans, Aspergillus fumigatus, and Candida albicans.\n\nFirst identified in 2009, Candida auris exhibits alarming traits unprecedented in medical mycology: 1) Over 90% of isolates are resistant to fluconazole, and approximately 30% are multidrug-resistant across two or more antifungal classes; 2) Unlike common yeasts that colonize mucus membranes, C. auris sheds heavily onto human skin, patient bedding, and medical equipment; 3) It produces persistent biofilms that survive quaternary ammonium and common hospital disinfectants, triggering severe nosocomial outbreaks in intensive care units; and 4) Standard hospital diagnostic labs frequently misidentify it as Candida haemulonii, delaying lifesaving isolation protocols.'),
-        caseStudy: tx('Hospital outbreaks in tertiary centers worldwide have forced entire ICU wards to undergo complete decontamination with vaporized hydrogen peroxide after C. auris persisted on plastic surfaces and blood pressure cuffs for months.'),
-        takeaway: tx('Candida auris is an emerging multidrug-resistant fungal pathogen with high mortality (30% to 60%) and an exceptional capacity to colonize hospital environments.')
+        heading: tx('Candida auris: The Emerging Hospital Fungal Superbug'),
+        content: tx('Just as bacteria can become resistant to antibiotics, fungi are now becoming resistant to antifungal medicines.\n\nIn 2022, the World Health Organization published its first-ever Fungal Priority Pathogens List and placed a yeast called Candida auris in the highest alert group ("Critical Priority").\n\nWhy are doctors around the world worried about Candida auris?\n• Over 90% of strains resist Fluconazole, our most common antifungal pill, and many resist multiple antifungal classes at once.\n• Unlike ordinary yeasts, it clings stubbornly to hospital bed rails, blood pressure cuffs, and plastic surfaces for weeks, surviving many normal cleaning sprays.\n• In fragile intensive-care patients, a bloodstream infection with Candida auris can be fatal if antifungals fail.'),
+        caseStudy: tx('Hospitals worldwide have had to temporarily close entire intensive care rooms for special deep-cleaning after Candida auris spread across shared medical thermometers and bedside equipment.'),
+        takeaway: tx('Candida auris is a drug-resistant fungal superbug that can survive on hospital surfaces and resist our main antifungal medicines.')
       },
       {
         stepNum: 3,
-        heading: tx('The Agricultural Pipeline: How Crop Fungicides Drive Human Resistance'),
-        content: tx('Antifungal resistance is not bred in hospitals alone. Demethylation inhibitor (DMI) triazole fungicides (such as tebuconazole, difenoconazole, and propiconazole) are applied by the thousands of tons across commercial agriculture to prevent mold on grains, fruits, and timber.\n\nThese agricultural chemicals share identical molecular structures and biochemical targets with clinical azoles used in human medicine (fluconazole and voriconazole). When ubiquitous environmental molds such as Aspergillus fumigatus encounter sublethal fungicide concentrations in farmland soil and compost heaps, they develop the tandem-repeat TR34/L98H mutation in the cyp51A gene.\n\nWhen immunocompromised individuals, asthma patients, or post-TB patients inhale these airborne resistant spores, they develop invasive aspergillosis that is already completely immune to hospital azole therapy before the patient has ever received a single dose of medicine.'),
-        caseStudy: tx('In agricultural belts across developing nations, patients with no prior history of antifungal drug use are increasingly diagnosed with primary azole-resistant Aspergillus lung infections acquired directly from airborne farming environments.'),
-        takeaway: tx('The One Health continuum links crop protection to human survival. Indiscriminate agricultural fungicide use directly destroys the efficacy of hospital antifungals.')
+        heading: tx('The Surprising Link Between Farm Crop Sprays & Human Fungal Infections'),
+        content: tx('How do fungi become resistant before a patient ever takes an antifungal pill? One major reason comes from agriculture.\n\nTo stop mold from spoiling crops like grains, fruits, and vegetables, large farms spray thousands of tons of chemical fungicides (especially "azole" fungicides). Those farm sprays have almost the exact same chemical structure as the "azole" antifungal pills doctors use to save human lives in hospitals!\n\nWhen common soil molds (like Aspergillus) are sprayed repeatedly on farms, they evolve resistance to azoles. If a person with weak lungs or low immunity breathes in those resistant mold spores from the air, the infection is already resistant to hospital antifungal medicine on Day 1.'),
+        caseStudy: tx('Doctors have found patients with severe lung mold infections that already resist hospital azole drugs—even though the patient had never taken an antifungal pill in their life, having breathed in resistant spores from the environment.'),
+        takeaway: tx('Overusing antifungal sprays on farm crops and misusing antifungal creams on skin both speed up antifungal resistance in humans.')
       }
     ],
     checks: [
       {
-        q: tx('Under the 2022 World Health Organization Fungal Priority Pathogens List (FPPL), which tier is Candida auris classified under?'),
+        q: tx('Which type of medicine is used to treat a fungal infection like ringworm or a yeast infection?'),
         options: [
-          tx('Critical Priority Group'),
-          tx('Low Priority / Benign Group'),
-          tx('Experimental Tier')
+          tx('An antifungal medicine (antibiotics do not kill fungi)'),
+          tx('An antibacterial antibiotic like Amoxicillin'),
+          tx('An antimalarial tablet')
         ],
         answer: 0,
-        why: tx('Candida auris is placed in the Critical Priority tier due to multidrug resistance, environmental persistence, and high ICU mortality.')
+        why: tx('Fungi are completely different from bacteria and require specific antifungal medicines.')
       },
       {
-        q: tx('How does widespread spraying of triazole fungicides on commercial agricultural crops lead to treatment failure in human hospital patients?'),
+        q: tx('Why is the fungus Candida auris listed by the World Health Organization as a "Critical Priority" threat?'),
         options: [
-          tx('Airborne environmental molds exposed to crop fungicides develop cyp51A resistance mutations that render clinical human azole drugs useless'),
-          tx('Crop fungicides turn into human viruses when inhaled'),
-          tx('Fungicides make agricultural soil too warm for plants')
+          tx('It frequently resists our main antifungal drugs and clings to hospital surfaces, threatening fragile patients'),
+          tx('It causes the common cold every winter'),
+          tx('It turns tap water green')
         ],
         answer: 0,
-        why: tx('Agricultural triazoles share the same molecular targets as human azoles; environmental exposure breeds resistant Aspergillus spores that infect human lungs.')
+        why: tx('Candida auris is multidrug-resistant, survives on hospital equipment, and causes severe infections in hospitalized patients.')
+      },
+      {
+        q: tx('How can spraying "azole" fungicides on farm crops affect a human patient in a hospital?'),
+        options: [
+          tx('Molds in the soil become resistant to the farm spray and then resist the matching "azole" antifungal medicines used in hospitals'),
+          tx('Farm fungicides turn crops into bacteria'),
+          tx('It has no connection to human medicine')
+        ],
+        answer: 0,
+        why: tx('Agricultural azole fungicides and hospital azole drugs share the same chemical target, so environmental molds develop cross-resistance.')
       }
     ],
     references: [
@@ -296,81 +463,83 @@ export const LESSONS = [
         title: 'WHO fungal priority pathogens list to guide research, development and public health action',
         journal: 'WHO Department of Antimicrobial Resistance, Geneva',
         url: 'https://www.who.int/publications/i/item/9789240060241',
-        stat: 'First global ranking designating C. auris and A. fumigatus as Critical Priority threats'
+        stat: 'Designates Candida auris and Aspergillus fumigatus as Critical Priority fungal threats'
       },
       {
         author: 'Centers for Disease Control and Prevention (CDC)',
         year: '2024',
-        title: 'General Information about Candida auris and Healthcare Infection Control',
-        journal: 'CDC Mycotic Diseases Branch, Atlanta, GA',
+        title: 'About Candida auris & Antifungal Resistance',
+        journal: 'CDC Fungal Diseases Branch',
         url: 'https://www.cdc.gov/fungal/candida-auris/index.html',
-        stat: 'High-level persistence on hospital surfaces with up to 60% mortality in invasive candidemia'
-      },
-      {
-        author: 'Fisher MC, Alastruey-Izquierdo A, Berman J, et al.',
-        year: '2022',
-        title: 'Threats posed by the fungal kingdom to human health and food security',
-        journal: 'Nature Reviews Microbiology, 20(8): 457–471',
-        url: 'https://doi.org/10.1038/s41579-022-00720-1',
-        stat: 'Dual impact of antifungal resistance on global food security and immunocompromised humans'
+        stat: 'Over 90% of C. auris isolates resist fluconazole and persist on healthcare surfaces'
       }
     ]
   },
   {
     id: 'parasites',
     tier: 'intermediate',
-    tierLevel: tx('Level 2: Clinical Practice'),
-    tierIcon: '🩺',
-    order: 4,
-    category: tx('PARASITOLOGY & MALARIA CONTROL'),
-    badge: 'PfKelch13 & RDT Protocol',
-    readTime: '4 min read',
-    title: tx('Parasitic Resistance: Safeguarding Malaria Therapy'),
-    subtitle: tx('Plasmodium falciparum evolution, artemisinin partial resistance, and the mandatory RDT stewardship protocol'),
-    summary: tx('The historical tragedy of chloroquine failure, emerging kelch13 mutations in Africa, and why diagnostic confirmation before taking ACTs is essential for child survival.'),
+    tierLevel: tx('Level 2: Meet the 4 Germs'),
+    tierIcon: '🔬',
+    order: 6,
+    category: tx('GERM #4 · PARASITES & MALARIA'),
+    badge: 'Test Before You Treat',
+    readTime: '3.5 min read',
+    title: tx('What Are Parasites & Protecting Malaria Medicines'),
+    subtitle: tx('How malaria parasites work, the true story of how we lost Chloroquine, and why you must always test before taking ACTs'),
+    summary: tx('Meet Germ #4: Parasites. Learn why malaria is caused by a microscopic blood parasite, why not every fever in Nigeria is malaria, and how the "Test Before You Treat" rule keeps our malaria tablets working.'),
     steps: [
       {
         stepNum: 1,
-        heading: tx('Historical Cautionary Tale: The Catastrophic Loss of Chloroquine'),
-        content: tx('In the mid-20th century, chloroquine was hailed as the definitive global cure for malaria. It was cheap, stable, and administered indiscriminately across endemic regions as monotherapy, even mixed into table salt. By the 1960s, selection pressure drove mutations in the Plasmodium falciparum chloroquine resistance transporter gene (pfcrt) on chromosome 7, enabling the parasite to pump chloroquine away from its digestive vacuole.\n\nAs chloroquine resistance swept across sub-Saharan Africa during the 1970s and 1980s, treatment failure rates soared past 70%. The loss of this single drug triggered a catastrophic doubling of malaria-attributable child mortality across the continent. To prevent history from repeating with modern medications, the global health community instituted Artemisinin-based Combination Therapies (ACTs). ACTs pair a rapid-killing, short-half-life artemisinin derivative (e.g., artemether or artesunate) with a slower-clearing partner drug (e.g., lumefantrine or amodiaquine) to destroy residual parasites and protect both chemical compounds from resistance selection.'),
-        caseStudy: tx('The generation of physicians trained in Nigeria in the 1980s witnessed firsthand the deadly impact of chloroquine resistance, where previously straightforward fever cases turned into fatal cerebral malaria within 48 hours.'),
-        takeaway: tx('Monotherapy and indiscriminate treatment destroyed chloroquine and doubled child malaria deaths. ACT combination stewardship is our primary barrier against repeat devastation.')
+        heading: tx('What Are Parasites? (Understanding Malaria)'),
+        content: tx('A parasite is an organism that lives inside or on another living creature (the host) and takes nourishment from it. Some parasites are larger, like intestinal worms, while others are microscopic single-celled organisms called protozoa.\n\nIn Nigeria and across sub-Saharan Africa, the most important parasite to know is Plasmodium falciparum—the microscopic blood parasite that causes malaria. When an infected female Anopheles mosquito bites a person, it injects these tiny parasites into the bloodstream, where they travel to the liver and red blood cells, causing fever, chills, headache, and body weakness.\n\nBecause malaria is caused by a parasite (not a bacterium or a virus), antibiotics cannot cure malaria. Instead, we rely on special antiparasitic medicines called antimalarials.'),
+        caseStudy: tx('Nigeria carries roughly 27% of the entire world’s malaria cases—meaning protecting our malaria medicines from resistance is a matter of life and death for millions of Nigerian children and families.'),
+        takeaway: tx('Malaria is caused by a microscopic parasite spread by mosquitoes, and it requires specific antimalarial medicines.')
       },
       {
         stepNum: 2,
-        heading: tx('The Looming Threat: Artemisinin Partial Resistance & PfKelch13'),
-        content: tx('Artemisinin partial resistance—defined clinically as delayed parasite clearance following ACT therapy—is primarily driven by single nucleotide polymorphisms (SNPs) in the propeller domain of the Plasmodium falciparum kelch13 (pfk13) gene. When parasites possess validated kelch13 mutations, initial artemisinin dosing fails to clear parasites within the standard 3-day therapeutic window, shifting the entire therapeutic burden onto the partner drug and rapidly accelerating partner drug failure.\n\nValidated pfk13 resistance mutations (such as R561H, A675V, and C580Y) have established footholds in East and Central Africa (Rwanda, Uganda, Tanzania, and the Horn of Africa). In Nigeria, extensive molecular surveillance across southwestern, north-central, and northern states confirms that validated WHO resistance markers remain largely absent, and first-line ACTs retain high clinical cure rates. However, with Nigeria accounting for over 27% of the global malaria case burden, the arrival or independent emergence of resistant strains poses an unprecedented health security risk.'),
-        caseStudy: tx('Continuous molecular tracking conducted by the National Malaria Elimination Programme (NMEP) and research institutes in Nigeria monitors the pfk13 gene in sentinel sites to catch any emergent resistance signals early.'),
-        takeaway: tx('Artemisinin partial resistance is expanding in Africa. Nigeria’s ACTs still work effectively, but improper stewardship will accelerate the spread of resistant strains.')
+        heading: tx('A Real Warning from History: How We Lost Chloroquine'),
+        content: tx('Have you ever wondered why our parents and grandparents used to take Chloroquine for malaria, yet doctors rarely use it for malaria in Nigeria today?\n\nFor decades, Chloroquine was a cheap, miracle cure for malaria. Because it was so popular, people swallowed it for every single fever or headache without testing, and often stopped after a couple of tablets. Over time, malaria parasites evolved a genetic pump that spat Chloroquine right out! By the 1980s and 1990s, Chloroquine failed in over 70% of cases across Africa, leading to a tragic rise in child deaths.\n\nTo save lives, scientists introduced Artemisinin-based Combination Therapies (ACTs—like Artemether-Lumefantrine). An ACT combines TWO different malaria medicines in one tablet: a fast-acting drug that clears most parasites quickly, plus a longer-acting partner drug that mops up any stragglers so neither drug easily faces resistance alone.'),
+        caseStudy: tx('Warning signs of partial resistance to artemisinin have already begun appearing in parts of East Africa (like Rwanda and Uganda). While ACTs still work very well in Nigeria today, misusing them could bring that resistance here.'),
+        takeaway: tx('We already lost Chloroquine to parasite resistance once. Modern ACT malaria tablets combine two drugs to protect each other—and we must use them carefully.')
       },
       {
         stepNum: 3,
-        heading: tx('Diagnostic Stewardship: "Test Before You Treat" with RDTs'),
-        content: tx('In Nigeria, every fever is colloquially attributed to "malaria." Surveys indicate that more than 60% of people who take antimalarials in community settings test negative for Plasmodium falciparum upon blood examination. Taking an ACT for non-malarial fevers (which are often self-limiting viral infections or other ailments) squanders scarce medical resources and exposes parasites to drug selection pressure without clinical justification.\n\nNigeria’s National Guidelines for Diagnosis and Treatment of Malaria mandate: Every suspected malaria case must be confirmed with a parasitological diagnostic test—either a Rapid Diagnostic Test (RDT) or quality-assured microscopy—before initiating treatment.\n\nIf the RDT is POSITIVE: The patient must complete the full 3-day (6-dose) course of ACT. Doses should be taken with fatty food or milk to optimize gastrointestinal absorption. Stopping therapy on Day 2 when fever subsides leaves surviving parasites exposed to declining drug levels, breeding resistant strains.\n\nIf the RDT is NEGATIVE: Do NOT prescribe or ingest an antimalarial. Investigate alternative etiologies with a healthcare provider.'),
-        caseStudy: tx('Implementation of subsidized mRDTs in patent medicine stores across Ogun State has demonstrated that when vendors test first, inappropriate ACT dispensing drops by more than 50%, reserving treatments for true clinical cases.'),
-        takeaway: tx('Never take an antimalarial without a confirmed positive RDT. When positive, always complete all 6 doses across all 3 days.')
+        heading: tx('The Golden Rule: "Test Before You Treat" & Finish All 6 Doses'),
+        content: tx('In Nigeria, almost every fever, headache, or body ache is automatically called "malaria." Yet health surveys show that more than 60% of people who buy malaria medicine at a chemist actually test NEGATIVE for malaria when their blood is checked (their fever was caused by a simple virus or stress instead).\n\nThat is why Nigeria’s National Malaria Guidelines have a simple two-part rule for everyone:\n\n1. Test Before You Treat: Before swallowing any malaria tablet, ask for a quick blood test—either a 15-minute Rapid Diagnostic Test (RDT) strip at a pharmacy/clinic or a lab blood test.\n2. If Positive, Finish the Full 3-Day Course: Standard ACT tablets are taken twice a day for 3 full days (6 doses in total), ideally with food or milk so your body absorbs the medicine well. Never stop on Day 2 just because the fever went down—finishing Day 3 kills the last hiding parasites so they cannot become resistant!'),
+        caseStudy: tx('When community pharmacies in Ogun State started offering quick 15-minute RDT finger-prick tests before selling malaria medicine, unnecessary ACT use dropped by over half!'),
+        takeaway: tx('Not every fever is malaria! Always confirm with a quick RDT blood test first, and if it is positive, complete every single dose across all 3 days.')
       }
     ],
     checks: [
       {
-        q: tx('A university student feels feverish and fatigued during exams. What is the mandatory clinical protocol before taking an Artemisinin Combination Therapy (ACT)?'),
+        q: tx('You feel feverish and tired after a long week. What should you do BEFORE buying or taking an ACT malaria medicine?'),
         options: [
-          tx('Perform a Rapid Diagnostic Test (RDT) or microscopy to confirm the presence of Plasmodium parasites before taking any medication'),
-          tx('Take a double dose of ACT immediately and skip the test'),
-          tx('Drink hot water and avoid testing to save money')
+          tx('Do a quick Rapid Diagnostic Test (RDT) or lab blood test to confirm that malaria parasites are actually causing the fever'),
+          tx('Swallow half a pack of malaria tablets and half a pack of antibiotics together'),
+          tx('Skip testing and take only 1 day of malaria tablets')
         ],
         answer: 0,
-        why: tx('Over 60% of presumptive fevers are not malaria. National guidelines require parasitological confirmation via RDT before ACT administration.')
+        why: tx('More than 60% of fevers treated as malaria are actually caused by other things like viruses. Testing first prevents wasted medicine and protects ACTs from resistance.')
       },
       {
-        q: tx('Which Plasmodium falciparum gene is monitored across Africa as the definitive molecular marker for artemisinin partial resistance?'),
+        q: tx('Why do modern ACT malaria tablets combine two different antimalarial drugs inside one treatment?'),
         options: [
-          tx('The kelch13 (pfk13) propeller domain gene'),
-          tx('The insulin growth factor receptor gene'),
-          tx('The bacterial 16S rRNA gene')
+          tx('The fast drug clears most parasites quickly while the partner drug eliminates remaining stragglers, protecting both drugs from resistance'),
+          tx('One drug is for malaria and the other is for the common cold'),
+          tx('To make the tablets taste sweeter')
         ],
         answer: 0,
-        why: tx('Mutations in the propeller domain of the pfk13 gene cause delayed parasite clearance and indicate artemisinin partial resistance.')
+        why: tx('Using a SINGLE drug alone (like Chloroquine in the past) made it easy for parasites to develop resistance; combining two drugs protects both.')
+      },
+      {
+        q: tx('If your malaria RDT test is positive and you start a 3-day ACT course, what should you do on Day 2 if your fever is completely gone?'),
+        options: [
+          tx('Keep taking the remaining doses through Day 3 until all 6 doses are finished, so no surviving parasites are left behind'),
+          tx('Stop immediately and save the Day 3 tablets for a family member'),
+          tx('Switch to an antibiotic on Day 3')
+        ],
+        answer: 0,
+        why: tx('Stopping on Day 2 leaves surviving parasites exposed to fading drug levels in your blood, which trains them to become drug-resistant.')
       }
     ],
     references: [
@@ -378,83 +547,75 @@ export const LESSONS = [
         author: 'World Health Organization (WHO)',
         year: '2023',
         title: 'World Malaria Report 2023 & Strategy to Respond to Antimalarial Drug Resistance in Africa',
-        journal: 'Global Malaria Programme, Geneva',
+        journal: 'WHO Global Malaria Programme, Geneva',
         url: 'https://www.who.int/teams/global-malaria-programme/reports/world-malaria-report-2023',
-        stat: 'Nigeria accounts for ~27% of global malaria burden; ACT efficacy must be guarded'
+        stat: 'Nigeria accounts for ~27% of global malaria cases; protecting ACT effectiveness is critical'
       },
       {
         author: 'Federal Ministry of Health, Nigeria (FMOH / NMEP)',
         year: '2021',
-        title: 'National Guidelines for Diagnosis and Treatment of Malaria (6th Edition)',
+        title: 'National Guidelines for Diagnosis and Treatment of Malaria',
         journal: 'National Malaria Elimination Programme, Abuja, Nigeria',
         url: 'https://nmep.gov.ng',
-        stat: 'Mandatory RDT / microscopy testing prior to artemisinin-based combination therapy'
-      },
-      {
-        author: 'Uwimana A, Legrand E, Stokes BH, et al.',
-        year: '2020',
-        title: 'Emergence and clonal expansion of in vitro artemisinin-resistant Plasmodium falciparum kelch13 R561H mutant parasites in Rwanda',
-        journal: 'Nature Medicine, 26(10): 1602–1608',
-        url: 'https://doi.org/10.1038/s41591-020-1005-2',
-        stat: 'Clinical proof of independent artemisinin partial resistance mutations emerging within Africa'
+        stat: 'Mandates parasitological confirmation via RDT or microscopy before starting ACT treatment'
       }
     ]
   },
   {
     id: 'human-spread',
-    tier: 'beginner',
-    tierLevel: tx('Level 1: Foundations'),
-    tierIcon: '🌱',
-    order: 3,
-    category: tx('INFECTION PREVENTION & CONTROL (IPC)'),
-    badge: 'ESKAPE Pathogens & Hygiene',
+    tier: 'advanced',
+    tierLevel: tx('Level 3: Stepping Up'),
+    tierIcon: '🌍',
+    order: 7,
+    category: tx('PREVENTION · STOPPING THE SPREAD'),
+    badge: 'Hygiene & Vaccines',
     readTime: '3.5 min read',
-    title: tx('Transmission Vectors & Infection Control'),
-    subtitle: tx('Interrupting the transmission chain of ESKAPE pathogens through institutional hygiene and community action'),
-    summary: tx('How multidrug-resistant bacteria colonize hospital wards and shared student environments, the ESKAPE pathogen threat, and why infection prevention is the ultimate antibiotic.'),
+    title: tx('How Superbugs Spread & How to Stop Them'),
+    subtitle: tx('How resistant germs travel on hands and surfaces, and why clean water, soap, and vaccines are the best defense'),
+    summary: tx('Now that you know all 4 germ types, let’s look at how resistant germs travel between people in hostels, homes, and hospitals—and why preventing an infection is even better than treating one.'),
     steps: [
       {
         stepNum: 1,
-        heading: tx('The ESKAPE Superbugs: Nosocomial Threats'),
-        content: tx('The world’s most dangerous multidrug-resistant bacterial pathogens are designated by the clinical acronym ESKAPE:\n\n• E — Enterococcus faecium (Vancomycin-Resistant Enterococcus / VRE)\n• S — Staphylococcus aureus (Methicillin-Resistant S. aureus / MRSA)\n• K — Klebsiella pneumoniae (Extended-Spectrum Beta-Lactamase / Carbapenem-Resistant)\n• A — Acinetobacter baumannii (Carbapenem-Resistant CRAB)\n• P — Pseudomonas aeruginosa (Multidrug-Resistant MDR-PA)\n• E — Enterobacter species\n\nThese organisms are capable of "escaping" conventional antimicrobial therapies. In healthcare settings and university hostels, ESKAPE bacteria form dense protective biofilms on non-living surfaces—such as door handles, bedside lockers, tap heads, smartphone screens, and intravenous catheters—allowing them to survive in a desiccation-resistant state for weeks.'),
-        caseStudy: tx('Surveillance in Nigerian secondary and tertiary hospitals highlights that intensive care units frequently harbor biofilm-forming Klebsiella and Pseudomonas on shared suction apparatus and monitoring monitors, driving secondary hospital-acquired infections.'),
-        takeaway: tx('ESKAPE superbugs resist standard antibiotics and produce biofilms on surfaces that allow them to persist for weeks.')
+        heading: tx('How Superbugs Hide on Everyday Surfaces (Meet the ESKAPE Group)'),
+        content: tx('Drug-resistant germs do not float around by magic—they hitch rides on everyday surfaces. In hospitals and crowded spaces like hostels, doctors keep a close watch on six notorious bacterial superbugs nicknamed the ESKAPE group (including drug-resistant Staph/MRSA, Klebsiella, and E. coli), named because they "escape" common antibiotics.\n\nThese tough bacteria can form an invisible, sticky protective layer (called a biofilm) on frequently touched objects:\n• Door handles and staircase rails\n• Shared water taps and bucket handles\n• Mobile phone screens\n• Hospital bed rails and medical equipment\n\nInside that sticky layer, superbugs can survive on a dry surface for days or even weeks, waiting for the next hand to touch them.'),
+        caseStudy: tx('Hospital checks in Nigeria show that shared ward equipment and tap handles are often the main stepping stones that carry resistant bacteria from one patient’s bed to another.'),
+        takeaway: tx('Superbugs can survive for days on shared surfaces like door handles, taps, and phone screens.')
       },
       {
         stepNum: 2,
-        heading: tx('Hands as the Primary Vector: The 5 Moments of Hand Hygiene'),
-        content: tx('More than 80% of all hospital- and community-acquired resistant bacterial infections are transmitted directly via human hands. A contaminated hand touching a common tap, a doorknob, or an open wound immediately seeds millions of bacterial colonies.\n\nProper hand hygiene interrupts this chain of transmission instantaneously. Thorough washing with clean running water and soap for 20 to 30 seconds mechanically removes microbes and emulsifies the lipid membranes of enveloped pathogens. Where running water is unavailable, applying an alcohol-based hand rub (ABHR with ≥70% ethanol or isopropanol) denatures microbial proteins within 15 seconds.\n\nThe WHO "5 Moments for Hand Hygiene" protocol (before touching a patient, before clean/aseptic procedures, after body fluid exposure risk, after touching a patient, and after touching patient surroundings) remains the single most cost-effective medical intervention in human history.'),
-        caseStudy: tx('Hand hygiene compliance audits in healthcare facilities in Ogun State showed that installing locally produced WHO-formulation alcohol rub dispensers at patient bedsides reduced surgical site infection rates by over 35%.'),
-        takeaway: tx('Friction handwashing with soap and clean water or ≥70% alcohol rub is our most effective physical barrier against spreading superbugs.')
+        heading: tx('Hands Are the #1 Highway—And Soap Is the Roadblock'),
+        content: tx('More than 80% of common infections are spread directly by human hands. When you touch a contaminated door handle or tap and then rub your eyes, eat food, or touch a small cut, you give those germs a free ride into your body.\n\nThe good news? Simple hand hygiene breaks this chain in seconds:\n• Soap and clean running water (rubbing for 20–30 seconds) lifts germs off your skin and breaks apart their outer coats.\n• Alcohol-based hand sanitizer (with at least 70% alcohol) deactivates germs on the spot when you are away from a sink.\n\nWashing your hands before eating, after using the toilet, and after visiting a clinic or crowded market is the simplest, cheapest way to stop superbugs in their tracks.'),
+        caseStudy: tx('When clinics in Ogun State placed simple locally made alcohol hand-rub bottles beside every patient bed, post-surgery wound infections dropped by more than a third!'),
+        takeaway: tx('Washing hands with soap and clean water for 20 seconds—or using 70% alcohol sanitizer—stops over 80% of touch-spread germs.')
       },
       {
         stepNum: 3,
-        heading: tx('Infection Prevention as the Ultimate Stewardship Strategy'),
-        content: tx('The most powerful and infallible antibiotic on earth is the infection that never happens. When an individual avoids contracting an infectious disease, the requirement for an antimicrobial prescription drops to absolute zero, eliminating any selective pressure for resistant mutations.\n\nUniversal infection prevention operates across three foundational pillars:\n1) Routine Immunization: Vaccines such as the Pneumococcal Conjugate Vaccine (PCV), Haemophilus influenzae type b (Hib), and the newly introduced Typhoid Conjugate Vaccine (TCV) prevent primary bacterial infections and eradicate the fevers that trigger unprescribed antibiotic misuse.\n2) Water, Sanitation, and Hygiene (WASH): Safe piped drinking water and dedicated sanitary sewage disposal eliminate the fecal-oral transmission of multidrug-resistant Salmonella, Shigella, and pathogenic E. coli.\n3) Barrier Precautions: Sterile wound dressings, safe injection practices, and isolation of patients carrying resistant superbugs prevent outbreaks before they start.'),
-        caseStudy: tx('Global modeling published in The Lancet indicates that achieving universal WASH and vaccination coverage in low- and middle-income nations would avert over 750,000 AMR-related deaths annually.'),
-        takeaway: tx('Vaccines and clean water save more lives from AMR than new drugs ever could. Preventing infection eliminates the need for antibiotics altogether.')
+        heading: tx('The Best Antibiotic Is the Infection That Never Happens'),
+        content: tx('Think about this: if you never catch an infection in the first place, how many antibiotics do you need to take? Zero! And when zero antibiotics are used, germs get zero chance to learn resistance.\n\nBeyond handwashing, two community tools prevent millions of infections before they ever start:\n1. Vaccines: Routine vaccines—like the Typhoid vaccine, Pneumonia (Pneumococcal) vaccine, and childhood immunizations—train your immune system in advance so dangerous bacteria and viruses cannot make you sick.\n2. Clean Water & Safe Food (WASH): Safe drinking water, clean toilets, and washing/cooking food properly stop typhoid, cholera, and diarrhea germs from spreading—cutting down one of the biggest reasons people take antibiotics in Nigeria.'),
+        caseStudy: tx('Public health studies estimate that improving clean water, sanitation, and routine vaccination in developing countries can prevent over 750,000 drug-resistant infection deaths every year.'),
+        takeaway: tx('Every infection prevented by clean water, handwashing, or a vaccine is one less antibiotic prescription needed.')
       }
     ],
     checks: [
       {
-        q: tx('Why do public health authorities describe routine childhood vaccinations (like Pneumococcal and Typhoid vaccines) as premier tools against AMR?'),
+        q: tx('Why do health experts say that vaccines (like the Typhoid and Pneumonia vaccines) are powerful tools against antimicrobial resistance?'),
         options: [
-          tx('Preventing bacterial illnesses eliminates infections at the source, reducing the need for antibiotic prescriptions and stopping selection pressure'),
-          tx('Vaccines contain concentrated liquid antibiotics that kill superbugs'),
-          tx('Vaccines genetically modify bacteria into harmless plants')
+          tx('Because preventing an illness means you never need to take antibiotics for it, giving germs no chance to develop resistance'),
+          tx('Because vaccines are actually liquid antibiotics'),
+          tx('Because vaccines make tap water cleaner')
         ],
         answer: 0,
-        why: tx('An infection prevented requires zero antibiotics. Vaccines directly slash antibiotic consumption and eliminate the opportunity for resistance mutations.')
+        why: tx('An infection that is prevented requires zero antibiotic treatment, directly reducing antibiotic overuse and resistance.')
       },
       {
-        q: tx('What is the primary physical vehicle responsible for transmitting multidrug-resistant ESKAPE pathogens across healthcare wards and student dormitories?'),
+        q: tx('What is the number-one way resistant bacteria travel from person to person in hostels, homes, and hospitals?'),
         options: [
-          tx('Contaminated hands touching shared equipment, door handles, and surfaces'),
-          tx('Mosquito bites carrying hospital bacteria'),
-          tx('Solar ultraviolet radiation')
+          tx('Unwashed hands touching shared surfaces like door handles, taps, and phones'),
+          tx('Looking at someone across a room'),
+          tx('Sunlight shining through windows')
         ],
         answer: 0,
-        why: tx('Over 80% of healthcare and institutional cross-infections are spread via unwashed or inadequately sanitized hands.')
+        why: tx('Over 80% of cross-infections in communities and clinics are carried by hands touching contaminated surfaces.')
       }
     ],
     references: [
@@ -462,100 +623,85 @@ export const LESSONS = [
         author: 'World Health Organization (WHO)',
         year: '2022',
         title: 'Global Report on Infection Prevention and Control (IPC)',
-        journal: 'Infection Prevention and Control Global Unit, Geneva',
+        journal: 'WHO Infection Prevention and Control Global Unit, Geneva',
         url: 'https://www.who.int/publications/i/item/9789240051164',
-        stat: 'Proper hand hygiene and IPC protocols reduce healthcare-associated infections by up to 70%'
-      },
-      {
-        author: 'Rice LB',
-        year: '2008',
-        title: 'Federal funding for the study of antimicrobial resistance in nosocomial pathogens: No ESKAPE',
-        journal: 'The Journal of Infectious Diseases, 197(8): 1079–1081',
-        url: 'https://doi.org/10.1086/533452',
-        stat: 'Foundational framework identifying the ESKAPE group of multi-drug resistant superbugs'
+        stat: 'Good hand hygiene and infection control can prevent up to 70% of healthcare-associated infections'
       },
       {
         author: 'Nigeria Centre for Disease Control (NCDC)',
         year: '2023',
-        title: 'Orange Network: National Infection Prevention and Control Programme in Healthcare Facilities',
+        title: 'Turn Nigeria Orange: National Hand Hygiene and Infection Prevention Programme',
         journal: 'NCDC Division of IPC, Abuja, Nigeria',
         url: 'https://ncdc.gov.ng',
-        stat: 'Dedicated nationwide network standardizing hand hygiene, WASH, and surveillance in Nigerian hospitals'
+        stat: 'Nationwide initiative promoting handwashing, clean water, and hospital hygiene across Nigeria'
       }
     ]
   },
   {
     id: 'one-health',
     tier: 'advanced',
-    tierLevel: tx('Level 3: One Health & Policy'),
+    tierLevel: tx('Level 3: Stepping Up'),
     tierIcon: '🌍',
-    order: 6,
-    category: tx('ONE HEALTH & AGRO-ENVIRONMENTAL STEWARDSHIP'),
-    badge: 'mcr-1 Colistin & Ogun Farms',
-    readTime: '4.5 min read',
-    title: tx('One Health: Farms, Food & Environment'),
-    subtitle: tx('Poultry prophylaxis in Southwestern Nigeria, the mcr-1 colistin crisis, and environmental runoff'),
-    summary: tx('The agricultural drivers of AMR in Southwestern Nigeria, veterinary antibiotic misuse, mobile colistin resistance, and how the One Health framework unites human, animal, and environmental defense.'),
+    order: 8,
+    category: tx('BIG PICTURE · FARMS, FOOD & WATER'),
+    badge: 'One Health Nigeria',
+    readTime: '4 min read',
+    title: tx('One Health: How Farm Antibiotics Reach Our Food & Water'),
+    subtitle: tx('Why giving human antibiotics to healthy farm animals creates superbugs that return to us through food and water'),
+    summary: tx('Did you know that most antibiotics in the world are given to farm animals rather than sick people? Learn what "One Health" means and how protecting animal and environmental health protects our own families.'),
     steps: [
       {
         stepNum: 1,
-        heading: tx('The Triad: Human, Animal, and Environmental Interconnection'),
-        content: tx('Antimicrobial resistance does not respect jurisdictional borders or biological species boundaries. Globally, over 70% of all medically important antibiotics produced each year are consumed not by human patients, but within commercial animal agriculture—predominantly poultry, swine, cattle, and aquaculture.\n\nThe One Health approach acknowledges that human health, animal health, and environmental integrity are inseparable. Antibiotics administered to livestock select for resistant strains in the animal gut. These superbugs and residual unmetabolized antibiotic chemicals are excreted in manure, contaminating soils, surface streams, and groundwater. They subsequently re-enter human populations via the food supply, farm workers, and municipal drinking water.'),
-        caseStudy: tx('Southwestern Nigeria (particularly Ogun State and Oyo State) forms the commercial poultry epicentre of the nation, where intensive poultry housing and proximity to urban centers create a high-density interface between animals, humans, and waterways.'),
-        takeaway: tx('Over 70% of global antimicrobials are used in livestock. What happens in animal farming directly impacts our ability to treat human infections.')
+        heading: tx('What Does "One Health" Mean?'),
+        content: tx('When we think about antibiotics, we usually picture a person swallowing a capsule from a pharmacy. But globally, over 70% of all medically important antibiotics are actually used in animal farming—given to poultry (chickens), cattle, pigs, and farmed fish!\n\n"One Health" is a simple but powerful idea: the health of people, the health of animals, and the health of our environment (water, soil, and crops) are all connected in one single loop.\n\nIf we misuse antibiotics on farms, resistant superbugs grow inside the animals, wash into rivers and soil through animal waste, contaminate vegetables and drinking water, and end up right back in human kitchens and hospitals.'),
+        caseStudy: tx('Southwestern Nigeria (especially Ogun and Oyo States) is a major poultry and fish-farming hub, where farms, rivers, markets, and residential neighborhoods sit right next to one another.'),
+        takeaway: tx('One Health means human health, animal health, and a clean environment are connected. We cannot stop AMR in hospitals if we ignore farms and water.')
       },
       {
         stepNum: 2,
-        heading: tx('The Colistin Crisis: Destroying a Human Last-Resort Drug in Poultry'),
-        content: tx('In human clinical medicine, colistin (polymyxin E) is classified by the WHO as a "Highest Priority Critically Important Antimicrobial" and a Reserve antibiotic of last resort. In hospital intensive care units, colistin is the final pharmacological safety net used to treat patients dying of carbapenem-resistant Gram-negative septicemia and pneumonia.\n\nYet in intensive commercial poultry farming in Ogun State and other agricultural hubs, studies have documented widespread, unregulated administration of colistin. It is routinely purchased over-the-counter in soluble powder formulations and administered in bulk drinking water to entire flocks of healthy chicks for routine prophylaxis (disease prevention) and growth promotion.\n\nThis continuous, sub-therapeutic exposure in poultry intestines selected for the plasmid-mediated mobilized colistin resistance gene (mcr-1). Because mcr-1 is carried on mobile conjugative plasmids rather than fixed chromosomes, it transfers freely between bacterial species—moving from avian E. coli directly into human-colonizing Enterobacterales. When a patient contracts an mcr-1 carrying infection that is also resistant to carbapenems, the infection becomes untreatable (pan-drug resistant), resulting in fatal outcomes.'),
-        caseStudy: tx('Surveillance studies in poultry farms and live bird markets across Ogun State (Abeokuta, Sagamu, and Ijebu) have isolated multidrug-resistant E. coli and Salmonella strains carrying mobile resistance markers, demonstrating that prophylactic antibiotic use drastically increases the prevalence of superbug reservoirs.'),
-        takeaway: tx('Administering last-resort human antibiotics like colistin to farm animals breeds the mobile mcr-1 gene, leaving human patients with zero treatment options.')
+        heading: tx('Why Giving Last-Resort Human Antibiotics to Healthy Chickens Is Dangerous'),
+        content: tx('Of course, when a farm animal is genuinely sick, a veterinarian should treat it properly. The problem happens when antibiotics are mixed into the daily drinking water or feed of thousands of completely HEALTHY chicks every day just to make them grow faster or to cover up crowded, unhygienic cages.\n\nEven worse, some farms use soluble antibiotic powders containing Colistin—a "Reserve" (Red-light) last-resort human antibiotic that ICU doctors rely on to save patients dying from severe superbug infections.\n\nWhen healthy chickens drink small doses of Colistin every day, bacteria in their guts evolve a mobile resistance gene (called mcr-1) that renders Colistin useless. If that resistant bacterium spreads to a human patient, our final emergency hospital medicine fails.'),
+        caseStudy: tx('Field surveys in poultry farms and live-bird markets across Ogun State have found bacteria carrying multi-drug resistance genes linked directly to routine, unprescribed antibiotic mixing in poultry drinking water.'),
+        takeaway: tx('Human last-resort antibiotics like Colistin should never be given to healthy farm animals as growth boosters or daily tonics.')
       },
       {
         stepNum: 3,
-        heading: tx('Environmental Runoff: Aquatic Reservoirs & Food Contamination'),
-        content: tx('Between 75% and 90% of antibiotics administered to poultry and livestock are excreted unmetabolized in urine and feces. In Southwestern Nigeria, poultry manure is routinely harvested and used directly as uncomposted organic fertilizer on vegetable farms or dumped into waterways.\n\nFurthermore, integrated farming systems (such as poultry-fish farms where battery cages are suspended directly over commercial catfish and tilapia ponds) expose aquatic microbial ecosystems to heavy antibiotic residues. Rivers such as the Ogun River and adjacent drainage basins receive continuous runoff carrying active antibiotic molecules, resistant bacteria, and naked resistance plasmids.\n\nThese water bodies serve as evolutionary incubators where ambient aquatic bacteria exchange resistance cassettes under constant antibiotic pressure. Resistant pathogens subsequently contaminate irrigation water for raw salad vegetables (cabbage, carrots, tomatoes), municipal boreholes, and commercial fish, re-entering the human food chain without the patient ever having visited a hospital or farm.'),
-        caseStudy: tx('Microbiological testing of borehole water and fresh market produce in peri-urban Ogun and Lagos has confirmed the presence of extended-spectrum beta-lactamase (ESBL) producing bacteria sharing identical genetic profiles to poultry farm isolates.'),
-        takeaway: tx('Antibiotics excreted by farm animals leach into rivers and crops, turning our water and food supplies into vectors for drug-resistant superbugs.')
-      },
-      {
-        stepNum: 4,
-        heading: tx('The Policy & Community Roadmap: Nigeria AMR NAP 2.0 (2024–2028)'),
-        content: tx('In October 2024, the Nigeria Centre for Disease Control (NCDC), in partnership with the Federal Ministry of Agriculture and Food Security and the Federal Ministry of Environment, launched Nigeria\'s Second National Action Plan on Antimicrobial Resistance (AMR NAP 2.0: 2024–2028).\n\nBuilt squarely upon the One Health framework, NAP 2.0 mandates:\n1) Regulatory Prohibition: Banning the use of critically important human antibiotics (specifically colistin and fluoroquinolones) as animal growth promoters or routine prophylactic agents.\n2) Veterinary Prescription Gatekeeping: Enforcing strict veterinary prescription requirements at agrochemical stores and commercial feed mills.\n3) Farm Biosecurity Upgrades: Providing technical training for Nigerian poultry and livestock farmers on modern biosecurity—adequate ventilation, low flock density, clean water lines, and comprehensive flock vaccination (such as Gumboro and Newcastle disease vaccines)—enabling farmers to maintain high animal yields without relying on antibiotic crutches.\n4) Integrated Surveillance: Establishing synchronized sentinel testing across human hospitals, veterinary clinics, abattoirs, and environmental water bodies.'),
-        caseStudy: tx('Student-led AMR clubs at universities like Babcock University serve as pivotal community ambassadors, educating local agricultural communities, poultry farmers, and chemistry vendors on the One Health stewardship principles outlined in NAP 2.0.'),
-        takeaway: tx('Securing our medical future requires collaborative action across human clinics, livestock farms, and environmental management.')
+        heading: tx('From Farm Runoff to Our Kitchens—And How Communities Can Help'),
+        content: tx('Up to 80% of the antibiotics swallowed by livestock pass straight through their bodies into their manure and wastewater. When raw manure is washed by rain into streams or spread onto vegetable beds, both the leftover drug chemicals and the resistant bacteria enter our water supply and food chain.\n\nHow do we fix this together under Nigeria’s National Action Plan on AMR (NAP 2.0)?\n• For Farmers: Keep coops clean, well-ventilated, and uncrowded, and use poultry vaccines (like Newcastle and Gumboro vaccines) instead of daily antibiotics—and consult a qualified vet before medicating flocks.\n• For Households: Always wash fresh fruits and salad vegetables with clean water, cook meat, poultry, and fish thoroughly (heat kills bacteria!), and wash your hands and cutting boards after handling raw meat.'),
+        caseStudy: tx('Nigeria’s 2024–2028 National Action Plan on AMR (NAP 2.0) brings together the Ministries of Health, Agriculture, and Environment to phase out using critical human antibiotics as animal growth promoters.'),
+        takeaway: tx('Clean animal housing and animal vaccines reduce farm antibiotic needs, while thorough cooking and washing raw produce protect your family at home.')
       }
     ],
     checks: [
       {
-        q: tx('A commercial poultry farmer in Ogun State adds colistin soluble powder to the daily drinking water of healthy chicks to prevent disease. Why is this perilous for human medicine?'),
+        q: tx('What is the core idea behind the "One Health" approach to antimicrobial resistance?'),
         options: [
-          tx('Colistin is a human antibiotic of last resort; animal prophylaxis breeds the mobile mcr-1 resistance gene, rendering life-threatening human infections untreatable'),
-          tx('Colistin makes chickens grow feathers too quickly to harvest'),
-          tx('Chickens become completely immune to all future veterinary vaccines')
+          tx('Human health, animal health, and the environment (water, soil, food) are all connected, so we must protect antibiotics across all three'),
+          tx('Only one hospital in each state should prescribe antibiotics'),
+          tx('Animals can never pass bacteria to humans')
         ],
         answer: 0,
-        why: tx('Colistin is a last-resort drug for multidrug-resistant human infections. Prophylactic veterinary use breeds the plasmid-borne mcr-1 resistance gene.')
+        why: tx('One Health recognizes that resistant germs and antibiotics move freely between people, farm animals, and the environment.')
       },
       {
-        q: tx('Approximately what percentage of antibiotics administered to agricultural livestock is excreted unmetabolized into animal feces, soil, and wastewater?'),
+        q: tx('Why is mixing a last-resort human antibiotic like Colistin into the daily water of healthy poultry flocks so dangerous?'),
         options: [
-          tx('Between 75% and 90%'),
-          tx('Less than 2%'),
-          tx('Exactly 50%')
+          tx('It trains bacteria in the chickens to resist Colistin, destroying one of the final emergency medicines doctors have to save human lives in ICUs'),
+          tx('It makes chicken eggs taste salty'),
+          tx('It turns chickens into vegetarian animals')
         ],
         answer: 0,
-        why: tx('The vast majority (75%–90%) of veterinary antibiotics are excreted unmetabolized, contaminating soils, rivers, and groundwater.')
+        why: tx('Colistin is a Reserve last-resort antibiotic for life-threatening human infections; routine farm use breeds transferable resistance genes.')
       },
       {
-        q: tx('Which multi-sectoral strategy was launched by NCDC and the Ministries of Health, Agriculture, and Environment in October 2024 to combat AMR across Nigeria?'),
+        q: tx('What everyday kitchen habit helps protect your family from any resistant bacteria that might be on raw meat or market vegetables?'),
         options: [
-          tx('Nigeria Second National Action Plan on Antimicrobial Resistance (AMR NAP 2.0: 2024–2028)'),
-          tx('The National Petrochemical Initiative'),
-          tx('The Agro-Deforestation Program')
+          tx('Cooking meat, poultry, and fish thoroughly and washing hands, knives, and raw vegetables with clean water'),
+          tx('Sprinkling antibiotic powder over raw meat before cooking'),
+          tx('Leaving raw chicken in the sun for two hours')
         ],
         answer: 0,
-        why: tx('AMR NAP 2.0 was officially launched in October 2024 to unite human, animal, and environmental AMR governance.')
+        why: tx('Thorough cooking heat kills bacteria on meat—including antibiotic-resistant bacteria—and clean washing prevents cross-contamination.')
       }
     ],
     references: [
@@ -565,132 +711,109 @@ export const LESSONS = [
         title: "Nigeria's Second National Action Plan on Antimicrobial Resistance (AMR NAP 2.0: 2024–2028)",
         journal: 'One Health Multisectoral Strategic Blueprint, Abuja, Nigeria',
         url: 'https://ncdc.gov.ng',
-        stat: 'National policy phasing out HPCIAM antibiotics as veterinary growth promoters'
-      },
-      {
-        author: 'Liu YY, Wang Y, Walsh TR, et al.',
-        year: '2016',
-        title: 'Emergence of plasmid-mediated colistin resistance mechanism MCR-1 in animals and human beings: a microbiological and molecular biological study',
-        journal: 'The Lancet Infectious Diseases, 16(2): 161–168',
-        url: 'https://doi.org/10.1016/S1473-3099(15)00424-7',
-        stat: 'Discovery of the mobile mcr-1 colistin resistance gene originating in livestock'
+        stat: 'Unites human health, veterinary agriculture, and environmental protection across Nigeria'
       },
       {
         author: 'Founou LL, Founou RC, Allam M, et al.',
         year: '2021',
-        title: 'Antibiotic use and resistance in poultry farms and live bird markets in Ogun State, Nigeria: A One Health approach',
+        title: 'Antibiotic use and resistance in poultry farms and live bird markets in Ogun State, Nigeria',
         journal: 'Frontiers in Public Health, 9: 647908',
         url: 'https://doi.org/10.3389/fpubh.2021.647908',
-        stat: 'High-level multi-drug resistance documented in commercial poultry chains in Ogun State'
-      },
-      {
-        author: 'Quadripartite (FAO, UNEP, WHO, WOAH)',
-        year: '2022',
-        title: 'One Health Joint Plan of Action (2022–2026): Working together for the health of humans, animals, plants and the environment',
-        journal: 'United Nations Quadripartite Collaboration, Rome, Italy',
-        url: 'https://www.who.int/publications/i/item/9789240059382',
-        stat: 'Global framework integrating environmental runoff, veterinary use, and clinical stewardship'
+        stat: 'Documents multidrug-resistant bacteria linked to unprescribed poultry antibiotic use in Ogun State'
       }
     ]
   },
   {
     id: 'systems-quality',
     tier: 'advanced',
-    tierLevel: tx('Level 3: One Health & Policy'),
+    tierLevel: tx('Level 3: Stepping Up'),
     tierIcon: '🌍',
-    order: 7,
-    category: tx('DRUG QUALITY, R&D PIPELINE & SAFE DISPOSAL'),
-    badge: 'WHO Pipeline & NAFDAC MAS',
-    readTime: '4.5 min read',
-    title: tx('Fake Drugs, The Empty Pipeline & Modern Medicine'),
-    subtitle: tx('Substandard antimicrobials (NAFDAC MAS), the 4-drug innovation gap, surgical dependency, and safe disposal'),
-    summary: tx('Why counterfeit and degraded medicines breed resistance even in compliant patients, why Big Pharma stopped inventing new antibiotics, how surgery and chemo depend on them, and how to dispose of leftovers safely.'),
+    order: 9,
+    category: tx('EVERYDAY ACTION · FAKE DRUGS & DISPOSAL'),
+    badge: 'NAFDAC MAS & Safe Disposal',
+    readTime: '4 min read',
+    title: tx('Fake Medicines, Safe Disposal & Protecting Future Healthcare'),
+    subtitle: tx('How to spot fake or sun-damaged drugs with NAFDAC MAS, why new antibiotics are rare, and what to do with leftover pills'),
+    summary: tx('Finish your pathway with practical life skills: why fake or heat-damaged medicines breed superbugs even when you finish the pack, how to verify your medicine via SMS, and why you should never flush leftover antibiotics.'),
     steps: [
       {
         stepNum: 1,
-        heading: tx('Substandard & Falsified (SF) Antimicrobials: The Hidden Resistance Engine'),
-        content: tx('Even when a patient sees a qualified doctor and completes every single dose on schedule, poor drug quality can still trigger antimicrobial resistance. Substandard medicines are genuine drugs that have degraded due to heat, humidity, or poor manufacturing—often containing only 30% to 50% of their stated active pharmaceutical ingredient (API). Falsified medicines are deliberate counterfeits containing chalk, starch, or minimal active drug.\n\nWhen a patient ingests a degraded or falsified antibiotic, blood concentrations never reach the lethal threshold required to eradicate the pathogen. Instead, the bacteria are bathed in a sub-therapeutic dose that kills only the weakest cells while selectively breeding drug-resistant survivors.\n\nTo combat this in Nigeria, the National Agency for Food and Drug Administration and Control (NAFDAC) mandates the Mobile Authentication Service (MAS) on antibiotics and antimalarials. Consumers scratch a silver panel on the pack and text the unique PIN via toll-free SMS to verify authenticity in seconds before taking the first dose.'),
-        caseStudy: tx('Open-air drug markets across Nigeria frequently expose heat-sensitive beta-lactams and ACT antimalarials to temperatures above 35°C, rapidly degrading active ingredients even in legitimate blister packs.'),
-        takeaway: tx('Always buy antimicrobials from licensed pharmacies with cool storage, and verify NAFDAC MAS scratch-code PINs via SMS before swallowing the first tablet.')
+        heading: tx('How Fake or Sun-Baked Medicines Breed Superbugs (And How to Check with NAFDAC MAS)'),
+        content: tx('Imagine doing everything right: you visit a doctor, get a proper prescription, and finish every single tablet in the pack—yet the infection still becomes drug-resistant. How could that happen?\n\nBecause of fake (counterfeit) or heat-damaged (substandard) medicines! A counterfeit pill may contain chalk and only a tiny pinch of real medicine. Even a genuine antibiotic left sitting on an open market tray under the hot 35°C Nigerian sun can break down until only half of its active ingredient remains.\n\nSwallowing a half-strength pill has the exact same effect as stopping your dose halfway: it is too weak to kill the tough germs, so it trains them to become resistant!\n\nHow to protect yourself in Nigeria:\n1. Only buy medicines from licensed, shaded/cooled pharmacies.\n2. Check for the NAFDAC Registration Number and scratch the silver NAFDAC Mobile Authentication Service (MAS) panel on the pack. Text the PIN to the free SMS number printed on the pack to confirm in seconds that your medicine is genuine before swallowing the first dose!'),
+        caseStudy: tx('NAFDAC requires the Mobile Authentication Service (MAS) scratch-and-text code on antibiotics and antimalarial packs in Nigeria so anyone with a basic phone can verify authenticity for free.'),
+        takeaway: tx('Buy antimicrobials only from licensed pharmacies, keep them out of extreme heat, and verify the NAFDAC MAS scratch code via SMS.')
       },
       {
         stepNum: 2,
-        heading: tx('The Empty Pipeline: Why Almost No New Antibiotics Are Being Invented'),
-        content: tx('Many people assume scientists will simply invent replacement antibiotics whenever superbugs emerge. In reality, we face a severe multi-decade discovery void.\n\nAccording to the World Health Organization (WHO) 2023/2024 Antibacterial Pipeline Report, out of 97 clinical candidates (57 traditional antibiotics and 40 non-traditional agents), only 12 traditional drugs are genuinely innovative—and only 4 of those 12 show activity against at least one WHO "Critical Priority" pathogen (such as carbapenem-resistant Gram-negative bacteria). Between July 2017 and December 2023, only 13 new antibiotics gained approval, and just 2 belonged to a genuinely new chemical class.\n\nThe root cause is market failure: lifelong drugs for hypertension or diabetes generate billions for pharmaceutical companies, whereas a novel antibiotic is taken for only 5–7 days and immediately locked away by hospitals as a "Reserve" last-resort drug to slow resistance.'),
-        caseStudy: tx('Several small biotech firms that successfully brought novel Gram-negative antibiotics to market in the past decade still went bankrupt due to low sales volumes—proving we cannot rely on new inventions to save us from misuse today.'),
-        takeaway: tx('Only 4 innovative drugs in the global clinical pipeline target Critical Priority superbugs. Preserving our existing antibiotics is our only realistic defense.')
+        heading: tx('Why Can’t Scientists Just Invent New Antibiotics Every Year?'),
+        content: tx('A common question people ask is: "If bacteria become resistant to old antibiotics, why don’t scientists simply invent new ones?"\n\nUnfortunately, discovering a safe new antibiotic is extraordinarily hard and takes 10 to 15 years of laboratory testing. Out of thousands of chemical compounds tested, almost none can kill tough superbugs without being toxic to the human liver or kidneys.\n\nAccording to the World Health Organization’s global pipeline report, there are only 4 truly new, innovative antibiotics in clinical trials worldwide that target the world’s most dangerous "Critical Priority" superbugs! Furthermore, many big drug companies stopped researching antibiotics because a 5-day antibiotic pill makes far less money than lifelong daily tablets for blood pressure or diabetes.\n\nThat means no cavalry of brand-new miracle drugs is coming anytime soon—taking care of the antibiotics we already have is our best defense.'),
+        caseStudy: tx('Between 2017 and 2023, only two genuinely new chemical classes of antibiotics were approved worldwide—showing how rare new antibiotic discoveries truly are.'),
+        takeaway: tx('Very few new antibiotics are being invented. We cannot rely on future replacements—we must protect the medicines we have today.')
       },
       {
         stepNum: 3,
-        heading: tx('Modern Medicine’s Invisible Safety Net: Surgery, Chemo & MDR-TB'),
-        content: tx('Effective antibiotics are the silent foundation of almost every branch of modern medicine. Without reliable prophylactic and therapeutic antibiotics:\n\n• Routine surgeries—including Caesarean sections (C-sections), appendectomies, hip replacements, and organ transplants—carry a high risk of fatal post-operative sepsis.\n• Cancer chemotherapy and dialysis suppress the patient’s white blood cells, leaving them completely dependent on effective antibiotics to survive routine bacterial exposures.\n\nMeanwhile, major high-burden pathogens are already slipping out of reach: Multidrug-Resistant Tuberculosis (MDR-TB, resistant to rifampicin and isoniazid) turns a curable lung infection into 6–18 months of costly, toxic therapy, and extensively drug-resistant Neisseria gonorrhoeae ("super-gonorrhea") is rapidly losing susceptibility to ceftriaxone.'),
-        caseStudy: tx('Nigeria carries one of the highest tuberculosis burdens in Africa; incomplete TB regimens and unmonitored antibiotic sales directly fuel rifampicin-resistant TB transmission in crowded urban centers.'),
-        takeaway: tx('Losing antibiotics does not just make sore throats dangerous—it makes childbirth, cancer treatment, and routine surgery life-threatening.')
-      },
-      {
-        stepNum: 4,
-        heading: tx('The Diagnostic Gap & Safe Disposal of Leftover Drugs'),
-        content: tx('Why do clinicians frequently prescribe broad-spectrum "Watch" drugs like ceftriaxone? Often it is due to the diagnostic gap: standard Culture and Antimicrobial Susceptibility Testing (AST) takes 48–72 hours and adds out-of-pocket laboratory costs, forcing doctors to start blind "empiric therapy" instead of reading a local hospital antibiogram.\n\nFinally, stewardship extends to what happens when a prescription ends. You must NEVER flush leftover or expired antibiotics down a toilet or toss them into open campus waste. Sewage systems cannot filter out antibiotic molecules, so flushed pills leach straight into rivers and groundwater—continuously training environmental bacteria to evolve resistance genes. Unused or expired medicines should be returned to a licensed pharmacy or hospital take-back bin for high-temperature incineration.'),
-        caseStudy: tx('Hospital stewardship programs that publish quarterly unit-specific antibiograms allow doctors to pick narrower, Access-group drugs on Day 1 without waiting 72 hours for lab cultures.'),
-        takeaway: tx('Support lab-guided diagnosis (antibiograms) where available, and never flush expired or leftover antibiotics into drains or open trash.')
+        heading: tx('What Is at Stake—And How to Safely Dispose of Leftover Medicines'),
+        content: tx('Working antibiotics are the invisible safety net underneath all of modern healthcare. Without effective antibiotics to prevent and treat infections:\n• Everyday surgeries—like Caesarean sections (C-sections) during childbirth, appendix removals, or fixing broken bones—become dangerously risky.\n• Newborns, burn victims, and cancer patients (whose immune systems are weakened by treatment) are left defenseless against common infections.\n\nFinally, what should you do if a doctor changes your treatment or you find expired antibiotics at home?\n• NEVER share leftovers with friends or family.\n• NEVER flush antibiotics down the toilet, sink, or gutter, or toss loose pills into open waste dumps! Sewage systems do not remove antibiotic chemicals; flushed pills flow straight into rivers and soil, where they train wild bacteria to become resistant.\n• Instead, return expired or leftover medicines to a hospital pharmacy or licensed community pharmacy for safe disposal.'),
+        caseStudy: tx('Environmental water tests near open waste dumps and hospital drains show that improperly discarded antibiotics continuously breed resistant bacteria in local streams.'),
+        takeaway: tx('Never share or flush leftover antibiotics into toilets, drains, or open trash. Return unused or expired medicines to a pharmacy or clinic for safe disposal.')
       }
     ],
     checks: [
       {
-        q: tx('How does taking a degraded or falsified (substandard) antibiotic breed antimicrobial resistance even if the patient completes the entire pack?'),
+        q: tx('Why can a fake or sun-damaged antibiotic cause drug resistance even when the patient finishes every tablet in the pack?'),
         options: [
-          tx('Under-dosed or degraded pills deliver sub-therapeutic drug levels that fail to kill the pathogen and selectively breed resistant survivors'),
-          tx('Fake pills dissolve into extra white blood cells in the stomach'),
-          tx('Substandard pills only affect viruses, never bacteria')
+          tx('Because degraded or counterfeit pills deliver weak, half-strength drug levels that kill only weak germs and leave tougher survivors to multiply'),
+          tx('Because sunlight turns tablets into sugar that feeds viruses'),
+          tx('Fake pills only affect people who take them at night')
         ],
         answer: 0,
-        why: tx('Sub-therapeutic active ingredient levels fail to reach the lethal concentration needed to clear the infection, allowing partially resistant microbes to survive and multiply.')
+        why: tx('Substandard or counterfeit tablets contain too little active medicine to clear the infection, exposing germs to weak doses that breed resistance.')
       },
       {
-        q: tx('According to the WHO 2023/2024 Antibacterial Pipeline Report, how many genuinely innovative traditional antibiotics in clinical trials target at least one WHO Critical Priority pathogen?'),
+        q: tx('How can a patient in Nigeria quickly check whether a pack of antibiotics or antimalarials is genuine before taking it?'),
         options: [
-          tx('Only 4 drugs'),
-          tx('Over 250 drugs'),
-          tx('Exactly 97 drugs')
+          tx('Scratch the NAFDAC Mobile Authentication Service (MAS) panel on the pack and send the PIN via free SMS to verify authenticity'),
+          tx('Drop the tablet into cold water to see if it floats'),
+          tx('Smell the plastic wrapper')
         ],
         answer: 0,
-        why: tx('Out of 97 total clinical agents, only 12 traditional candidates are innovative, and only 4 are active against at least one WHO Critical Priority pathogen.')
+        why: tx('NAFDAC MAS allows anyone to text the unique PIN under the scratch panel via toll-free SMS to verify that the medicine is genuine.')
       },
       {
-        q: tx('What is the safest way to dispose of expired or leftover antibiotic tablets?'),
+        q: tx('What is the safest thing to do with expired or leftover antibiotics found at home?'),
         options: [
-          tx('Return them to a licensed pharmacy or hospital take-back point for safe disposal—never flush them down the toilet'),
-          tx('Flush them down the toilet so nobody finds them'),
-          tx('Save them in a drawer to share with roommates next semester')
+          tx('Return them to a licensed pharmacy or hospital clinic for safe disposal—never share them or flush them down the toilet/drain'),
+          tx('Flush them down the toilet or pour them into the gutter'),
+          tx('Keep them to give to a friend next time someone has a cough')
         ],
         answer: 0,
-        why: tx('Flushed antibiotics enter sewage and waterways where they select for environmental resistance genes; pharmacy take-back ensures safe destruction.')
+        why: tx('Flushing or dumping antibiotics pollutes water and soil with drug residues that train environmental bacteria to become resistant.')
       }
     ],
     references: [
-      {
-        author: 'World Health Organization (WHO)',
-        year: '2024',
-        title: '2023 Antibacterial agents in clinical and preclinical development: an overview and analysis',
-        journal: 'WHO Department of Antimicrobial Resistance, Geneva',
-        url: 'https://www.who.int/publications/i/item/9789240094000',
-        stat: 'Only 12 innovative traditional antibiotics in clinical trials; only 4 target Critical Priority pathogens'
-      },
       {
         author: 'National Agency for Food and Drug Administration and Control (NAFDAC)',
         year: '2023',
         title: 'Mobile Authentication Service (MAS) Scheme for Antibiotics and Antimalarials',
         journal: 'NAFDAC Pharmacovigilance & Post-Marketing Surveillance, Abuja, Nigeria',
         url: 'https://nafdac.gov.ng',
-        stat: 'Mandated scratch-panel SMS PIN verification to combat substandard and falsified antimicrobials'
+        stat: 'Free SMS scratch-code verification protecting Nigerians from counterfeit and substandard antimicrobials'
+      },
+      {
+        author: 'World Health Organization (WHO)',
+        year: '2024',
+        title: ' Antibacterial agents in clinical and preclinical development: an overview and analysis',
+        journal: 'WHO Department of Antimicrobial Resistance, Geneva',
+        url: 'https://www.who.int/publications/i/item/9789240094000',
+        stat: 'Highlights the critical shortage of truly novel antibiotics in the global R&D pipeline'
       },
       {
         author: 'World Health Organization (WHO)',
         year: '2018',
-        title: 'Global Surveillance and Monitoring System for Substandard and Falsified Medical Products',
-        journal: 'WHO Essential Medicines & Health Products, Geneva',
-        url: 'https://www.who.int/publications/i/item/9789241513425',
-        stat: 'Antimalarials and antibiotics are among the most frequently falsified essential medicines in LMICs'
+        title: 'Substandard and Falsified Medical Products & Their Impact on Antimicrobial Resistance',
+        journal: 'WHO Global Surveillance and Monitoring System, Geneva',
+        url: 'https://www.who.int/news-room/fact-sheets/detail/substandard-and-falsified-medical-products',
+        stat: 'Under-dosed and degraded antimicrobials directly accelerate drug resistance in communities'
       }
     ]
   }

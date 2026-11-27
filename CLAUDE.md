@@ -1,6 +1,6 @@
 # XEITH: project brief (read first)
 
-**What it is:** a PWA that teaches antimicrobial resistance (AMR) stewardship in six languages (English, Nigerian Pidgin, Hausa, Yorùbá, Igbo, French), enabled by AI. Built for the Code Against Resistance pitch (Babcock University AMR Club): **pitch Fri 27 Nov 2026, 8:00 AM WAT**. Scope is learning only: no medicine records, symptom checker or care finder. Loop: **Discover & Ask -> Test & Play -> Track & Connect.**
+**What it is:** a PWA that teaches antimicrobial resistance (AMR) stewardship in five languages (English, Nigerian Pidgin, Hausa, Yorùbá, Igbo), enabled by AI. Built for the Code Against Resistance pitch (Babcock University AMR Club): **pitch Fri 27 Nov 2026, 8:00 AM WAT**. Scope is learning only: no medicine records, symptom checker or care finder. Loop: **Discover & Ask -> Test & Play -> Track & Connect.**
 
 **Source of truth for progress:** `docs/CHECKLIST.md` (status per item with file evidence). Update it whenever a task is finished.
 
