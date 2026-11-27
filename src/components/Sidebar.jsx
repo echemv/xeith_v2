@@ -135,6 +135,7 @@ export default function Sidebar({ isPinned, onTogglePin }) {
             aria-label={t(item.labelKey)}
           >
             <span className="rail-icon">{item.icon}</span>
+            <span className="rail-label" aria-hidden="true">{t(item.shortLabel || item.labelKey)}</span>
             <span className="rail-tooltip">{t(item.labelKey)}</span>
           </NavLink>
         ))}

@@ -147,54 +147,28 @@ export default function WeeklyWordLadder() {
   }
 
   return (
-    <section className="card weekly-ladder-card" style={{ marginTop: '24px', position: 'relative', overflow: 'hidden' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+    <section className="card weekly-ladder-card">
+      <div className="ladder-head">
         <div>
-          <p className="eyebrow" style={{ color: 'var(--g-teal)', fontWeight: 700 }}>
+          <p className="eyebrow ladder-eyebrow">
             🧗 {t('7-Day Weekly Word Ladder')} · {t('Week {{wk}}', { wk })}
           </p>
-          <h3 style={{ margin: '4px 0 6px', color: 'var(--navy)' }}>
-            {ladder.start} <span style={{ opacity: 0.5 }}>→</span> {ladder.target}
+          <h3 className="ladder-title">
+            {ladder.start} <span className="arrow" aria-hidden="true">→</span> {ladder.target}
           </h3>
-          <p className="muted" style={{ margin: 0, fontSize: '0.88rem' }}>
-            {t(ladder.theme)}
-          </p>
+          <p className="muted ladder-sub">{t(ladder.theme)}</p>
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <span style={{
-            background: isCompletedForWeek ? 'rgba(39,174,96,0.15)' : 'var(--g-soft)',
-            color: isCompletedForWeek ? '#27AE60' : 'var(--navy)',
-            padding: '6px 12px',
-            borderRadius: '99px',
-            fontSize: '0.82rem',
-            fontWeight: 700,
-            border: '1px solid var(--line)'
-          }}>
-            {isCompletedForWeek ? '🏆 ' + t('Ladder Complete (+50 pts)') : `${Math.min(savedSteps.length - 1, 7)} / 7 ${t('Steps')}`}
-          </span>
-        </div>
+        <span className={`ladder-progress ${isCompletedForWeek ? 'done' : ''}`}>
+          {isCompletedForWeek ? '🏆 ' + t('Ladder Complete (+50 pts)') : `${Math.min(savedSteps.length - 1, 7)} / 7 ${t('Steps')}`}
+        </span>
       </div>
 
       {/* 7 Daily Step Slots Visualizer */}
-      <div className="ladder-steps-grid" style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))',
-        gap: '8px',
-        margin: '20px 0 16px'
-      }}>
+      <div className="ladder-steps-grid">
         {/* Start Word Slot */}
-        <div style={{
-          padding: '10px 8px',
-          borderRadius: '10px',
-          background: 'var(--navy)',
-          color: '#fff',
-          textAlign: 'center',
-          fontWeight: 700,
-          fontFamily: 'monospace',
-          letterSpacing: '0.1em'
-        }}>
-          <span style={{ fontSize: '0.7rem', display: 'block', opacity: 0.7, fontWeight: 500 }}>{t('START')}</span>
-          <span style={{ fontSize: '1.05rem' }}>{ladder.start}</span>
+        <div className="ladder-end start">
+          <span className="ladder-end-label">{t('START')}</span>
+          <span className="ladder-end-word">{ladder.start}</span>
         </div>
 
         {/* 7 Daily Steps */}
@@ -204,34 +178,18 @@ export default function WeeklyWordLadder() {
           const isToday = idx === todayDayIndex
           const isUnlocked = idx <= todayDayIndex
           const isCurrentActiveInput = stepIndex === savedSteps.length && isUnlocked && !isCompletedForWeek
+          const state = filledWord ? 'is-filled' : isCurrentActiveInput ? 'is-active' : !isUnlocked ? 'is-locked' : ''
 
           return (
-            <div
-              key={idx}
-              style={{
-                padding: '10px 6px',
-                borderRadius: '10px',
-                textAlign: 'center',
-                border: isCurrentActiveInput ? '2px solid var(--g-teal)' : '1px solid var(--line)',
-                background: filledWord ? 'rgba(39,174,96,0.1)' : isCurrentActiveInput ? 'var(--g-soft)' : 'rgba(0,0,0,0.02)',
-                opacity: !isUnlocked && !filledWord ? 0.6 : 1,
-                transition: 'all .2s ease'
-              }}
-            >
-              <div style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--muted)', marginBottom: '2px' }}>
-                {dayName} {isToday && '📍'}
+            <div key={idx} className={`ladder-slot ${state}`}>
+              <div className="ladder-slot-day">
+                {t(dayName)} {isToday && '📍'}
               </div>
-              <div style={{
-                fontFamily: 'monospace',
-                fontWeight: 700,
-                fontSize: '1rem',
-                color: filledWord ? '#27AE60' : isCurrentActiveInput ? 'var(--g-teal)' : 'var(--muted)',
-                letterSpacing: '0.05em'
-              }}>
+              <div className="ladder-slot-word">
                 {filledWord ? (
                   <span>{filledWord} ✓</span>
                 ) : isUnlocked ? (
-                  <span style={{ fontStyle: 'italic', fontSize: '0.82rem' }}>{isCurrentActiveInput ? t('Ready') : '—'}</span>
+                  <span className="pending">{isCurrentActiveInput ? t('Ready') : '—'}</span>
                 ) : (
                   <span>🔒</span>
                 )}
@@ -241,19 +199,9 @@ export default function WeeklyWordLadder() {
         })}
 
         {/* Goal Target Slot */}
-        <div style={{
-          padding: '10px 8px',
-          borderRadius: '10px',
-          background: isCompletedForWeek ? 'var(--g-teal)' : 'var(--g-soft)',
-          color: isCompletedForWeek ? '#fff' : 'var(--navy)',
-          textAlign: 'center',
-          fontWeight: 700,
-          fontFamily: 'monospace',
-          border: '1px solid var(--line)',
-          letterSpacing: '0.1em'
-        }}>
-          <span style={{ fontSize: '0.7rem', display: 'block', opacity: 0.7, fontWeight: 500 }}>{t('TARGET')} 🏁</span>
-          <span style={{ fontSize: '1.05rem' }}>{ladder.target}</span>
+        <div className={`ladder-end target ${isCompletedForWeek ? 'done' : ''}`}>
+          <span className="ladder-end-label">{t('TARGET')} 🏁</span>
+          <span className="ladder-end-word">{ladder.target}</span>
         </div>
       </div>
 
@@ -261,56 +209,34 @@ export default function WeeklyWordLadder() {
       {!isCompletedForWeek && (
         <div>
           {isTodayStepAlreadyDone ? (
-            <div style={{
-              background: 'rgba(39,174,96,0.08)',
-              padding: '12px 16px',
-              borderRadius: '10px',
-              border: '1px solid rgba(39,174,96,0.25)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px'
-            }}>
-              <span style={{ fontSize: '1.5rem' }}>✅</span>
+            <div className="ladder-done-today">
+              <span style={{ fontSize: '1.5rem' }} aria-hidden="true">✅</span>
               <div>
-                <b style={{ color: 'var(--navy)' }}>{t("Today's ladder step is complete!")}</b>
-                <p className="muted" style={{ margin: '2px 0 0', fontSize: '0.84rem' }}>
+                <b>{t("Today's ladder step is complete!")}</b>
+                <p className="muted">
                   {t('Come back tomorrow for the next word step. Keep your streak burning! 🔥')}
                 </p>
               </div>
             </div>
           ) : (
-            <div style={{
-              background: 'var(--g-soft)',
-              padding: '16px',
-              borderRadius: '12px',
-              border: '1px solid var(--line)'
-            }}>
-              <p style={{ margin: '0 0 8px', fontSize: '0.9rem', fontWeight: 600, color: 'var(--navy)' }}>
+            <div className="ladder-panel">
+              <p className="ladder-panel-title">
                 {t('Day {{n}} Step', { n: savedSteps.length })}: {t('Change 1 letter from')} <code>{savedSteps[savedSteps.length - 1]}</code>
               </p>
-              <p className="muted" style={{ margin: '0 0 12px', fontSize: '0.85rem' }}>
+              <p className="muted ladder-hint">
                 💡 <b>{t('Hint')}:</b> {t(ladder.hints[savedSteps.length - 1])}
               </p>
 
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <div className="ladder-form">
                 <input
                   type="text"
+                  className="ladder-input"
                   value={currentInput}
                   onChange={(e) => { setCurrentInput(e.target.value.toUpperCase()); setErrorMsg('') }}
                   onKeyDown={(e) => e.key === 'Enter' && handleWordSubmit()}
                   placeholder={t('4-letter word')}
+                  aria-label={t('4-letter word')}
                   maxLength={ladder.start.length}
-                  style={{
-                    width: '130px',
-                    textAlign: 'center',
-                    fontSize: '1.1rem',
-                    fontWeight: 700,
-                    letterSpacing: '0.12em',
-                    textTransform: 'uppercase',
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    border: '2px solid var(--line)'
-                  }}
                 />
                 <button className="btn" onClick={handleWordSubmit}>
                   {t('Submit Daily Step (+10 pts)')}
@@ -318,7 +244,7 @@ export default function WeeklyWordLadder() {
               </div>
 
               {errorMsg && (
-                <p style={{ color: 'var(--coral)', margin: '8px 0 0', fontSize: '0.85rem', fontWeight: 600 }}>
+                <p className="ladder-error" role="alert">
                   ⚠️ {errorMsg}
                 </p>
               )}
@@ -328,16 +254,10 @@ export default function WeeklyWordLadder() {
       )}
 
       {isCompletedForWeek && (
-        <div style={{
-          textAlign: 'center',
-          padding: '16px',
-          background: 'rgba(39,174,96,0.1)',
-          borderRadius: '12px',
-          border: '1px solid #27AE60'
-        }}>
-          <p style={{ fontSize: '1.8rem', margin: 0 }}>🎉 🏆</p>
-          <h4 style={{ margin: '6px 0 2px', color: '#27AE60' }}>{t('Weekly Ladder Conquered!')}</h4>
-          <p className="muted" style={{ margin: 0, fontSize: '0.88rem' }}>
+        <div className="ladder-complete">
+          <p style={{ fontSize: '1.8rem', margin: 0 }} aria-hidden="true">🎉 🏆</p>
+          <h4>{t('Weekly Ladder Conquered!')}</h4>
+          <p className="muted">
             {t('You successfully transformed {{start}} to {{target}} across all 7 days (+50 points awarded).', { start: ladder.start, target: ladder.target })}
           </p>
         </div>
