@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { tx } from '../i18n'
 import { award } from '../store'
 import { PATIENT_CASES } from '../data/patientCases'
 
@@ -16,7 +17,7 @@ function shuffle(arr) {
 }
 
 const AWARE_COLOR = { A: '#176B65', W: '#D6A84B', R: '#F2786B' }
-const AWARE_LABEL = { A: 'Access', W: 'Watch', R: 'Reserve' }
+const AWARE_LABEL = { A: tx('Access'), W: tx('Watch'), R: tx('Reserve') }
 
 export default function StewardshipCommand({ onExit }) {
   const { t } = useTranslation()
@@ -66,33 +67,32 @@ export default function StewardshipCommand({ onExit }) {
       <div className="stewardship-briefing animate-fade-in">
         <div className="card glass" style={{ maxWidth: 520, margin: '0 auto', textAlign: 'center', padding: '32px 28px' }}>
           <div style={{ fontSize: '3rem', marginBottom: 12 }}>🏥</div>
-          <p className="eyebrow">New Game Mode</p>
-          <h2 style={{ margin: '0 0 12px' }}>Stewardship Command</h2>
+          <p className="eyebrow">{t('New Game Mode')}</p>
+          <h2 style={{ margin: '0 0 12px' }}>{t('Stewardship Command')}</h2>
           <p className="muted" style={{ marginBottom: 20 }}>
-            You are the Antimicrobial Stewardship Officer at a Nigerian teaching hospital.
-            {' '}Five patient cases will come through your ward — choose the right drug, right dose, right duration.
+            {t('You are the Antimicrobial Stewardship Officer at a Nigerian teaching hospital. Five practice cases come through your ward: pick the approach that helps the patient and limits resistance. This is a learning game, not medical advice.')}
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 24 }}>
             {[
-              { color: '#176B65', label: 'Access', desc: 'First-line. Use freely.' },
-              { color: '#D6A84B', label: 'Watch', desc: 'Higher resistance risk.' },
-              { color: '#F2786B', label: 'Reserve', desc: 'Last resort only.' }
+              { color: '#176B65', label: tx('Access'), desc: tx('First choice for common infections.') },
+              { color: '#D6A84B', label: tx('Watch'), desc: tx('Higher resistance risk.') },
+              { color: '#F2786B', label: tx('Reserve'), desc: tx('Last resort only.') }
             ].map(({ color, label, desc }) => (
               <div key={label} style={{ padding: '10px 8px', borderRadius: 12, border: `1px solid ${color}40`, background: `${color}10`, textAlign: 'center' }}>
                 <div style={{ width: 10, height: 10, borderRadius: '50%', background: color, margin: '0 auto 6px' }} />
-                <b style={{ color, fontSize: '.82rem' }}>{label}</b>
-                <p className="muted" style={{ fontSize: '.75rem', margin: 0 }}>{desc}</p>
+                <b style={{ color, fontSize: '.82rem' }}>{t(label)}</b>
+                <p className="muted" style={{ fontSize: '.75rem', margin: 0 }}>{t(desc)}</p>
               </div>
             ))}
           </div>
           <p className="muted" style={{ fontSize: '.85rem', marginBottom: 24 }}>
-            💡 Based on <strong>WHO AWaRe Classification</strong> &amp; Nigerian NCDC guidelines
+            💡 {t('Based on the WHO AWaRe classification')}
           </p>
           <div style={{ display: 'flex', gap: 10 }}>
             <button className="btn" style={{ flex: 1 }} onClick={() => setPhase('case')}>
-              🩺 Start Ward Round
+              🩺 {t('Start Ward Round')}
             </button>
-            <button className="btn ghost" onClick={onExit}>← Back</button>
+            <button className="btn ghost" onClick={onExit}>← {t('Back')}</button>
           </div>
         </div>
       </div>
@@ -102,7 +102,7 @@ export default function StewardshipCommand({ onExit }) {
   if (phase === 'debrief') {
     const correctCount = history.filter(h => h.correct).length
     const passed = correctCount >= Math.ceil(TOTAL_CASES / 2)
-    const resistanceLevel = resistanceMeter < 30 ? 'Low' : resistanceMeter < 60 ? 'Moderate' : 'High'
+    const resistanceLevel = t(resistanceMeter < 30 ? 'Low' : resistanceMeter < 60 ? 'Moderate' : 'High')
     const resistanceColor = resistanceMeter < 30 ? '#176B65' : resistanceMeter < 60 ? '#D6A84B' : '#F2786B'
 
     return (
@@ -119,20 +119,20 @@ export default function StewardshipCommand({ onExit }) {
               background: passed ? 'rgba(23,107,101,.15)' : 'rgba(242,120,107,.15)',
               color: passed ? 'var(--teal)' : 'var(--coral)', marginBottom: 10
             }}>
-              {passed ? 'Ward Round Completed' : 'More Training Needed'}
+              {passed ? t('Ward Round Completed') : t('More Training Needed')}
             </span>
-            <h2 style={{ margin: '0 0 6px' }}>{passed ? 'Excellent Stewardship!' : 'Review Your Prescriptions'}</h2>
+            <h2 style={{ margin: '0 0 6px' }}>{passed ? t('Excellent Stewardship!') : t('Review Your Choices')}</h2>
           </div>
 
           {/* Score + Resistance bar */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
             <div style={{ padding: '14px', borderRadius: 14, background: 'rgba(23,107,101,.07)', border: '1px solid rgba(23,107,101,.2)', textAlign: 'center' }}>
-              <p className="eyebrow" style={{ margin: '0 0 4px' }}>Score</p>
+              <p className="eyebrow" style={{ margin: '0 0 4px' }}>{t('Score')}</p>
               <p style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--teal)', margin: 0 }}>{score + (resistanceMeter < 30 ? 30 : resistanceMeter < 60 ? 15 : 0)}</p>
               <p className="muted" style={{ fontSize: '.78rem', margin: 0 }}>{correctCount}/{TOTAL_CASES} correct</p>
             </div>
             <div style={{ padding: '14px', borderRadius: 14, background: `${resistanceColor}10`, border: `1px solid ${resistanceColor}40`, textAlign: 'center' }}>
-              <p className="eyebrow" style={{ margin: '0 0 4px', color: resistanceColor }}>Resistance Pressure</p>
+              <p className="eyebrow" style={{ margin: '0 0 4px', color: resistanceColor }}>{t('Resistance Pressure')}</p>
               <div style={{ height: 8, background: 'var(--line)', borderRadius: 4, margin: '4px 0' }}>
                 <div style={{ width: `${resistanceMeter}%`, height: '100%', background: resistanceColor, borderRadius: 4, transition: 'width .5s' }} />
               </div>
@@ -141,7 +141,7 @@ export default function StewardshipCommand({ onExit }) {
           </div>
 
           {/* Case-by-case review */}
-          <p className="eyebrow" style={{ marginBottom: 8 }}>Case Review</p>
+          <p className="eyebrow" style={{ marginBottom: 8 }}>{t('Case Review')}</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20, maxHeight: 220, overflowY: 'auto' }}>
             {history.map((h, i) => {
               const opt = h.case.options[h.chosen]
@@ -155,7 +155,7 @@ export default function StewardshipCommand({ onExit }) {
                   <span style={{ fontSize: '1.1rem' }}>{h.correct ? '✅' : '❌'}</span>
                   <div>
                     <p style={{ margin: '0 0 2px', fontSize: '.84rem', fontWeight: 700, color: 'var(--navy)' }}>{h.case.name} — {h.case.hospital}</p>
-                    <p className="muted" style={{ margin: 0, fontSize: '.78rem' }}>You chose: <b>{opt.label}</b> ({AWARE_LABEL[opt.aware]})</p>
+                    <p className="muted" style={{ margin: 0, fontSize: '.78rem' }}>{t('You chose:')} <b>{opt.label}</b> ({t(AWARE_LABEL[opt.aware])})</p>
                     {!h.correct && <p className="muted" style={{ margin: '2px 0 0', fontSize: '.75rem', color: 'var(--coral)' }}>{h.case.options[h.case.correct].label} was best — {h.case.takeaway}</p>}
                   </div>
                 </div>
@@ -174,7 +174,7 @@ export default function StewardshipCommand({ onExit }) {
               <Link to="/challenges" className="btn ghost" style={{ flex: 1, justifyContent: 'center' }}>
                 🔥 Daily Challenges
               </Link>
-              <button className="btn ghost" onClick={onExit} style={{ flex: 1 }}>← Lab Menu</button>
+              <button className="btn ghost" onClick={onExit} style={{ flex: 1 }}>← {t('Lab Menu')}</button>
             </div>
           </div>
         </div>
@@ -195,7 +195,7 @@ export default function StewardshipCommand({ onExit }) {
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <span style={{ fontSize: '.85rem', fontWeight: 700, color: 'var(--teal)' }}>⭐ {score}</span>
           <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-            <span style={{ fontSize: '.75rem', color: 'var(--muted)' }}>Resistance:</span>
+            <span style={{ fontSize: '.75rem', color: 'var(--muted)' }}>{t('Resistance:')}</span>
             <div style={{ width: 60, height: 6, background: 'var(--line)', borderRadius: 3 }}>
               <div style={{ width: `${resistanceMeter}%`, height: '100%', background: resistanceMeter < 40 ? '#176B65' : resistanceMeter < 70 ? '#D6A84B' : '#F2786B', borderRadius: 3, transition: 'width .4s' }} />
             </div>
@@ -219,13 +219,13 @@ export default function StewardshipCommand({ onExit }) {
         <h3 style={{ margin: '0 0 8px', color: 'var(--navy)', fontSize: '1.1rem' }}>{currentCase.name}</h3>
         <p style={{ margin: '0 0 10px', fontSize: '.9rem', lineHeight: 1.6 }}>{currentCase.presentation}</p>
         <div style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(23,107,101,.07)', border: '1px solid rgba(23,107,101,.2)' }}>
-          <p className="eyebrow" style={{ margin: '0 0 2px', fontSize: '.72rem' }}>Working Diagnosis</p>
+          <p className="eyebrow" style={{ margin: '0 0 2px', fontSize: '.72rem' }}>{t('Case summary')}</p>
           <p style={{ margin: 0, fontSize: '.88rem', fontWeight: 600, color: 'var(--teal)' }}>{currentCase.suspected}</p>
         </div>
       </div>
 
       {/* Options */}
-      <p className="eyebrow" style={{ marginBottom: 10 }}>Choose your treatment:</p>
+      <p className="eyebrow" style={{ marginBottom: 10 }}>{t('Choose your approach:')}</p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
         {currentCase.options.map((opt, idx) => {
           const isChosen = chosen === idx
@@ -263,7 +263,7 @@ export default function StewardshipCommand({ onExit }) {
               </div>
               <div style={{ flex: 1 }}>
                 <p style={{ margin: '0 0 2px', fontWeight: 600, fontSize: '.9rem', color: 'var(--navy)' }}>{opt.label}</p>
-                <p className="muted" style={{ margin: 0, fontSize: '.78rem' }}>WHO AWaRe: <b style={{ color: AWARE_COLOR[opt.aware] }}>{AWARE_LABEL[opt.aware]}</b></p>
+                <p className="muted" style={{ margin: 0, fontSize: '.78rem' }}>WHO AWaRe: <b style={{ color: AWARE_COLOR[opt.aware] }}>{t(AWARE_LABEL[opt.aware])}</b></p>
                 {isAnswered && (isThisCorrect || isChosen) && (
                   <p style={{ margin: '4px 0 0', fontSize: '.78rem', color: isThisCorrect ? 'var(--teal)' : 'var(--coral)', lineHeight: 1.4 }}>
                     {isThisCorrect ? '✅ ' : '❌ '}{opt.reasoning}

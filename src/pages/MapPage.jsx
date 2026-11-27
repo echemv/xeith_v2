@@ -173,10 +173,10 @@ export default function MapPage() {
                   📖 {selectedRegion.id === 'sw' ? t('Study Ogun & One Health →') : t('Study Bacterial AMR →')}
                 </Link>
                 <Link to="/play" className="btn ghost" style={{ fontSize: '.8rem', padding: '6px 12px' }}>
-                  🧪 {t('Practice in Lab →')}
+                  🧪 {t('Practice in The AMR Lab →')}
                 </Link>
                 <Link to="/chat" className="btn ghost" style={{ fontSize: '.8rem', padding: '6px 12px' }}>
-                  💬 {t('Ask AI Assistant →')}
+                  💬 {t('Ask XEITH →')}
                 </Link>
               </div>
             </div>
