@@ -35,11 +35,18 @@ export default function MapPage() {
 
     if (!leafletRef.current) return
 
-    const map = L.map(leafletRef.current, { minZoom: 5, maxZoom: 10 }).setView([8.8, 8.7], 6)
+    const nigeriaBounds = L.latLngBounds([3.8, 2.3], [14.2, 15.2])
+    const map = L.map(leafletRef.current, {
+      minZoom: 6,
+      maxZoom: 12,
+      maxBounds: nigeriaBounds,
+      maxBoundsViscosity: 1.0,
+    }).setView([9.08, 8.68], 6)
     mapInstance.current = map
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
+      attribution: '© OpenStreetMap contributors',
+      bounds: nigeriaBounds,
     }).addTo(map)
 
     regions.forEach((r, idx) => {
@@ -173,10 +180,10 @@ export default function MapPage() {
                   📖 {selectedRegion.id === 'sw' ? t('Study Ogun & One Health →') : t('Study Bacterial AMR →')}
                 </Link>
                 <Link to="/play" className="btn ghost" style={{ fontSize: '.8rem', padding: '6px 12px' }}>
-                  🧪 {t('Practice in Lab →')}
+                  🧪 {t('Practice in The AMR Lab →')}
                 </Link>
                 <Link to="/chat" className="btn ghost" style={{ fontSize: '.8rem', padding: '6px 12px' }}>
-                  💬 {t('Ask AI Assistant →')}
+                  💬 {t('Ask XEITH →')}
                 </Link>
               </div>
             </div>

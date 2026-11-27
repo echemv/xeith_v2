@@ -5,6 +5,10 @@ import { useApp, award, weekNumber } from '../store'
 import DailyChallenge from '../components/DailyChallenge'
 import WeeklyWordLadder from '../components/WeeklyWordLadder'
 import AiUpdateFramework from '../components/AiUpdateFramework'
+import FourWorlds from '../components/FourWorlds'
+import CaseFiles from '../components/CaseFiles'
+import { WeeklyRewardCardBanner } from '../components/PlayerAchievementCards'
+import { getCompletedLessonCount } from '../data/achievements'
 
 const DEFAULT_WEEKLY_CHALLENGES = [
   {
@@ -40,12 +44,40 @@ const DEFAULT_WEEKLY_CHALLENGES = [
   }
 ]
 
-function WeeklyChallenge({ index, id, challenge }) {
+function WeeklyChallenge({ index, id, challenge, lessonsDone }) {
   const { t } = useTranslation()
   const { done } = useApp()
   const isDone = done[id]
   const [selected, setSelected] = useState(null)
   const [submitted, setSubmitted] = useState(false)
+
+  // Question 3 (index === 2) is the Weekly Scenario — requires at least 1 completed Classroom lesson
+  const requiredLessons = index === 2 ? 1 : 0
+  const isLockedByLevel = !isDone && lessonsDone < requiredLessons
+
+  if (isLockedByLevel) {
+    return (
+      <section className="card" key={id} style={{ borderStyle: 'dashed', opacity: 0.92 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+          <p className="eyebrow" style={{ margin: 0 }}>
+            🔒 {t('Question {{n}} of 3 · Level-Locked Scenario', { n: index + 1 })}
+          </p>
+          <span className="badge-pill" style={{ background: 'rgba(242,120,107,0.14)', color: 'var(--coral)', fontSize: '.74rem', fontWeight: 700, padding: '3px 10px', borderRadius: 99 }}>
+            🔒 {t('Requires 1 Classroom Lesson')}
+          </span>
+        </div>
+        <p style={{ margin: '10px 0 6px', fontWeight: 700, color: 'var(--navy)' }}>
+          {t('Complete your first Classroom lesson to unlock this Weekly Scenario!')}
+        </p>
+        <p className="muted" style={{ margin: '0 0 12px', fontSize: '.86rem' }}>
+          {t('Scenario challenges test real-life AMR decisions based on what you learn in The AMR Classroom pathway.')}
+        </p>
+        <a href="/learn" className="btn ghost" style={{ fontSize: '.82rem', padding: '7px 14px' }}>
+          📚 {t('Go to The AMR Classroom →')}
+        </a>
+      </section>
+    )
+  }
 
   if (isDone) {
     return (
@@ -156,6 +188,7 @@ export default function Challenges() {
   }, [wk, i18n.resolvedLanguage])
 
   const completedWeeklyCount = weeklyIds.filter(id => done[id]).length
+  const lessonsDone = getCompletedLessonCount(done)
 
   return (
     <div className="challenges-page animate-fade-in">
@@ -207,10 +240,26 @@ export default function Challenges() {
       {/* 7-Step Weekly Word Ladder */}
       <WeeklyWordLadder />
 
-      <h2 style={{ marginTop: '28px', marginBottom: '14px' }}>{t('This Week')}</h2>
+      {/* Games and branching scenarios (draft content) */}
+      <FourWorlds />
+      <CaseFiles />
+
+      <h2 style={{ marginTop: '28px', marginBottom: '12px' }}>{t('This Week')}</h2>
+      <WeeklyRewardCardBanner
+        completedWeeklyCount={completedWeeklyCount}
+        points={points}
+        streak={streak}
+        done={done}
+      />
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         {weeklyIds.map((id, k) => (
-          <WeeklyChallenge key={id} index={k} id={id} challenge={weeklyList[k] || DEFAULT_WEEKLY_CHALLENGES[k]} />
+          <WeeklyChallenge
+            key={id}
+            index={k}
+            id={id}
+            lessonsDone={lessonsDone}
+            challenge={weeklyList[k] || DEFAULT_WEEKLY_CHALLENGES[k]}
+          />
         ))}
       </div>
 
@@ -222,6 +271,8 @@ export default function Challenges() {
           <li>{t('Photo Challenge: Take a real-world photo matching the prompt')}</li>
           <li>{t('Fact Check: Sort facts from myths about antimicrobial resistance')}</li>
           <li>{t('Weekly: 3 questions, 5 points each. Build your streak for bonus points!')}</li>
+          <li>{t('Four Worlds: Group 16 AMR terms into 4 hidden categories before 4 mistakes')}</li>
+          <li>{t('Case Files: Make 3 stewardship decisions in real-world scenarios')}</li>
         </ul>
       </section>
 

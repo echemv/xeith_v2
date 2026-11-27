@@ -1,0 +1,79 @@
+{
+  "game": "Case Files",
+  "status": "draft",
+  "note": "Draft content. Correct choices are stewardship actions only: no diagnosis, no medicine choice, no doses. Needs review by a pharmacist and a veterinarian before publishing.",
+  "cases": [
+    {
+      "id": "cf-pharmacy",
+      "title": "The pharmacy counter",
+      "setting": "Community pharmacy, Ibadan",
+      "level": "beginner",
+      "status": "draft",
+      "source": { "name": "WHO fact sheet: Antimicrobial resistance", "url": "https://www.who.int/news-room/fact-sheets/detail/antimicrobial-resistance", "licence": "WHO terms of use", "retrieved": null },
+      "intro": "Your younger brother Tunde has had a runny nose and cough for two days. A neighbour says, “Just buy antibiotics, it will clear fast.” You walk to the pharmacy near your house.",
+      "steps": [
+        {
+          "prompt": "The attendant offers to sell you a strip of antibiotics without a prescription. What do you do?",
+          "choices": [
+            { "text": "Buy them. The neighbour said it works.", "good": false, "outcome": "Antibiotics bought without advice may not be needed at all. Every unneeded use adds selection pressure, so resistant bacteria survive and spread." },
+            { "text": "Ask to speak with the pharmacist about whether Tunde should be seen at a clinic.", "good": true, "outcome": "Good stewardship. A qualified pharmacist or health worker decides if any medicine is needed. You did not guess." },
+            { "text": "Buy only half the strip to save money.", "good": false, "outcome": "Buying part of a pack without advice is still self-medication. It does not reduce the risk of resistance." }
+          ]
+        },
+        {
+          "prompt": "Tunde rests, drinks fluids and feels better. At home you find old antibiotics left over from last year. What do you do with them?",
+          "choices": [
+            { "text": "Keep them in the drawer for next time.", "good": false, "outcome": "Old leftovers tempt people to self-medicate later, and they may be expired or wrong for the next illness." },
+            { "text": "Give them to Tunde now, just in case.", "good": false, "outcome": "Medicines should only be used when a health worker says they are needed. Using them “just in case” adds selection pressure." },
+            { "text": "Take them back to the pharmacy and ask how to dispose of them safely.", "good": true, "outcome": "Right call. Safe disposal keeps leftovers out of homes, rivers and soil." }
+          ]
+        },
+        {
+          "prompt": "Your family WhatsApp group is sharing a message that says “antibiotics cure every cough.” How do you respond?",
+          "choices": [
+            { "text": "Say nothing. It is not your business.", "good": false, "outcome": "Myths spread fastest when nobody answers them. A short, kind reply can help." },
+            { "text": "Reply that antibiotics do not work on viruses, and that a health worker should decide when they are needed.", "good": true, "outcome": "You shared an accurate message without diagnosing anyone. That is stewardship in action." },
+            { "text": "Reply that people should buy the strongest antibiotic they can find.", "good": false, "outcome": "“Stronger” is not safer. Using medicines without need, whatever the type, drives resistance." }
+          ]
+        }
+      ],
+      "summary": "You avoided self-medication, cleared out leftovers safely and corrected a myth. All three protect antibiotics for when they are truly needed."
+    },
+    {
+      "id": "cf-poultry",
+      "title": "The poultry farm",
+      "setting": "Poultry farm, Ogun State",
+      "level": "intermediate",
+      "status": "draft",
+      "source": { "name": "FAO: Antimicrobial resistance", "url": "https://www.fao.org/antimicrobial-resistance/en/", "licence": "FAO terms of use", "retrieved": null },
+      "intro": "You are helping on your uncle’s poultry farm during the holidays. A few birds look weak and are eating less. A feed seller visits.",
+      "steps": [
+        {
+          "prompt": "The feed seller says: “Mix antibiotics into all the feed. The birds will grow faster and won’t fall sick.” What do you advise your uncle?",
+          "choices": [
+            { "text": "Mix antibiotics into all the feed as the seller says.", "good": false, "outcome": "Using antimicrobials to make healthy animals grow faster is a major driver of resistance in farms." },
+            { "text": "Call a veterinarian to examine the flock before any medicine is used.", "good": true, "outcome": "Correct. A vet decides if treatment is needed. The decision is not yours or the seller’s." },
+            { "text": "Buy the cheapest medicine at the market and try it.", "good": false, "outcome": "Unknown medicines can be fake or wrong, and trying them without advice adds selection pressure." }
+          ]
+        },
+        {
+          "prompt": "The vet says good biosecurity will stop infections spreading. Which plan do you follow?",
+          "choices": [
+            { "text": "Let visitors and traders walk through the pens as usual.", "good": false, "outcome": "People, boots and crates carry microbes from farm to farm." },
+            { "text": "Separate weak birds, clean and disinfect pens, use a footbath and limit visitors.", "good": true, "outcome": "Strong biosecurity prevents infections, so fewer medicines are needed." },
+            { "text": "Throw dead birds into the stream behind the farm.", "good": false, "outcome": "This spreads microbes into water that people and animals use." }
+          ]
+        },
+        {
+          "prompt": "The vet gives instructions for the sick birds, including a waiting time before eggs can be sold. A buyer wants eggs today. What do you do?",
+          "choices": [
+            { "text": "Follow the vet’s instructions fully, including the waiting time before selling eggs.", "good": true, "outcome": "Correct. Waiting times keep medicine residues out of food." },
+            { "text": "Sell the eggs today. The buyer will not know.", "good": false, "outcome": "Selling before the waiting time can put medicine residues into food." },
+            { "text": "Stop the treatment early and keep the rest for next time.", "good": false, "outcome": "Changing the vet’s plan and storing leftovers leads to misuse later. Ask the vet before changing anything." }
+          ]
+        }
+      ],
+      "summary": "You brought in a vet, used biosecurity to prevent infection and respected the waiting time. That is One Health stewardship on a farm."
+    }
+  ]
+}

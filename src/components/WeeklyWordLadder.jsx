@@ -1,55 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { tx } from '../i18n'
-import { useApp, award, weekNumber } from '../store'
-
-const LADDER_POOLS = [
-  {
-    start: 'GERM',
-    target: 'HEAL',
-    theme: tx('From Microbe to Recovery: Transform GERM to HEAL across 7 daily steps.'),
-    steps: ['GERM', 'TERM', 'TEEM', 'TEED', 'FEED', 'FEEL', 'HEEL', 'HEAL'],
-    hints: [
-      tx('A specific period or technical word (G → T)'),
-      tx('To be full of or swarm with life (R → E)'),
-      tx('Equipped with a golf tee or prepared (M → D)'),
-      tx('To supply with nourishment or food (T → F)'),
-      tx('To perceive through touch or emotion (D → L)'),
-      tx('The rear part of the human foot (F → H)'),
-      tx('To recover and restore health! (E → A)')
-    ]
-  },
-  {
-    start: 'COLD',
-    target: 'SAFE',
-    theme: tx('From Viral Cold to Antimicrobial Safety: 7 daily steps to keep patients safe.'),
-    steps: ['COLD', 'CORD', 'CARD', 'WARD', 'WARM', 'WORM', 'SORE', 'SAFE'],
-    hints: [
-      tx('A flexible cable or string (L → R)'),
-      tx('A piece of thick paper or ID badge (O → A)'),
-      tx('A hospital division or room (C → W)'),
-      tx('Having a moderate degree of heat (D → M)'),
-      tx('An invertebrate that aerates soil (A → O)'),
-      tx('Painful or tender to the touch (W → S)'),
-      tx('Protected from danger or superbug harm! (O → A)')
-    ]
-  },
-  {
-    start: 'BUGS',
-    target: 'CURE',
-    theme: tx('From Resistant BUGS to CURE: 7 daily steps of stewardship.'),
-    steps: ['BUGS', 'BAGS', 'BARE', 'CARE', 'CORE', 'CORN', 'CURN', 'CURE'],
-    hints: [
-      tx('Containers used for carrying goods (U → A)'),
-      tx('Exposed, uncovered, or plain (G → R)'),
-      tx('Compassion, medical attention, and stewardship (B → C)'),
-      tx('The central or most vital part (A → O)'),
-      tx('A cereal plant producing yellow kernels (E → N)'),
-      tx('A small grain or dialect term (O → U)'),
-      tx('To relieve a person of the symptoms of a disease! (N → E)')
-    ]
-  }
-]
+import { useApp, award, weekNumber, ymd } from '../store'
+import {
+  LADDER_POOLS, RUNG_POINTS, REVEAL_COST, RUNG_FLOOR, COMPLETE_POINTS, checkRung, solveRung,
+} from '../data/weeklyLadder'
 
 const DAYS_OF_WEEK = [
   tx('Monday'),
@@ -61,177 +16,168 @@ const DAYS_OF_WEEK = [
   tx('Sunday')
 ]
 
+const RUNGS = 7
+
+function loadProgress(key, start) {
+  const empty = { steps: [start], hints: {}, penalties: {}, revealDays: {} }
+  try {
+    const raw = JSON.parse(localStorage.getItem(key))
+    if (Array.isArray(raw)) return { ...empty, steps: raw.length ? raw : [start] } // old format
+    if (raw && Array.isArray(raw.steps)) return { ...empty, ...raw }
+  } catch { /* storage unavailable or corrupt */ }
+  return empty
+}
+
 export default function WeeklyWordLadder() {
   const { t } = useTranslation()
   const { done } = useApp()
   const wk = weekNumber()
 
-  // Day index: Monday = 0, ..., Sunday = 6
+  // Day index: Monday = 0, ..., Sunday = 6. Rung n (1..7) opens on day index n - 1.
   const todayDayIndex = (new Date().getDay() + 6) % 7
+  const today = ymd()
   const ladder = LADDER_POOLS[wk % LADDER_POOLS.length]
   const storageKey = `xeith-weekly-ladder-${wk}`
 
-  const [savedSteps, setSavedSteps] = useState(() => {
-    try {
-      const stored = localStorage.getItem(storageKey)
-      return stored ? JSON.parse(stored) : [ladder.start]
-    } catch {
-      return [ladder.start]
-    }
-  })
-
+  const [progress, setProgress] = useState(() => loadProgress(storageKey, ladder.start))
   const [currentInput, setCurrentInput] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
-  const [stepSuccess, setStepSuccess] = useState(false)
+  const [checking, setChecking] = useState(false)
+  const [solved, setSolved] = useState(null) // { rung, pos, letter } for hints, kept in memory only
 
-  // Sync to storage
   useEffect(() => {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(savedSteps))
-    } catch { /* ignore */ }
-  }, [savedSteps, storageKey])
+    try { localStorage.setItem(storageKey, JSON.stringify(progress)) } catch { /* ignore */ }
+  }, [progress, storageKey])
 
-  // Current step to fill (index 1 to 7 corresponding to Day 0 to Day 6)
-  const currentStepNum = savedSteps.length // 1 to 7
-  const isCompletedForWeek = savedSteps.length >= 8
-  const isTodayStepAlreadyDone = savedSteps.length > todayDayIndex + 1
+  const { steps } = progress
+  const rung = steps.length // the rung being worked on, 1..7
+  const prevWord = steps[steps.length - 1]
+  const isCompletedForWeek = steps.length > RUNGS
+  const rungUnlocked = rung - 1 <= todayDayIndex
+  const isTodayStepAlreadyDone = !isCompletedForWeek && !rungUnlocked
+  const rungHints = progress.hints[rung] || {}
+  const rungReward = Math.max(RUNG_FLOOR, RUNG_POINTS - (progress.penalties[rung] || 0))
+  const revealFreeToday = !(progress.revealDays[today] > 0)
+  const target = isCompletedForWeek ? steps[RUNGS] : '?'.repeat(ladder.start.length)
 
-  const handleWordSubmit = () => {
+  const getSolution = async () => {
+    if (solved && solved.rung === rung) return solved
+    const s = await solveRung(ladder, rung, prevWord)
+    if (s) setSolved({ rung, ...s })
+    return s ? { rung, ...s } : null
+  }
+
+  // Hints already taken for this rung survive a reload: recompute the solution in memory.
+  useEffect(() => {
+    if (isCompletedForWeek || !(rungHints.position || rungHints.reveal)) return
+    if (solved && solved.rung === rung) return
+    let live = true
+    solveRung(ladder, rung, prevWord).then((r) => { if (live && r) setSolved({ rung, ...r }) })
+    return () => { live = false }
+  }, [isCompletedForWeek, rungHints.position, rungHints.reveal, solved, rung, ladder, prevWord])
+
+  const takeHint = async (kind) => {
+    if (isCompletedForWeek || !rungUnlocked || rungHints[kind]) return
+    const s = await getSolution()
+    if (!s) { setErrorMsg(t('Hint unavailable right now. Try again.')); return }
+    setProgress((p) => {
+      const next = { ...p, hints: { ...p.hints, [rung]: { ...(p.hints[rung] || {}), [kind]: true } } }
+      if (kind === 'reveal') {
+        const used = p.revealDays[today] || 0
+        next.revealDays = { ...p.revealDays, [today]: used + 1 }
+        if (used > 0) next.penalties = { ...p.penalties, [rung]: (p.penalties[rung] || 0) + REVEAL_COST }
+        // a reveal also shows the position
+        next.hints[rung].position = true
+      }
+      return next
+    })
+  }
+
+  const handleWordSubmit = async () => {
+    if (checking || isCompletedForWeek || !rungUnlocked) return
     const word = currentInput.toUpperCase().trim()
     const expectedLength = ladder.start.length
 
-    if (word.length !== expectedLength) {
+    if (!/^[A-Z]+$/.test(word) || word.length !== expectedLength) {
       setErrorMsg(t('Word must be {{n}} letters', { n: expectedLength }))
       return
     }
-
-    const prevWord = savedSteps[savedSteps.length - 1]
     if (word === prevWord) {
-      setErrorMsg(t("That's the same as the previous word!"))
+      setErrorMsg(t('That’s the same as the previous word!'))
       return
     }
-
-    // Check one letter difference
     const diff = word.split('').filter((char, i) => char !== prevWord[i]).length
     if (diff !== 1) {
       setErrorMsg(t('Change exactly one letter from {{prev}}', { prev: prevWord }))
       return
     }
 
-    // Validate against solution path or verify valid word
-    const expectedWord = ladder.steps[savedSteps.length]
-    if (word !== expectedWord && word !== ladder.target) {
-      setErrorMsg(t('Not the expected stewardship step word. Hint: {{hint}}', { hint: ladder.hints[savedSteps.length - 1] }))
+    setChecking(true)
+    let ok = false
+    try { ok = await checkRung(ladder, rung, word) } catch { /* crypto unavailable */ }
+    setChecking(false)
+    if (!ok) {
+      setErrorMsg(t('Not the word for this step. Try a hint below.'))
       return
     }
 
-    const nextSteps = [...savedSteps, word]
-    setSavedSteps(nextSteps)
+    const nextSteps = [...steps, word]
+    setProgress((p) => ({ ...p, steps: nextSteps }))
     setCurrentInput('')
     setErrorMsg('')
-    setStepSuccess(true)
 
-    // Award daily step points
-    const stepId = `weekly-ladder-step-${wk}-${savedSteps.length}`
-    if (!done[stepId]) {
-      award(10, stepId)
-    }
+    const stepId = `weekly-ladder-step-${wk}-${rung}`
+    if (!done[stepId]) award(rungReward, stepId)
 
-    // If day 7 / final target reached
-    if (nextSteps.length >= 8 || word === ladder.target) {
+    if (nextSteps.length > RUNGS) {
       const fullId = `weekly-ladder-complete-${wk}`
-      if (!done[fullId]) {
-        award(50, fullId)
-      }
+      if (!done[fullId]) award(COMPLETE_POINTS, fullId)
     }
   }
 
+  const s = solved && solved.rung === rung ? solved : null
+
   return (
-    <section className="card weekly-ladder-card" style={{ marginTop: '24px', position: 'relative', overflow: 'hidden' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+    <section className="card weekly-ladder-card">
+      <div className="ladder-head">
         <div>
-          <p className="eyebrow" style={{ color: 'var(--g-teal)', fontWeight: 700 }}>
+          <p className="eyebrow ladder-eyebrow">
             🧗 {t('7-Day Weekly Word Ladder')} · {t('Week {{wk}}', { wk })}
           </p>
-          <h3 style={{ margin: '4px 0 6px', color: 'var(--navy)' }}>
-            {ladder.start} <span style={{ opacity: 0.5 }}>→</span> {ladder.target}
+          <h3 className="ladder-title">
+            {ladder.start} <span className="arrow" aria-hidden="true">→</span> {target}
           </h3>
-          <p className="muted" style={{ margin: 0, fontSize: '0.88rem' }}>
-            {t(ladder.theme)}
-          </p>
+          <p className="muted ladder-sub">{t(ladder.theme)}</p>
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <span style={{
-            background: isCompletedForWeek ? 'rgba(39,174,96,0.15)' : 'var(--g-soft)',
-            color: isCompletedForWeek ? '#27AE60' : 'var(--navy)',
-            padding: '6px 12px',
-            borderRadius: '99px',
-            fontSize: '0.82rem',
-            fontWeight: 700,
-            border: '1px solid var(--line)'
-          }}>
-            {isCompletedForWeek ? '🏆 ' + t('Ladder Complete (+50 pts)') : `${Math.min(savedSteps.length - 1, 7)} / 7 ${t('Steps')}`}
-          </span>
-        </div>
+        <span className={`ladder-progress ${isCompletedForWeek ? 'done' : ''}`}>
+          {isCompletedForWeek ? '🏆 ' + t('Ladder Complete (+50 pts)') : `${Math.min(steps.length - 1, RUNGS)} / ${RUNGS} ${t('Steps')}`}
+        </span>
       </div>
 
-      {/* 7 Daily Step Slots Visualizer */}
-      <div className="ladder-steps-grid" style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))',
-        gap: '8px',
-        margin: '20px 0 16px'
-      }}>
-        {/* Start Word Slot */}
-        <div style={{
-          padding: '10px 8px',
-          borderRadius: '10px',
-          background: 'var(--navy)',
-          color: '#fff',
-          textAlign: 'center',
-          fontWeight: 700,
-          fontFamily: 'monospace',
-          letterSpacing: '0.1em'
-        }}>
-          <span style={{ fontSize: '0.7rem', display: 'block', opacity: 0.7, fontWeight: 500 }}>{t('START')}</span>
-          <span style={{ fontSize: '1.05rem' }}>{ladder.start}</span>
+      <div className="ladder-steps-grid">
+        <div className="ladder-end start">
+          <span className="ladder-end-label">{t('START')}</span>
+          <span className="ladder-end-word">{ladder.start}</span>
         </div>
 
-        {/* 7 Daily Steps */}
         {DAYS_OF_WEEK.map((dayName, idx) => {
           const stepIndex = idx + 1
-          const filledWord = savedSteps[stepIndex]
+          const filledWord = steps[stepIndex]
           const isToday = idx === todayDayIndex
           const isUnlocked = idx <= todayDayIndex
-          const isCurrentActiveInput = stepIndex === savedSteps.length && isUnlocked && !isCompletedForWeek
+          const isCurrentActiveInput = stepIndex === steps.length && isUnlocked && !isCompletedForWeek
+          const state = filledWord ? 'is-filled' : isCurrentActiveInput ? 'is-active' : !isUnlocked ? 'is-locked' : ''
 
           return (
-            <div
-              key={idx}
-              style={{
-                padding: '10px 6px',
-                borderRadius: '10px',
-                textAlign: 'center',
-                border: isCurrentActiveInput ? '2px solid var(--g-teal)' : '1px solid var(--line)',
-                background: filledWord ? 'rgba(39,174,96,0.1)' : isCurrentActiveInput ? 'var(--g-soft)' : 'rgba(0,0,0,0.02)',
-                opacity: !isUnlocked && !filledWord ? 0.6 : 1,
-                transition: 'all .2s ease'
-              }}
-            >
-              <div style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--muted)', marginBottom: '2px' }}>
-                {dayName} {isToday && '📍'}
+            <div key={idx} className={`ladder-slot ${state}`}>
+              <div className="ladder-slot-day">
+                {t(dayName)} {isToday && '📍'}
               </div>
-              <div style={{
-                fontFamily: 'monospace',
-                fontWeight: 700,
-                fontSize: '1rem',
-                color: filledWord ? '#27AE60' : isCurrentActiveInput ? 'var(--g-teal)' : 'var(--muted)',
-                letterSpacing: '0.05em'
-              }}>
+              <div className="ladder-slot-word">
                 {filledWord ? (
                   <span>{filledWord} ✓</span>
                 ) : isUnlocked ? (
-                  <span style={{ fontStyle: 'italic', fontSize: '0.82rem' }}>{isCurrentActiveInput ? t('Ready') : '—'}</span>
+                  <span className="pending">{isCurrentActiveInput ? t('Ready') : '—'}</span>
                 ) : (
                   <span>🔒</span>
                 )}
@@ -240,86 +186,78 @@ export default function WeeklyWordLadder() {
           )
         })}
 
-        {/* Goal Target Slot */}
-        <div style={{
-          padding: '10px 8px',
-          borderRadius: '10px',
-          background: isCompletedForWeek ? 'var(--g-teal)' : 'var(--g-soft)',
-          color: isCompletedForWeek ? '#fff' : 'var(--navy)',
-          textAlign: 'center',
-          fontWeight: 700,
-          fontFamily: 'monospace',
-          border: '1px solid var(--line)',
-          letterSpacing: '0.1em'
-        }}>
-          <span style={{ fontSize: '0.7rem', display: 'block', opacity: 0.7, fontWeight: 500 }}>{t('TARGET')} 🏁</span>
-          <span style={{ fontSize: '1.05rem' }}>{ladder.target}</span>
+        <div className={`ladder-end target ${isCompletedForWeek ? 'done' : ''}`}>
+          <span className="ladder-end-label">{t('TARGET')} 🏁</span>
+          <span className="ladder-end-word">{target}</span>
         </div>
       </div>
 
-      {/* Input / Progress Section */}
       {!isCompletedForWeek && (
         <div>
           {isTodayStepAlreadyDone ? (
-            <div style={{
-              background: 'rgba(39,174,96,0.08)',
-              padding: '12px 16px',
-              borderRadius: '10px',
-              border: '1px solid rgba(39,174,96,0.25)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px'
-            }}>
-              <span style={{ fontSize: '1.5rem' }}>✅</span>
+            <div className="ladder-done-today">
+              <span style={{ fontSize: '1.5rem' }} aria-hidden="true">✅</span>
               <div>
-                <b style={{ color: 'var(--navy)' }}>{t("Today's ladder step is complete!")}</b>
-                <p className="muted" style={{ margin: '2px 0 0', fontSize: '0.84rem' }}>
+                <b>{t('Today’s ladder step is complete!')}</b>
+                <p className="muted">
                   {t('Come back tomorrow for the next word step. Keep your streak burning! 🔥')}
                 </p>
               </div>
             </div>
           ) : (
-            <div style={{
-              background: 'var(--g-soft)',
-              padding: '16px',
-              borderRadius: '12px',
-              border: '1px solid var(--line)'
-            }}>
-              <p style={{ margin: '0 0 8px', fontSize: '0.9rem', fontWeight: 600, color: 'var(--navy)' }}>
-                {t('Day {{n}} Step', { n: savedSteps.length })}: {t('Change 1 letter from')} <code>{savedSteps[savedSteps.length - 1]}</code>
+            <div className="ladder-panel">
+              <p className="ladder-panel-title">
+                {t('Day {{n}} Step', { n: rung })}: {t('Change 1 letter from')} <code>{prevWord}</code>
               </p>
-              <p className="muted" style={{ margin: '0 0 12px', fontSize: '0.85rem' }}>
-                💡 <b>{t('Hint')}:</b> {ladder.hints[savedSteps.length - 1]}
+              <p className="muted ladder-hint">
+                💡 <b>{t('Clue')}:</b> {t(ladder.clues[rung - 1])}
               </p>
+              {rungHints.position && s && (
+                <p className="muted ladder-hint">
+                  <b>{t('Position')}:</b> {t('The letter that changes is letter {{n}}', { n: s.pos + 1 })}
+                </p>
+              )}
+              {rungHints.reveal && s && (
+                <p className="muted ladder-hint">
+                  <b>{t('Letter')}:</b> {t('Letter {{n}} becomes {{letter}}', { n: s.pos + 1, letter: s.letter })}
+                </p>
+              )}
 
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <div className="ladder-form">
                 <input
                   type="text"
+                  className="ladder-input"
                   value={currentInput}
                   onChange={(e) => { setCurrentInput(e.target.value.toUpperCase()); setErrorMsg('') }}
                   onKeyDown={(e) => e.key === 'Enter' && handleWordSubmit()}
                   placeholder={t('4-letter word')}
+                  aria-label={t('4-letter word')}
                   maxLength={ladder.start.length}
-                  style={{
-                    width: '130px',
-                    textAlign: 'center',
-                    fontSize: '1.1rem',
-                    fontWeight: 700,
-                    letterSpacing: '0.12em',
-                    textTransform: 'uppercase',
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    border: '2px solid var(--line)'
-                  }}
-                  autoFocus
                 />
-                <button className="btn" onClick={handleWordSubmit}>
-                  {t('Submit Daily Step (+10 pts)')}
+                <button className="btn" onClick={handleWordSubmit} disabled={checking}>
+                  {checking ? t('Checking…') : t('Submit Daily Step (+{{n}} pts)', { n: rungReward })}
                 </button>
               </div>
 
+              <div className="ladder-form ladder-hint-actions">
+                {!rungHints.position && (
+                  <button className="btn ghost" onClick={() => takeHint('position')}>
+                    {t('Position hint (free)')}
+                  </button>
+                )}
+                {!rungHints.reveal && (
+                  <button className="btn ghost" onClick={() => takeHint('reveal')}>
+                    {revealFreeToday
+                      ? t('Reveal a letter (free today)')
+                      : rungReward > RUNG_FLOOR
+                        ? t('Reveal a letter (-{{n}} pts)', { n: Math.min(REVEAL_COST, rungReward - RUNG_FLOOR) })
+                        : t('Reveal a letter')}
+                  </button>
+                )}
+              </div>
+
               {errorMsg && (
-                <p style={{ color: 'var(--coral)', margin: '8px 0 0', fontSize: '0.85rem', fontWeight: 600 }}>
+                <p className="ladder-error" role="alert">
                   ⚠️ {errorMsg}
                 </p>
               )}
@@ -329,17 +267,11 @@ export default function WeeklyWordLadder() {
       )}
 
       {isCompletedForWeek && (
-        <div style={{
-          textAlign: 'center',
-          padding: '16px',
-          background: 'rgba(39,174,96,0.1)',
-          borderRadius: '12px',
-          border: '1px solid #27AE60'
-        }}>
-          <p style={{ fontSize: '1.8rem', margin: 0 }}>🎉 🏆</p>
-          <h4 style={{ margin: '6px 0 2px', color: '#27AE60' }}>{t('Weekly Ladder Conquered!')}</h4>
-          <p className="muted" style={{ margin: 0, fontSize: '0.88rem' }}>
-            {t('You successfully transformed {{start}} to {{target}} across all 7 days (+50 points awarded).', { start: ladder.start, target: ladder.target })}
+        <div className="ladder-complete">
+          <p style={{ fontSize: '1.8rem', margin: 0 }} aria-hidden="true">🎉 🏆</p>
+          <h4>{t('Weekly Ladder Conquered!')}</h4>
+          <p className="muted">
+            {t('You successfully transformed {{start}} to {{target}} across all 7 days (+50 points awarded).', { start: ladder.start, target })}
           </p>
         </div>
       )}

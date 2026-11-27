@@ -14,6 +14,9 @@ export default defineConfig({
       },
       workbox: {
         navigateFallbackDenylist: [/^\/api\//],
+        // Precache app images and bundled fonts so the app looks right offline. Design mockups stay out.
+        globPatterns: ['**/*.{js,css,html,webmanifest,png,jpg,svg,woff2}'],
+        globIgnores: ['redesigns/**'],
         runtimeCaching: [{
           urlPattern: /^https:\/\/tile\.openstreetmap\.org\/.*/,
           handler: 'CacheFirst',

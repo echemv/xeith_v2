@@ -3,7 +3,7 @@ dist
 .env
 .env.*
 .dev.vars
-
+#agents
 .adal/
 .agents/
 .aider-desk/
@@ -54,6 +54,8 @@ dist
 .windsurf/
 .zcode/
 .zencoder/
-data/
+/data/
 skills-lock.json
 skills/
+# macOS metadata
+.DS_Store

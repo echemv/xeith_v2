@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { tx } from '../i18n'
 import { useApp, award, ymd } from '../store'
+import { DAILY_LADDERS } from '../data/dailyLadders'
+import { checkRung } from '../data/weeklyLadder'
 
 const TOPIC_TO_LESSON = {
   bacteria: 'bacteria',
@@ -28,15 +30,6 @@ const mockAI = {
     // Rotate challenge types deterministically by day
     const types = Object.values(CHALLENGE_TYPES)
     const type = types[dayOfYear % types.length]
-
-    // Word ladders for AMR terms (consistent 4-letter steps)
-    const wordLadders = [
-      { start: 'GERM', end: 'DRUG', steps: ['GERM', 'TERM', 'TEEM', 'TEED', 'DEED', 'DEAD', 'DEAR', 'DRAB', 'DRUG'], hint: tx('Transform the microbe into the medicine! (4 letters)') },
-      { start: 'COLD', end: 'CURE', steps: ['COLD', 'CORD', 'CORE', 'CURE'], hint: tx('From the symptom to recovery. (4 letters)') },
-      { start: 'MOLD', end: 'HEAL', steps: ['MOLD', 'HOLD', 'HEAD', 'HEAL'], hint: tx('From fungal mold to healing. (4 letters)') },
-      { start: 'BUGS', end: 'SAFE', steps: ['BUGS', 'BAGS', 'BARE', 'SAFE'], hint: tx('Stop the superbugs, keep patients safe. (4 letters)') },
-      { start: 'DOSE', end: 'WELL', steps: ['DOSE', 'DOLE', 'POLE', 'POLL', 'WELL'], hint: tx('Right dose, get well. (4 letters)') }
-    ]
 
     // Photo challenge prompts
     const photoChallenges = [
@@ -72,16 +65,13 @@ const mockAI = {
 
     switch (type) {
       case CHALLENGE_TYPES.WORD_LADDER: {
-        const ladder = wordLadders[dayOfYear % wordLadders.length]
+        // Answers live only as salted hashes in src/data/dailyLadders.js; the target is never in the challenge.
+        const ladder = DAILY_LADDERS[dayOfYear % DAILY_LADDERS.length]
         return {
           type: CHALLENGE_TYPES.WORD_LADDER,
           topic,
-          title: tx('Word Ladder: {{start}} → {{end}}', { start: ladder.start, end: ladder.end }),
-          prompt: tx('Transform "{{start}}" into "{{end}}" by changing one letter at a time. Each step must be a valid word.', { start: ladder.start, end: ladder.end }),
-          startWord: ladder.start,
-          endWord: ladder.end,
-          hint: ladder.hint,
-          maxSteps: ladder.steps.length - 1
+          title: tx('Word Ladder'),
+          ladderId: ladder.id
         }
       }
       case CHALLENGE_TYPES.PHOTO_CHALLENGE: {
@@ -128,40 +118,49 @@ const mockAI = {
   }
 }
 
-// Word Ladder Component
+// Word Ladder Component: fixed path, each step checked against a salted hash.
+// The target word stays hidden until the last step is solved.
 function WordLadder({ challenge, onComplete, t }) {
-  const [currentWord, setCurrentWord] = useState(challenge.startWord)
-  const [steps, setSteps] = useState([challenge.startWord])
+  const ladder = DAILY_LADDERS.find((l) => l.id === challenge.ladderId) || DAILY_LADDERS[0]
+  const total = ladder.hashes.length
+  const [currentWord, setCurrentWord] = useState('')
+  const [steps, setSteps] = useState([ladder.start])
   const [message, setMessage] = useState('')
-  const [solved, setSolved] = useState(false)
+  const [checking, setChecking] = useState(false)
+  const solved = steps.length > total
+  const step = steps.length // 1..total while playing
+  const prev = steps[steps.length - 1]
+  const hidden = '?'.repeat(ladder.start.length)
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (solved || checking) return
     const word = currentWord.toUpperCase().trim()
-    if (word.length !== challenge.startWord.length) {
-      setMessage(t('Word must be {{n}} letters', { n: challenge.startWord.length }))
+    if (!/^[A-Z]+$/.test(word) || word.length !== ladder.start.length) {
+      setMessage(t('Word must be {{n}} letters', { n: ladder.start.length }))
       return
     }
-    if (word === steps[steps.length - 1]) {
-      setMessage(t('That\'s the current word!'))
+    if (word === prev) {
+      setMessage(t('That’s the current word!'))
       return
     }
-    // Check one letter difference
-    const diff = word.split('').filter((c, i) => c !== steps[steps.length - 1][i]).length
+    const diff = word.split('').filter((c, i) => c !== prev[i]).length
     if (diff !== 1) {
       setMessage(t('Change only one letter from the previous word'))
       return
     }
-    // Check if it's the end word
-    if (word === challenge.endWord) {
-      setSteps([...steps, word])
-      setSolved(true)
-      onComplete(true)
+    setChecking(true)
+    let ok = false
+    try { ok = await checkRung(ladder, step, word) } catch { /* crypto unavailable */ }
+    setChecking(false)
+    if (!ok) {
+      setMessage(t('Not the word for this step. Check the clue.'))
       return
     }
-    // Accept as intermediate step
-    setSteps([...steps, word])
+    const next = [...steps, word]
+    setSteps(next)
     setCurrentWord('')
     setMessage('')
+    if (next.length > total) onComplete(true)
   }
 
   const handleInput = (e) => {
@@ -169,60 +168,69 @@ function WordLadder({ challenge, onComplete, t }) {
     setMessage('')
   }
 
+  const tile = (text, active, key) => (
+    <span key={key} style={{
+      background: active ? challenge.topic === 'virus' ? 'var(--g-sky)' : 'var(--g-teal)' : 'var(--g-soft)',
+      color: active ? '#fff' : 'var(--navy)',
+      padding: '8px 12px',
+      borderRadius: '10px',
+      fontWeight: 600,
+      fontFamily: 'monospace',
+      letterSpacing: '0.1em',
+      boxShadow: active ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
+      transition: 'all 0.3s',
+      minWidth: '60px',
+      textAlign: 'center'
+    }}>
+      {text}
+    </span>
+  )
+
   return (
     <section className="card daily-challenge">
-      <p className="eyebrow">{t(challenge.title)}</p>
-      <p className="fact">{t(challenge.prompt)}</p>
-      <p className="muted" style={{ fontSize: '0.85rem' }}>{t(challenge.hint)}</p>
+      <p className="eyebrow">{t(challenge.title)}: {ladder.start} → {solved ? steps[total] : hidden}</p>
+      <p className="fact">{t('Change one letter at a time, starting from {{start}}. The target stays hidden until you reach it.', { start: ladder.start })}</p>
+      <p className="muted" style={{ fontSize: '0.85rem' }}>{t(ladder.theme)}</p>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', margin: '16px 0' }}>
-        {steps.map((step, i) => (
-          <span key={i} style={{
-            background: i === steps.length - 1 ? challenge.topic === 'virus' ? 'var(--g-sky)' : 'var(--g-teal)' : 'var(--g-soft)',
-            color: i === steps.length - 1 ? '#fff' : 'var(--navy)',
-            padding: '8px 12px',
-            borderRadius: '10px',
-            fontWeight: 600,
-            fontFamily: 'monospace',
-            letterSpacing: '0.1em',
-            boxShadow: i === steps.length - 1 ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
-            transition: 'all 0.3s',
-            minWidth: '60px',
-            textAlign: 'center'
-          }}>
-            {step}
-            {i < steps.length - 1 && <span style={{ marginLeft: '8px', opacity: 0.5 }}>→</span>}
-          </span>
-        ))}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', alignItems: 'center', margin: '16px 0' }}>
+        {steps.map((w, i) => tile(w, i === steps.length - 1, i))}
+        {!solved && Array.from({ length: total - steps.length + 1 }, (_, i) => tile(hidden, false, 'h' + i))}
       </div>
 
       {!solved && (
-        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-          <input
-            type="text"
-            value={currentWord}
-            onChange={handleInput}
-            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-            placeholder={t('Enter next word...')}
-            style={{
-              width: '140px',
-              textAlign: 'center',
-              fontSize: '1.1rem',
-              fontWeight: 600,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              padding: '10px',
-              borderRadius: '12px',
-              border: '2px solid var(--line)'
-            }}
-            maxLength={challenge.startWord.length}
-            autoFocus
-          />
-          <button className="btn" onClick={handleSubmit} style={{ alignSelf: 'flex-end' }}>{t('Submit')}</button>
-        </div>
+        <>
+          <p className="muted" style={{ textAlign: 'center' }}>
+            <b>{t('Step {{n}} of {{total}}', { n: step, total })}</b> · {t('Clue')}: {t(ladder.clues[step - 1])}
+          </p>
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+            <input
+              type="text"
+              value={currentWord}
+              onChange={handleInput}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+              placeholder={t('Enter next word...')}
+              aria-label={t('Enter next word...')}
+              style={{
+                width: '140px',
+                textAlign: 'center',
+                fontSize: '1.1rem',
+                fontWeight: 600,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                padding: '10px',
+                borderRadius: '12px',
+                border: '2px solid var(--line)'
+              }}
+              maxLength={ladder.start.length}
+            />
+            <button className="btn" onClick={handleSubmit} disabled={checking} style={{ alignSelf: 'flex-end' }}>
+              {checking ? t('Checking…') : t('Submit')}
+            </button>
+          </div>
+        </>
       )}
 
-      {message && <p className="muted" style={{ color: 'var(--coral)', textAlign: 'center', minHeight: '1.5em' }}>{message}</p>}
+      {message && <p className="muted" role="alert" style={{ color: 'var(--coral)', textAlign: 'center', minHeight: '1.5em' }}>{message}</p>}
 
       {solved && (
         <div style={{ textAlign: 'center', marginTop: '16px', animation: 'pop 0.5s' }}>
@@ -469,8 +477,9 @@ export default function DailyChallenge() {
       const cacheKey = `xeith-daily-challenge-${today}-${i18n.resolvedLanguage || 'en'}`
       try {
         const cached = localStorage.getItem(cacheKey)
-        if (cached) {
-          setChallenge(JSON.parse(cached))
+        const parsed = cached && JSON.parse(cached)
+        if (parsed && parsed.type !== CHALLENGE_TYPES.WORD_LADDER) {
+          setChallenge(parsed)
           setLoading(false)
           return
         }
@@ -483,8 +492,9 @@ export default function DailyChallenge() {
       const type = types[dayOfYear % types.length]
       const topic = topics[dayOfYear % topics.length]
 
-      // Online: attempt live AI generation via /api/challenges
-      if (typeof navigator === 'undefined' || navigator.onLine) {
+      // Online: attempt live AI generation via /api/challenges.
+      // Word ladders always come from the local hashed pool: the API returns the target word in plain text.
+      if (type !== CHALLENGE_TYPES.WORD_LADDER && (typeof navigator === 'undefined' || navigator.onLine)) {
         const ctrl = new AbortController()
         const timer = setTimeout(() => ctrl.abort(), 12000)
         try {
@@ -503,7 +513,7 @@ export default function DailyChallenge() {
           if (res.ok) {
             const raw = await res.json()
             const data = raw?.challenge || raw
-            if (data && data.type) {
+            if (data && data.type && data.type.toLowerCase() !== CHALLENGE_TYPES.WORD_LADDER) {
               const normType = data.type.toLowerCase()
               const normalized = {
                 ...data,
@@ -511,14 +521,11 @@ export default function DailyChallenge() {
                 topic: data.topic || topic,
                 source: 'ai',
                 title: data.title || (
-                  normType === CHALLENGE_TYPES.WORD_LADDER ? tx('Word Ladder: {{start}} → {{end}}', { start: data.startWord, end: data.endWord })
-                  : normType === CHALLENGE_TYPES.PHOTO_CHALLENGE ? tx('Photo Challenge')
+                  normType === CHALLENGE_TYPES.PHOTO_CHALLENGE ? tx('Photo Challenge')
                   : normType === CHALLENGE_TYPES.FACT_MATCH ? tx('Fact or Myth?')
                   : tx('Daily Quiz')
                 ),
-                prompt: data.prompt || (normType === CHALLENGE_TYPES.WORD_LADDER
-                  ? tx('Transform "{{start}}" into "{{end}}" by changing one letter at a time.', { start: data.startWord, end: data.endWord })
-                  : normType === CHALLENGE_TYPES.FACT_MATCH
+                prompt: data.prompt || (normType === CHALLENGE_TYPES.FACT_MATCH
                   ? tx('Sort: which statements are facts and which are myths?')
                   : '')
               }
@@ -581,7 +588,7 @@ export default function DailyChallenge() {
             📖 {t('Explore Classroom Pathway →')}
           </Link>
           <Link to="/play" className="btn ghost" style={{ fontSize: '.8rem', padding: '6px 12px' }}>
-            🧪 {t('Practice in AMR Lab →')}
+            🧪 {t('Practice in The AMR Lab →')}
           </Link>
         </div>
       </section>
@@ -631,7 +638,7 @@ export default function DailyChallenge() {
           className="btn ghost"
           style={{ fontSize: '.8rem', padding: '6px 12px' }}
         >
-          🧪 {t('Practice in Lab →')}
+          🧪 {t('Practice in The AMR Lab →')}
         </Link>
       </div>
     </section>
